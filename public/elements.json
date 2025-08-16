@@ -1,0 +1,82 @@
+[
+  {
+    "InternalName": "et_earth",
+    "DisplayName": "Earth",
+    "StrongAgainst": "Fire,Storm",
+    "WeakTo": "Nature, Water",
+    "ResistanceTo": "",
+	"CostStringLetter": "E"
+  },
+  {
+    "InternalName": "et_fire",
+    "DisplayName": "Fire",
+    "StrongAgainst": "Ice, Nature",
+    "WeakTo": "Earth, Water",
+    "ResistanceTo": "",
+	"CostStringLetter": "F"
+  },
+  {
+    "InternalName": "et_ice",
+    "DisplayName": "Ice",
+    "StrongAgainst": "Toxic, Void",
+    "WeakTo": "Fire, Synthetic",
+    "ResistanceTo": "",
+	"CostStringLetter": "I"
+  },
+  {
+    "InternalName": "et_nature",
+    "DisplayName": "Nature",
+    "StrongAgainst": "Earth, Water",
+    "WeakTo": "Fire, Toxic",
+    "ResistanceTo": "",
+	"CostStringLetter": "N"
+  },
+  {
+    "InternalName": "et_neutral",
+    "DisplayName": "Neutral",
+    "StrongAgainst": "",
+    "WeakTo": "",
+    "ResistanceTo": "",
+	"CostStringLetter": "U"
+  },
+  {
+    "InternalName": "et_storm",
+    "DisplayName": "Storm",
+    "StrongAgainst": "Synthetic, Water",
+    "WeakTo": "Earth, Void",
+    "ResistanceTo": "",
+	"CostStringLetter": "S"
+  },
+  {
+    "InternalName": "et_synthetic",
+    "DisplayName": "Synthetic",
+    "StrongAgainst": "Ice, Toxic",
+    "WeakTo": "Storm, Void",
+    "ResistanceTo": "",
+	"CostStringLetter": "Y"
+  },
+  {
+    "InternalName": "et_toxic",
+    "DisplayName": "Toxic",
+    "StrongAgainst": "Nature, Void",
+    "WeakTo": "Ice, Synthetic",
+    "ResistanceTo": "",
+	"CostStringLetter": "T"
+  },
+  {
+    "InternalName": "et_void",
+    "DisplayName": "Void",
+    "StrongAgainst": "Storm, Synthetic",
+    "WeakTo": "Ice, Toxic",
+    "ResistanceTo": "",
+	"CostStringLetter": "V"
+  },
+  {
+    "InternalName": "et_water",
+    "DisplayName": "Water",
+    "StrongAgainst": "Earth, Fire",
+    "WeakTo": "Nature, Storm",
+    "ResistanceTo": "",
+	"CostStringLetter": "W"
+  }
+]

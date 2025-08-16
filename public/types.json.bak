@@ -1,0 +1,5 @@
+{
+  "SuperType": ["", "Token"], 
+  "CardType": ["","Partner", "Unit", "Ability", "Event", "Support", "Shield"],
+  "SubType": ["", "Reaction", "Augment"] 
+}

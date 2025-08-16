@@ -1,0 +1,72 @@
+/* src/styles/filters.css */
+.filters-panel {
+  width: 280px;
+  background: #111622;
+  color: #e7eaf3;
+  border-right: 1px solid #2a2f3a;
+  padding: 14px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.filters-title {
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.filters-group { margin-bottom: 12px; }
+
+.filters-label {
+  display: block;
+  font-size: 12px;
+  opacity: 0.85;
+  margin-bottom: 6px;
+}
+
+.filters-row {
+  display: flex;
+  gap: 8px;
+}
+
+.filters-input, .filters-select {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #343a46;
+  background: #0e1320;
+  color: #e7eaf3;
+  outline: none;
+}
+
+.filters-input::placeholder { color: #8791a3; }
+
+.filters-help {
+  font-size: 11px;
+  opacity: 0.7;
+  line-height: 1.35;
+}
+
+.filters-actions { display: flex; gap: 8px; }
+
+.btn {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #343a46;
+  background: #0e1320;
+  color: #e7eaf3;
+  cursor: pointer;
+}
+.btn:hover { background: #151b2b; }
+.btn-primary {
+  background: #2b5cff;
+  border-color: #2b5cff;
+}
+.btn-primary:hover { filter: brightness(1.1); }
+
+/* container layout helper (optional) */
+.app-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr auto;
+  height: 100vh;
+}

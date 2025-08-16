@@ -1,0 +1,61 @@
+{
+  // ===========================
+  // Format ID: Freeform
+  // This is the "anything goes" format — matches your current default rules.
+  // ===========================
+  "Freeform": {
+    // Per-rarity copy limits (card caps)
+    // Key is the Rarity string, value is the max copies per deck.
+    // Omit a rarity entirely to make it uncapped (Infinity).
+    // "Partner" here overrides Partner's default 1-copy limit.
+    "rarityCap": {
+      "Common": 4,
+      "Uncommon": 3,
+      "Rare": 2,
+      "Ultra Rare": 1,
+      "Partner": 1
+    },
+
+    // Deck size rules
+    "deckSize": {
+      // type = "byElements": deck size is based on the number of elements
+      // on your chosen Partner card. 
+      // "1" = limit if Partner has 1 element type
+      // "2" = limit if Partner has 2 element types
+      // "3" = limit if Partner has 3+ element types
+      "type": "byElements",
+      "values": { "1": 25, "2": 50, "3": 75 },
+    // NEW: Set IDs allowed in this format — "*" means all sets. Replace these with real set IDs that exist in reference.json -> Set
+	  "allowedSets": "*"
+    },
+  },
+
+  // ===========================
+  // Format ID: Standard
+  // This example uses a fixed deck size instead of being element-dependent.
+  // ===========================
+  "Standard": {
+    "rarityCap": {
+      "Common": 4,
+      "Uncommon": 3,
+      "Rare": 2,
+      "Ultra Rare": 1,
+      "Partner": 1
+    },
+
+    "deckSize": {
+      // type = "fixed": same limit regardless of Partner elements.
+      // "values" = exact deck size limit.
+      "type": "fixed",
+      "values": 60,
+	  "allowedSets": ["CS1"]
+    },
+  }
+
+  // ===========================
+  // To add more formats later:
+  // 1. Add the new Format ID to reference.json -> "Format" array
+  // 2. Add an entry here with "rarityCap" and "deckSize" rules
+  // 3. The app will automatically use them when that Format is selected
+  // ===========================
+}

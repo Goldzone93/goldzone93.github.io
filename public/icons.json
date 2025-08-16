@@ -1,0 +1,122 @@
+[
+  {
+    "InternalName": "icon_add",
+    "DisplayName": "Add",
+    "RulesText": "This represents the addition of an ability or effect to a card. Always appearing at the start of a text box line. These icons on augments modify the unit card placed in the space directly infront of them and apply the new abilities or effects to that card.",
+    "SearchTerm": "Add"
+  },
+  {
+    "InternalName": "icon_advattack",
+    "DisplayName": "Advance Attack",
+    "RulesText": "This is an alternate attack option that a unit can peform when it attack during your turn. If a unit has multiple advance attack options the player must choose which one to activate when the unit attacks.",
+    "SearchTerm": "Adv Attack"
+  },
+  {
+    "InternalName": "icon_atkvalue",
+    "DisplayName": "Attack Value",
+    "RulesText": "This represents the Attack Stat. When listed in a text box line it represents a temporary stat change that lasts until the end of combat.",
+    "SearchTerm": "ATK Value"
+  },
+  {
+    "InternalName": "icon_banish",
+    "DisplayName": "Banish",
+    "RulesText": "This represents the action of this card being removed from the game and placed into your banish zone. Usually listed at the end of text box line.",
+    "SearchTerm": "Banish"
+  },
+  {
+    "InternalName": "icon_basicatk",
+    "DisplayName": "Basic Attack",
+    "RulesText": "This represents a modifier to a unit’s basic attack. If a unit has multiple Basic Attack icons, all effects are combined into a single basic attack modifier text box line.",
+    "SearchTerm": "Basic Attack"
+  },
+  {
+    "InternalName": "icon_basicblock",
+    "DisplayName": "Basic Block",
+    "RulesText": "This represents a modifier to a unit’s basic block. If a unit has multiple Basic Block icons, all effects are combined into a single basic block modifier text box line.",
+    "SearchTerm": "Basic Block"
+  },
+  {
+    "InternalName": "icon_battleeff",
+    "DisplayName": "Battle Effect",
+    "RulesText": "This represents a triggered effect that occurs when the unit card it is on engages in battle against an another unit. This will always come first on a text box line.",
+    "SearchTerm": "Battle"
+  },
+  {
+    "InternalName": "icon_defeatanother",
+    "DisplayName": "Defeat Another Friendly Unit",
+    "RulesText": "This represents a game action that you can take durin your turn of defeating another friendly unit in play to cost for the cost of activating the effect of the text box line.",
+    "SearchTerm": "Defeat Another Friendly Unit"
+  },
+  {
+    "InternalName": "icon_defeatenshield",
+    "DisplayName": "Defeat Enemy Shield",
+    "RulesText": "This is the Defeat Enemy Shield icon. This represents the trigger caused by defeating an enemy shield. This will always come before the effect.",
+    "SearchTerm": "Defeat Enemy Shield"
+  },
+  {
+    "InternalName": "icon_defeatthis",
+    "DisplayName": "Defeat This",
+    "RulesText": "This is the Defeat This icon. This represents a game action of you defeating this card.This will always be part of the cost to activate an effect.",
+    "SearchTerm": "Defeat This"
+  },
+  {
+    "InternalName": "icon_defvalue",
+    "DisplayName": "Defense Value",
+    "RulesText": "The Defense Value icon. This represents the Defense Stat of a unit card. When listed on an attack or block it represents a temporary stat change that lasts until the end of turn.",
+    "SearchTerm": "DEF Value"
+  },
+  {
+    "InternalName": "icon_discardthis",
+    "DisplayName": "Discard This",
+    "RulesText": "This is the Discard This icon. This represents a game action of you discarding this card from your hand.This will always be part of the cost to activate an effect.",
+    "SearchTerm": "Discard This"
+  },
+  {
+    "InternalName": "icon_endturn",
+    "DisplayName": "End of Turn",
+    "RulesText": "This is the End Turn icon. This represents the trigger caused by entering your End Phase. This will always come before the effect.",
+    "SearchTerm": "End Turn"
+  },
+  {
+    "InternalName": "icon_exhaust",
+    "DisplayName": "Exhaust This",
+    "RulesText": "This is the Exhaust This icon. This represents a game action of you exhausting this card.This will always be part of the cost to activate an effect.",
+    "SearchTerm": "Exhaust"
+  },
+  {
+    "InternalName": "icon_ingrave",
+    "DisplayName": "In Grave",
+    "RulesText": "This is the In Grave icon. This means that this effect will only be allowed to be activated or is activated when this card is in your grave. This will always come before the effect.",
+    "SearchTerm": "In Grave"
+  },
+  {
+    "InternalName": "icon_hpvalue",
+    "DisplayName": "Health Value",
+    "RulesText": "The Health Value icon. This represents the Health Stat of a unit card. When listed on an attack or block it represents a temporary stat change that lasts until the end of turn.",
+    "SearchTerm": "HP Value"
+  },
+  {
+    "InternalName": "icon_enterplay",
+    "DisplayName": "Enter Play",
+    "RulesText": "This is the Enter Play  icon. This represents the trigger caused by this card entering play. This will always come before the effect.",
+    "SearchTerm": "Enter Play"
+  },
+  {
+    "InternalName": "icon_reaction",
+    "DisplayName": "Reaction",
+    "RulesText": "This is the Reaction icon. This means that this effect will only be allowed to be activated during a reaction window. This will always come before the effect.",
+    "SearchTerm": "Reaction"
+  },
+  {
+    "InternalName": "icon_startturn",
+    "DisplayName": "Start of Turn",
+    "RulesText": "This is the Start Turn icon. This represents the trigger caused by entering your Start Phase. This will always come before the effect.",
+    "SearchTerm": "Start Turn"
+  },
+  {
+    "InternalName": "icon_whendefeat",
+    "DisplayName": "When Defeated",
+    "RulesText": "This is the When Defeated icon. This represents the trigger caused by this card being defeated. This will always come before the effect.",
+    "SearchTerm": "When Defeated"
+  }
+]

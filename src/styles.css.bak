@@ -1,0 +1,194 @@
+:root{
+  --bg:#0f172a;
+  --panel:#111827;
+  --card:#1f2937;
+  --ink:#e5e7eb;
+  --muted:#9ca3af;
+  --accent:#22c55e
+}
+
+*{box-sizing:border-box}
+html,body,#root{height:100%}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif
+}
+a{color:inherit}
+
+/* Layout: widen left, keep deck width, prevent overlap */
+.app{
+  display:grid;
+  grid-template-columns:320px 1fr 360px; /* left a bit wider */
+  gap:12px;
+  height:100%;
+  align-items:start;
+}
+
+/* Side panels */
+.left,.right{
+  background:var(--panel);
+  padding:12px;
+  border-radius:12px;
+  overflow:auto;
+}
+
+.left{
+  position:sticky;        /* sit above grid & stay visible while scrolling */
+  top:0;
+  z-index:2;              /* make sure grid never covers it */
+  max-height:100vh;
+}
+
+.right{
+  position:sticky;
+  top:0;
+  max-height:100vh;
+}
+
+/* Card grid */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
+  gap:12px;
+  overflow:auto;
+  position:relative;
+  z-index:1;              /* below the left panel */
+  min-width:0;            /* prevents grid from pushing into sidebars */
+}
+
+/* Cards */
+.card{
+  background:var(--card);
+  border-radius:12px;
+  padding:8px;
+  display:flex;
+  flex-direction:column;
+  gap:6px
+}
+.card h4{margin:0;font-size:14px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+/* Controls: bigger inputs/selects */
+.controls{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  margin-bottom:8px
+}
+input,select{
+  background:#0b1220;
+  border:1px solid #263143;
+  color:var(--ink);
+  padding:8px 10px;       /* larger padding */
+  height:36px;            /* taller boxes */
+  font-size:14px;         /* slightly larger text */
+  border-radius:8px;
+  width:100%;
+}
+
+button{
+  background:#0b1220;
+  border:1px solid #263143;
+  color:var(--ink);
+  padding:6px 10px;
+  border-radius:8px;
+  cursor:pointer
+}
+
+.badge{
+  background:#0b1220;
+  border:1px solid #263143;
+  border-radius:999px;
+  padding:2px 8px;
+  font-size:12px;
+  color:var(--muted)
+}
+
+img.cardart{
+  width:100%;
+  aspect-ratio:3/4;
+  object-fit:cover;
+  border-radius:8px;
+  background:#000
+}
+
+.small{font-size:12px;color:var(--muted)}
+
+.deckRow{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:4px 0;
+  border-bottom:1px dashed #263143
+}
+.qty{display:flex;align-items:center;gap:4px}
+
+/* Stack layout on small screens */
+@media (max-width: 1100px){
+  .app{
+    grid-template-columns:1fr;
+    height:auto;
+  }
+  .left,.right{
+    position:static;
+    max-height:none;
+  }
+}
+/* Highlight cards that are in the deck */
+.card.in-deck {
+  outline: 3px solid #f5c542;           /* yellow outline */
+  outline-offset: -3px;                 /* pull it inside so it won't clip */
+  box-shadow: 0 0 0 2px rgba(0,0,0,0.18) inset; /* subtle inner depth */
+  transition: outline-color 120ms ease;
+}
+
+/* (optional) keep hover working nicely */
+.card:hover {
+  transform: translateY(-1px);
+}
+
+/* (optional) also tint the title/badges slightly when selected */
+.card.in-deck h4 {
+  color: #b88600;
+}
+.cardart.clickable {
+  cursor: pointer;
+  user-select: none;
+  touch-action: manipulation; /* faster taps on mobile */
+}
+/* ensure positioned children can sit on corners */
+.card { position: relative; }
+
+/* top-left deck count badge */
+.deck-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #f5c542;
+  color: #1a1a1a;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 22px;
+  text-align: center;
+  box-shadow: 0 1px 2px rgba(0,0,0,.25);
+  z-index: 2;
+  pointer-events: none; /* clicks go through to the image */
+}
+
+/* larger numbers auto-fit */
+.deck-badge { display: inline-flex; align-items: center; justify-content: center; }
+
+/* (optional) subtle pop when count appears/changes */
+@media (prefers-reduced-motion: no-preference) {
+  .deck-badge {
+    transition: transform 120ms ease, filter 120ms ease;
+  }
+  .card.in-deck .deck-badge { transform: scale(1.0); }
+  .card.in-deck:active .deck-badge { transform: scale(1.06); filter: brightness(1.05); }
+}

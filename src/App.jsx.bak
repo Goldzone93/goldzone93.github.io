@@ -1,0 +1,467 @@
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+
+// Parse stat values coming from cards.json.
+const statVal = (v) => {
+  if (v === '' || v == null) return -Infinity
+  if (typeof v === 'string' && v.trim().toUpperCase() === 'X') return -Infinity
+  const n = Number(v)
+  return Number.isFinite(n) ? n : -Infinity
+}
+
+// Safer numeric coercion for user-typed bounds
+const safeNum = (x, fallback) => {
+  const n = Number(x)
+  return Number.isFinite(n) ? n : fallback
+}
+
+// --- image helpers ---
+// Try <id>.png -> <id>_a.png -> <id>_b.png -> default
+const primaryImg = (id) => `/images/${id}.png`
+const aImg       = (id) => `/images/${id}_a.png`
+const bImg       = (id) => `/images/${id}_b.png`
+const defaultBack = '/images/card0000_b.png'
+
+// onError chain through the patterns above
+const makeImgErrorHandler = (id) => (e) => {
+  const img = e.currentTarget
+  const tried = img.dataset.tried || '' // '', 'a', 'b', 'default'
+  if (tried === '') {
+    img.dataset.tried = 'a'
+    img.src = aImg(id)
+  } else if (tried === 'a') {
+    img.dataset.tried = 'b'
+    img.src = bImg(id)
+  } else if (tried === 'b') {
+    img.dataset.tried = 'default'
+    img.src = defaultBack
+  }
+}
+
+// Full element list used by the dropdown
+const ELEMENTS = [
+  'Any Element',
+  'Neutral',
+  'Earth',
+  'Fire',
+  'Nature',
+  'Storm',
+  'Water',
+  'Toxic',
+  'Void',
+  'Ice',
+  'Synthetic',
+]
+
+export default function App(){
+  const [cards, setCards] = useState([])
+
+  // existing filters
+  const [q, setQ] = useState('')
+  const [rarity, setRarity] = useState('Any Rarity')
+  const [type, setType] = useState('Any Type')
+  const [element, setElement] = useState('Any Element')
+  const [ccMin, setCcMin] = useState('')
+  const [ccMax, setCcMax] = useState('')
+
+  // added filters
+  const [costStr, setCostStr] = useState('')
+
+  // NEW: min/max bounds for stats
+  const [atkMin, setAtkMin] = useState('')
+  const [atkMax, setAtkMax] = useState('')
+  const [defMin, setDefMin] = useState('')
+  const [defMax, setDefMax] = useState('')
+  const [hpMin,  setHpMin]  = useState('')
+  const [hpMax,  setHpMax]  = useState('')
+
+  // Deck state
+  const [deck, setDeck] = useState({})
+  const [deckName, setDeckName] = useState('')
+  const [showNameInput, setShowNameInput] = useState(false)
+  const nameRef = useRef(null)
+  const fileRef = useRef(null)
+
+  // --- helpers for confirm prompts ---
+  const hasDeckContent = () =>
+    deckName.trim().length > 0 || Object.keys(deck).length > 0
+
+  const confirmDanger = (msg) => {
+    if (!hasDeckContent()) return true
+    return window.confirm(msg)
+  }
+
+  useEffect(()=>{
+    fetch('/cards.json').then(r=>r.json()).then(setCards)
+  },[])
+
+  useEffect(()=>{
+    if (showNameInput) {
+      // slight delay to ensure render before focus
+      setTimeout(()=> nameRef.current?.focus(), 0)
+    }
+  }, [showNameInput])
+
+  const filtered = useMemo(()=>{
+    const cc_lo = ccMin === '' ? -Infinity : safeNum(ccMin, -Infinity)
+    const cc_hi = ccMax === '' ?  Infinity : safeNum(ccMax,  Infinity)
+
+    const a_lo = atkMin === '' ? -Infinity : safeNum(atkMin, -Infinity)
+    const a_hi = atkMax === '' ?  Infinity : safeNum(atkMax,  Infinity)
+
+    const d_lo = defMin === '' ? -Infinity : safeNum(defMin, -Infinity)
+    const d_hi = defMax === '' ?  Infinity : safeNum(defMax,  Infinity)
+
+    const h_lo = hpMin  === '' ? -Infinity : safeNum(hpMin,  -Infinity)
+    const h_hi = hpMax  === '' ?  Infinity : safeNum(hpMax,   Infinity)
+
+    const costNeedle = costStr.trim().toUpperCase()
+
+    return cards.filter((c)=>{
+      if (rarity  !== 'Any Rarity'  && c.Rarity   !== rarity)  return false
+      if (type    !== 'Any Type'    && c.CardType !== type)    return false
+
+      // element filtering including Neutral-as-its-own element
+      if (element !== 'Any Element') {
+        const els = [c.ElementType1, c.ElementType2, c.ElementType3].filter(Boolean)
+        if (element === 'Neutral') {
+          if (els.length !== 0) return false
+        } else {
+          if (!els.includes(element)) return false
+        }
+      }
+
+      const cc = Number(c.ConvertedCost ?? 0)
+      if (!Number.isFinite(cc)) return false
+      if (cc < cc_lo || cc > cc_hi) return false
+
+      if (q){
+        const blob = `${c.CardName} ${c.CardText} ${c.InternalName} ${c.SubType}`.toLowerCase()
+        if (!blob.includes(q.toLowerCase())) return false
+      }
+
+      if (costNeedle){
+        const hay = String(c.Cost ?? '').toUpperCase()
+        if (!hay.includes(costNeedle)) return false
+      }
+
+      // Stat ranges
+      const atk = statVal(c.ATK)
+      const def = statVal(c.DEF)
+      const hp  = statVal(c.HP)
+
+      if (atk < a_lo || atk > a_hi) return false
+      if (def < d_lo || def > d_hi) return false
+      if (hp  < h_lo || hp  > h_hi) return false
+
+      return true
+    })
+  }, [cards, rarity, type, element, ccMin, ccMax, q, costStr, atkMin, atkMax, defMin, defMax, hpMin, hpMax])
+
+  // --- robust image error handler: _a -> _b -> default ---
+  const makeImgErrorHandler = (id) => (e) => {
+    const img = e.currentTarget
+    const tried = img.dataset.tried || '' // '', 'b', 'default'
+    if (tried === '') {
+      img.dataset.tried = 'b'
+      img.src = backImg(id)
+    } else if (tried === 'b') {
+      img.dataset.tried = 'default'
+      img.src = defaultBack
+    }
+  }
+
+  // ---- Add/remove to deck ----
+  const add = (id, delta=1) => {
+    // Auto-create a deck the first time the user adds a card.
+    if (delta > 0 && !showNameInput && Object.keys(deck).length === 0) {
+      setShowNameInput(true)
+      setDeckName((n) => n || 'New Deck') // give a placeholder if empty
+      setTimeout(()=> nameRef.current?.focus(), 0)
+    }
+
+    setDeck(prev=>{
+      const next = { ...prev }
+      const count = (next[id] ?? 0) + delta
+      if (count <= 0) delete next[id]
+      else next[id] = count
+      return next
+    })
+  }
+
+  const deckList = Object.entries(deck).map(([id,qty])=>{
+    const c = cards.find(x=>x.InternalName===id)
+    return { id, qty, c }
+  })
+
+  // ---- Deck actions ----
+  const onNewDeck = () => {
+    if (!confirmDanger('Start a new deck? This will clear the deck name and all cards.')) return
+    setDeck({})
+    setDeckName('')
+    setShowNameInput(true)  // keep the name box up for immediate typing
+    if (fileRef.current) fileRef.current.value = ''
+    setTimeout(()=> nameRef.current?.focus(), 0)
+  }
+
+  const onClearDeck = () => {
+    if (!confirmDanger('Clear this deck? This will remove the deck name and all cards.')) return
+    setDeck({})
+    setDeckName('')
+    setShowNameInput(false) // restore New Deck button
+    if (fileRef.current) fileRef.current.value = ''
+  }
+
+  const exportJSON = () => {
+    const payload = { name: deckName || 'New Deck', list: deck }
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = `${(deckName || 'deck').replace(/[^\w\-]+/g,'_')}.json`; a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const exportCSV = () => {
+    const rows = ['InternalName,Qty'].concat(
+      deckList.map(r => `${r.id},${r.qty}`)
+    ).join('\n')
+    const blob = new Blob([rows], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = `${(deckName || 'deck').replace(/[^\w\-]+/g,'_')}.csv`; a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const handleImport = async (file) => {
+    if (!file) return
+    const text = await file.text()
+    try {
+      if (file.name.toLowerCase().endsWith('.json')) {
+        const data = JSON.parse(text)
+        // Accept either { name, list } or a raw map { id: qty }
+        if (data && typeof data === 'object') {
+          if (data.list && typeof data.list === 'object') {
+            setDeck(data.list)
+          } else {
+            setDeck(data)
+          }
+          setDeckName(typeof data.name === 'string' ? data.name : '')
+          setShowNameInput(true) // show the name box if we imported
+        }
+      } else if (file.name.toLowerCase().endsWith('.csv')) {
+        const lines = text.trim().split(/\r?\n/)
+        const map = {}
+        for (let i=1;i<lines.length;i++){
+          const [id, qty] = lines[i].split(',')
+          if (id && qty) map[id.trim()] = Math.max(0, Number(qty.trim()) || 0)
+        }
+        setDeck(map)
+        // CSV has no canonical name; keep existing or empty
+        setShowNameInput(true)
+      }
+    } catch (e) {
+      alert('Failed to import deck: ' + e.message)
+    } finally {
+      if (fileRef.current) fileRef.current.value = ''
+    }
+  }
+
+  return (
+    <div className="app">
+      {/* LEFT FILTERS */}
+      <aside className="left">
+        <h3>Filters</h3>
+
+        <div className="controls">
+          <input
+            placeholder="Search name or rules..."
+            value={q}
+            onChange={e=>setQ(e.target.value)}
+          />
+        </div>
+
+        <div className="controls">
+          <select value={type} onChange={e=>setType(e.target.value)}>
+            {['Any Type','Unit','Ability','Event','Support','Shield'].map(t=>(<option key={t}>{t}</option>))}
+          </select>
+          <select value={rarity} onChange={e=>setRarity(e.target.value)}>
+            {['Any Rarity','Basic','Common','Uncommon','Rare','Ultra Rare'].map(r=>(<option key={r}>{r}</option>))}
+          </select>
+          <select value={element} onChange={e=>setElement(e.target.value)}>
+            {ELEMENTS.map(el => (<option key={el}>{el}</option>))}
+          </select>
+        </div>
+
+        <div className="controls">
+          <input
+            placeholder="Cost string contains (e.g. 1E4A)"
+            value={costStr}
+            onChange={e=>setCostStr(e.target.value)}
+          />
+        </div>
+
+        <div className="controls">
+          <input style={{width:90}} placeholder="Min CC" value={ccMin} onChange={e=>setCcMin(e.target.value)} />
+          <input style={{width:90}} placeholder="Max CC" value={ccMax} onChange={e=>setCcMax(e.target.value)} />
+        </div>
+
+        {/* ATK bounds */}
+        <div className="controls">
+          <span className="label small" style={{minWidth:34}}>ATK</span>
+          <input style={{width:70}} placeholder="Min" value={atkMin} onChange={e=>setAtkMin(e.target.value)} />
+          <input style={{width:70}} placeholder="Max" value={atkMax} onChange={e=>setAtkMax(e.target.value)} />
+        </div>
+
+        {/* DEF bounds */}
+        <div className="controls">
+          <span className="label small" style={{minWidth:34}}>DEF</span>
+          <input style={{width:70}} placeholder="Min" value={defMin} onChange={e=>setDefMin(e.target.value)} />
+          <input style={{width:70}} placeholder="Max" value={defMax} onChange={e=>setDefMax(e.target.value)} />
+        </div>
+
+        {/* HP bounds */}
+        <div className="controls">
+          <span className="label small" style={{minWidth:34}}>HP</span>
+          <input style={{width:70}} placeholder="Min" value={hpMin} onChange={e=>setHpMin(e.target.value)} />
+          <input style={{width:70}} placeholder="Max" value={hpMax} onChange={e=>setHpMax(e.target.value)} />
+        </div>
+
+        <p className="small">Tip: Leave blank for no bound. Stat fields accept empty values in your data.</p>
+        <p className="small">
+          Images should be at <code>/images/&lt;InternalName&gt;_a.png</code> and <code>_b.png</code>.
+          If <code>_b</code> is missing, the UI falls back to <code>/images/card0000_b.png</code>.
+        </p>
+      </aside>
+
+      {/* GRID */}
+      <main className="grid">
+        {filtered.map(c=>{
+          const id = c.InternalName
+          const qty = deck[id] ?? 0
+		  const inDeck = qty > 0
+          return (
+            <div key={id} className={`card ${inDeck ? 'in-deck' : ''}`}>
+			  {qty > 0 && (
+			    <div
+				  className="deck-badge"
+				  title="Click to remove 1 from deck"
+				  onClick={(e) => {
+				    e.stopPropagation(); // prevent the image click from firing
+				    add(id, -1);
+				  }}
+				  role="button"
+				  tabIndex={0}
+				  onKeyDown={(e) => {
+				    if (e.key === 'Enter' || e.key === ' ') {
+					  e.preventDefault();
+					  add(id, -1);
+				    }
+				  }}
+			    >
+				  {qty}
+			    </div>
+			  )}
+              <img
+				className="cardart clickable"
+				src={primaryImg(id)}
+				alt={c.CardName}
+				onError={makeImgErrorHandler(id)}
+				data-tried=""
+				draggable={false}
+				onClick={() => add(id, +1)}
+				role="button"
+				tabIndex={0}
+				aria-label={`Add ${c.CardName} to deck`}
+			  />
+
+              <h4>{c.CardName}</h4>
+              <div className="row small">
+                <span className="badge">{c.Rarity}</span>
+                <span className="badge">{c.CardType}</span>
+                <span className="badge">{[c.ElementType1,c.ElementType2,c.ElementType3].filter(Boolean).join(' / ')||'Neutral'}</span>
+                <span className="badge">CC {c.ConvertedCost}</span>
+              </div>
+              <div className="row">
+                <button onClick={()=>add(id, +1)}>+ Add</button>
+                <button onClick={()=>add(id, +3)}>+3</button>
+                <button onClick={()=>add(id, -1)} disabled={qty===0}>-1</button>
+                <span className="small">In deck: {qty}</span>
+              </div>
+              <div className="small">{c.CardText}</div>
+            </div>
+          )
+        })}
+      </main>
+
+      {/* RIGHT: DECK PANEL */}
+      <aside className="right">
+        <h3>Deck</h3>
+
+        {/* Name area */}
+        {!showNameInput ? (
+          <div className="row" style={{marginBottom:8}}>
+            <button onClick={onNewDeck}>New Deck</button>
+          </div>
+        ) : (
+          <div className="controls" style={{alignItems:'center', gap:'6px'}}>
+            <input
+              ref={nameRef}
+              placeholder="Deck name..."
+              value={deckName}
+              onChange={(e)=>setDeckName(e.target.value)}
+              style={{flex:1}}
+            />
+            <button
+              onClick={() => {
+                if (!confirmDanger('Cancel and clear the current deck? This will remove the deck name and all cards.')) return
+                setDeck({})
+                setDeckName('')
+                setShowNameInput(false)
+                if (fileRef.current) fileRef.current.value = ''
+              }}
+              title="Cancel and clear deck"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
+
+        <div className="small">Cards: {deckList.reduce((s,x)=>s+x.qty,0)}</div>
+
+        <div style={{marginTop:8}}>
+          {deckList.map(row=>(
+            <div key={row.id} className="deckRow">
+              <div>
+                <div className="small">{row.c?.CardName || row.id}</div>
+                <div className="small">CC {row.c?.ConvertedCost ?? '-'}</div>
+              </div>
+              <div className="qty">
+                <button onClick={()=>add(row.id,-1)}>-</button>
+                <div className="badge">{row.qty}</div>
+                <button onClick={()=>add(row.id,+1)}>+</button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Actions */}
+        <div style={{marginTop:12}} className="row">
+          <button onClick={exportJSON}>Export JSON</button>
+          <button onClick={exportCSV}>Export CSV</button>
+        </div>
+
+        <div style={{marginTop:8}} className="row">
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".json,.csv"
+            onChange={(e)=>handleImport(e.target.files?.[0])}
+          />
+        </div>
+
+        <div style={{marginTop:8}} className="row">
+          <button onClick={onClearDeck}>Clear</button>
+        </div>
+      </aside>
+    </div>
+  )
+}

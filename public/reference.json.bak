@@ -1,0 +1,216 @@
+{
+  "SuperType": ["Token"], 
+  "CardType": ["Partner", "Unit", "Ability", "Event", "Support", "Shield"],
+  "SubType": ["Reaction", "Augment"],
+  "Rarity": ["Basic", "Common", "Uncommon", "Rare", "Ultra Rare"],
+  "Element": ["Neutral", "Earth", "Fire", "Nature", "Storm", "Water", "Toxic", "Void", "Ice", "Synthetic"],
+  "Set": ["CS1","CS2"],
+  "Format": ["Freeform", "Story 1", "Story 2", "Example"],
+  "TurnStructure": [
+    {
+      "section": "Start Phase",
+      "items": [
+        {
+          "name": "Ready Step",
+          "desc": "You ready all friendly cards in play or remove a stun counter from them if they have one."
+        },
+        {
+          "name": "Draw Step",
+          "desc": "You must draw the top card of your deck. The player who goes first skips this step for their first turn."
+        },
+        {
+          "name": "Produce Step",
+          "desc": "You choose one of your partner’s elemental types and produce 1 resource of that elemental type. The player who goes first skips this phase for their first turn."
+        },
+        {
+          "name": "Start Step",
+          "desc": "Abilities and effects that trigger at \"Start of turn\" resolve from left to right. Resolve effects that produce resources first."
+        }
+      ]
+    },
+    {
+      "section": "Main Phase",
+      "items": [
+        {
+          "name": "Play Step",
+          "desc": "You can play up to two shield cards and any number of unit, ability, event and/or support cards in any order. You can also activate any number of partner, support or unit abilities in any order."
+        }
+      ]
+    },
+    {
+      "section": "Battle Phase",
+      "items": [
+        {
+          "name": "Start of Battle Step",
+          "desc": "Card abilities and effects that trigger at \"Start of Battle\" trigger and are resolved."
+        },
+        {
+          "name": "Declare Attacker Step",
+          "desc": "You can select a unit to attack your opponent. If you pass in this step, play proceeds to the Closure Step."
+        },
+        {
+          "name": "Declare Blocker Step",
+          "desc": "Your opponent can select a unit to block your attack."
+        },
+        {
+          "name": "Reaction Step",
+          "desc": "If two units are about to battle, both players may play reactions to affect the outcome.",
+          "subitems": [
+            {
+              "name": "Active Player Sub-Step",
+              "desc": "The active player may play any number of reaction cards or activate reaction effects."
+            },
+            {
+              "name": "Inactive Player Sub-Step",
+              "desc": "The inactive player may play any number of reaction cards or activate reaction effects."
+            }
+          ]
+        },
+        {
+          "name": "Resolution Step",
+          "desc": "The outcome of the declared attack is determined and then play moves back to the Declare Attacker Step."
+        },
+        {
+          "name": "Closure Step",
+          "desc": "All \"until end of battle\" effects end."
+        }
+      ]
+    },
+    {
+      "section": "End Phase",
+      "items": [
+        {
+          "name": "Start of End Step",
+          "desc": "You ready all friendly cards with Overwatch. Then all card abilities and effects that trigger at \"End of turn\" trigger and are resolved."
+        },
+        {
+          "name": "Refund Step",
+          "desc": "Gain resources from each card you played or that entered play this turn with refund pips."
+        },
+        {
+          "name": "Cleanup Step",
+          "desc": "All \"until end of turn\" effects end. Hand limit is checked; if a player is over, they discard down to the limit. Play then passes to your opponent."
+        }
+      ]
+    }
+  ],
+  "Tips": [
+  "Leave stat and cost fields blank to match any value — bounds accept empty values in your data.",
+  "Click the card art in the gallery to add 1 copy to your deck (if allowed by your selected Partner).",
+  "Cards with elements not compatible with your Partner are highlighted in red and cannot be added.",
+  "Use the Allowable Only toggle to filter the gallery to cards your Partner can use.",
+  "Click the count badge in the deck list to add or remove 1 copy of that card.",
+  "Click the yellow count badge on a gallery card (or in the deck list) to remove 1 copy.",
+  "Right-click (PC) or long-press (mobile) a card to flip it to its back image if available.",
+  "Click the magnifying glass on a card to open a larger, easier-to-read version of the art.",
+  "Hover over a card in the deck list to see a floating card preview.",
+  "Gallery cards show key info: Rarity, Type, Elements, Cost, CC, ATK, DEF, HP, Refund, SuperType, SubType.",
+  "Cards in the deck list are grouped by type, with collapsible sections and totals per type.",
+  "Keyboard shortcuts: H or ? = Tips & Features; K = Keywords; I = Effect Icons; E = Element Chart; T = Turn Structure; L = Card Layout; S = Deck Stats; Esc = close any open help modal.",
+  "Searchable help tables: the Keywords, Effect Icons, and Element Chart modals now include a search bar at the top to quickly filter their contents.",
+  "Search reset on open: opening the Keywords, Effect Icons, or Element Chart modals clears the search box so the full list is shown.",
+  "Shortcuts are disabled while typing in inputs, textareas, or selects (to avoid conflicts while editing).",
+  "Tip: '?' may appear as Shift+/ on some keyboards — both open Tips & Features."
+],
+"CardLayout": {
+  "title": "How to Read a Card",
+  "image": "/images/card_layout_example.png",
+  "markers": [
+    { "id": "1", "x": 23,  "y": 5  },
+    { "id": "2", "x": 70, "y": 9  },
+    { "id": "3", "x": 45,  "y": 11 },
+    { "id": "4", "x": 23,  "y": 30 },
+    { "id": "6", "x": 77, "y": 60 },
+    { "id": "5", "x": 23,  "y": 60 },
+    { "id": "7", "x": 66, "y": 63 },
+    { "id": "8", "x": 23,  "y": 72 },
+    { "id": "9", "x": 50, "y": 94 }
+  ],
+  "sections": [
+    {
+      "id": "",
+      "title": "Card Name",
+      "text": "The unique name of the card. No cards in the game have the same name as another card."
+    },
+    {
+      "id": "",
+      "title": "Refund",
+      "text": "The refund pips represents the amount of resources that you get back at the end of the turn you played this card. For each pip you get back one neutral resource. This is different from producing resources."
+    },
+    {
+      "id": "",
+      "title": "Resource Cost",
+      "text": "Resources are used to play cards and activate support and unit abilities. To play a card from your hand you will need to pay the required cost of the card. To play this card you would need to spend 1 Earth type resource and 4 resources of any type for a total of 5 resources spent."
+    },
+    {
+      "id": "",
+      "title": "Artwork",
+      "text": "The card artwork, this has no bearing on gameplay and can change between set to set."
+    },
+    {
+      "id": "",
+      "title": "Card Type",
+      "text": "Every card has a card type, such as Unit, Ability, Event, Support, Shield and Partner."
+    },
+    {
+      "id": "",
+      "title": "Card Elemental Type",
+      "text": "Every card has at least one of the ten elemental types. The ten elemental types are Earth, Fire, Ice, Nature, Neutral, Storm, Synthetic, Toxic, Void, Water."
+    },
+    {
+      "id": "",
+      "title": "Rarity",
+      "text": "Every card has a rarity symbol. The color changes and indicates the rarity, light blue is common, dark blue is uncommon, gold is rare and orange-gold is mythic. The rarity of the card determines how many copies of it can be in your deck. You can up to four copies of any common, up to 3 copies of any uncommon, up to 2 copies of any rare and only one copy of any mythic."
+    },
+    {
+      "id": "",
+      "title": "Text Box",
+      "text": "The text on a card is broken into two zones, rules text and then flavor text.",
+      "subitems": [
+        {
+          "id": "8a",
+          "title": "Rules Text",
+          "text": "Is special text that affects this card, other cards or players during gameplay. Sometimes certain words are bolded and underlined, this represents a keyword. These words are shorthand for multiple lines of rules text. See page # for all the keywords in [Game]."
+        },
+        {
+          "id": "8b",
+          "title": "Flavor Text",
+          "text": "This text does not affect gameplay, but it provides context and relevant story material about the card."
+        }
+      ]
+    },
+    {
+      "id": "",
+      "title": "Card Stats",
+      "text": "These numbers are used in determining combat for a unit or shield card.",
+      "subitems": [
+        {
+          "id": "9a",
+          "title": "Attack (ATK) Value",
+          "text": "The leftmost number on the card. This represents the attack of the card and is used in combat when determining how much damage is dealt to the enemy shield or unit."
+        },
+        {
+          "id": "9b",
+          "title": "Defense (DEF) Value",
+          "text": "The middle number on the card. This represents the defense of the card and is used in combat when determining how much damage is prevented when being dealt damage from an enemy source."
+        },
+        {
+          "id": "9c",
+          "title": "Health (HP) Value",
+          "text": "The rightmost number on the card. This represents the health of the card and is used when determining if a shield or unit is defeated. Once a shield or unit has an amount of damage counters equal to the card’s HP value, the card is automatically defeated."
+        },
+        {
+          "id": "9d",
+          "title": "Strengths",
+          "text": "The leftmost elemental type icons next to the ATK value of a card are the types that this card has advantage over. When this card battles or damages an enemy shield or unit, increase the value by +1."
+        },
+        {
+          "id": "9e",
+          "title": "Weaknesses",
+          "text": "The rightmost elemental type icons next to the HP value of a card are the types that this card has a disadvantage against. When this card battles or is dealt damage by an enemy source, increase their value by +1."
+        }
+      ]
+    }
+  ]
+}
+}
