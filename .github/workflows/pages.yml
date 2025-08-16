@@ -27,22 +27,39 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - name: Install
-        run: npm ci
+      # Robust install: prefer npm ci, but fall back to npm install if there is no lockfile
+      - name: Install deps
+        run: |
+          if [ -f package-lock.json ]; then
+            echo "Using npm ci"
+            npm ci
+          else
+            echo "No package-lock.json found, using npm install"
+            npm install
+          fi
 
       - name: Build
         run: npm run build
 
+      - name: List build output (debug)
+        run: |
+          echo "Root files:" && ls -la
+          echo "Dist files:" && ls -la dist || true
+
+      # SPA fallback for hard-refresh (safe even if you don't use a router)
       - name: Create SPA fallback (404.html)
         run: cp dist/index.html dist/404.html
 
-      # Keep your current folder structure:
-      # If you have /images (and/or /icons) at the repo root, copy them into dist/
+      # Keep your current folder structure for images/icons referenced as /images/... etc.
       - name: Copy static images/icons into dist
         run: |
           mkdir -p dist
           if [ -d images ]; then cp -R images dist/images; fi
           if [ -d icons ]; then cp -R icons dist/icons; fi
+
+      # Configure Pages (recommended by GitHub)
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
