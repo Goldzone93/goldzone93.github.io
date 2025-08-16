@@ -345,6 +345,10 @@ export default function App() {
     // near other modal booleans
     const [layoutOpen, setLayoutOpen] = useState(false);
 
+    // Collapsible Filters
+    const [filtersCollapsed, setFiltersCollapsed] = useState(false);
+    const [helpCollapsed, setHelpCollapsed] = useState(false);
+
     // Modal search queries
     const [keywordsQuery, setKeywordsQuery] = useState('');
     const [iconsQuery, setIconsQuery] = useState('');
@@ -690,9 +694,9 @@ export default function App() {
   const [flipped, setFlipped] = useState({})   // { [frontId]: true|false }
 
   // Zoomed art modal
-  const [zoom, setZoom] = useState({ show: false, src: null, alt: '' })
-  const openZoom = (src, alt = 'Card art') => setZoom({ show: true, src, alt })
-  const closeZoom = () => setZoom({ show: false, src: null, alt: '' })
+    const [zoom, setZoom] = useState({ show: false, src: null, alt: '', id: null })
+    const openZoom = (src, alt = 'Card art', id = null) => setZoom({ show: true, src, alt, id })
+    const closeZoom = () => setZoom({ show: false, src: null, alt: '', id: null })
 
   // Floating deck preview (follows cursor)
   const [deckPreview, setDeckPreview] = useState({ id: null, x: 0, y: 0, show: false })
@@ -1177,16 +1181,17 @@ export default function App() {
         // ❌ Block tokens entirely
         if (isToken(card)) return
 
-        // ✅ Enforce: only one Partner TOTAL in deck
+        // ✅ Enforce: total Partners allowed by selected format (formats.json → rarityCap.Partner)
         if (isPartner(card) && delta > 0) {
-            const alreadyHasOtherPartner = Object.keys(deck).some(k => {
-                if (k === frontId) return false
-                const kc = getById(k)
-                return isPartner(kc) && (deck[k] ?? 0) > 0
-            })
-            if (alreadyHasOtherPartner) {
-                alert('Only one Partner is allowed in a deck.')
-                return
+            const rc = getRarityCapMap();                          // pulls from formats.json for current formatId
+            const partnerCap = Number.isFinite(rc?.Partner) ? rc.Partner : 1;
+            const currentPartnerTotal = Object.entries(deck).reduce((s, [k, q]) => {
+                const kc = getById(k);
+                return s + (isPartner(kc) ? (q || 0) : 0);
+            }, 0);
+            if (currentPartnerTotal >= partnerCap) {
+                alert(`Only ${partnerCap} Partner${partnerCap === 1 ? '' : 's'} allowed in this format.`);
+                return;
             }
         }
 
@@ -1268,7 +1273,8 @@ export default function App() {
         if (removedId) {
             clearPreviewIf(h => h?.id === removedId)
         }
-    }, [normalizeToFront, getById, showNameInput, deck, setShowNameInput, setDeckName, clearPreviewIf])
+    }, [normalizeToFront, getById, showNameInput, deck, setShowNameInput, setDeckName, clearPreviewIf, getRarityCapMap])
+
 
     // Use CardType if present, otherwise fall back to SuperType (e.g., "Token"), otherwise "Other"
     const getTypeTag = (c) =>
@@ -1697,7 +1703,21 @@ export default function App() {
     <div className="app">
       {/* LEFT FILTERS */}
       <aside className="left">
-        <h3 className="section-title">Filters</h3>
+              <h3 className="section-title filters-header">
+                  <span>Filters</span>
+                  <button
+                      type="button"
+                      className="chev-btn"
+                      aria-label={filtersCollapsed ? 'Expand filters' : 'Collapse filters'}
+                      aria-expanded={!filtersCollapsed}
+                      aria-controls="filters-body"
+                      onClick={() => setFiltersCollapsed(v => !v)}
+                  >
+                      <span className="chev" aria-hidden="true">▸</span>
+                  </button>
+              </h3>
+
+       <div id="filters-body" hidden={filtersCollapsed}>
 
               {/* Dataset toggle */}
               <div className="dataset-toggle">
@@ -1727,13 +1747,13 @@ export default function App() {
                   </button>
               </div>
 
-        <div className="controls">
+         <div className="controls">
           <input
             placeholder="Search name or rules..."
             value={q}
             onChange={e=>setQ(e.target.value)}
           />
-        </div>
+         </div>
 
               {/* Rarity stays simple */}
               <div className="controls">
@@ -1878,13 +1898,13 @@ export default function App() {
                   })()}
               </div>
 
-        <div className="controls">
+         <div className="controls">
           <input
             placeholder="Cost string contains (e.g. 1E4A)"
             value={costStr}
             onChange={e=>setCostStr(e.target.value)}
           />
-        </div>
+         </div>
 
         {/* CC bounds */}
               <div className="controls">
@@ -1933,84 +1953,131 @@ export default function App() {
                   </button>
               </div>
 
+       </div>
+
               {/* Help Section title */}
-              <h3 id="help-title" className="section-title">Help Section</h3>
-
-              <div className="controls" style={{ marginTop: 8 }}>
+              <h3 id="help-title" className="section-title filters-header">
+                  <span>Help Section</span>
                   <button
                       type="button"
-                      className="tips-btn"
-                      onClick={() => setTipsOpen(true)}
-                      aria-haspopup="dialog"
-                      aria-expanded={tipsOpen}
+                      className="chev-btn"
+                      aria-label={helpCollapsed ? 'Expand help' : 'Collapse help'}
+                      aria-expanded={!helpCollapsed}
+                      aria-controls="help-body"
+                      onClick={() => setHelpCollapsed(v => !v)}
                   >
-                      Tips &amp; Features
+                      <span className="chev" aria-hidden="true">▸</span>
                   </button>
-              </div>
-
-              <div className="controls" style={{ marginTop: 6 }}>
-                  <button
-                      type="button"
-                      className="tips-btn"
-                      onClick={() => { setKeywordsQuery(''); setKeywordsOpen(true); }}
-                      aria-haspopup="dialog"
-                      aria-expanded={keywordsOpen}
-                      title="Shortcut: K"
+              </h3>
+              <div id="help-body" hidden={helpCollapsed}>
+                  {/* 2-per-row layout for Help buttons */}
+                  <div
+                      style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                          columnGap: 8,
+                          rowGap: 0,
+                          marginTop: 8
+                      }}
                   >
-                      Keywords
-                  </button>
-              </div>
+                      <div className="controls" style={{ marginTop: 0 }}>
+                          <button
+                              type="button"
+                              className="tips-btn"
+                              style={{ width: '100%', whiteSpace: 'nowrap' }}
+                              onClick={() => setTipsOpen(true)}
+                              aria-haspopup="dialog"
+                              aria-expanded={tipsOpen}
+                          >
+                              Tips &amp; Features
+                          </button>
+                      </div>
 
-              <div className="controls" style={{ marginTop: 6 }}>
-                  <button
-                      type="button"
-                      className="tips-btn"
-                      onClick={() => { setIconsQuery(''); setIconsOpen(true); }}
-                      aria-haspopup="dialog"
-                      aria-expanded={iconsOpen}
-                      title="Shortcut: I"
-                  >
-                      Effect Icons
-                  </button>
-              </div>
+                      <div className="controls" style={{ marginTop: 0 }}>
+                          <button
+                              type="button"
+                              className="tips-btn"
+                              style={{ width: '100%', whiteSpace: 'nowrap' }}
+                              onClick={() => { setKeywordsQuery(''); setKeywordsOpen(true); }}
+                              aria-haspopup="dialog"
+                              aria-expanded={keywordsOpen}
+                              title="Shortcut: K"
+                          >
+                              Keywords
+                          </button>
+                      </div>
 
-              <div className="controls" style={{ marginTop: 6 }}>
-                  <button
-                      type="button"
-                      className="tips-btn"
-                      onClick={() => { setElementsQuery(''); setElementsOpen(true); }}
-                      aria-haspopup="dialog"
-                      aria-expanded={elementsOpen}
-                      title="Shortcut: E"
-                  >
-                      Element Chart
-                  </button>
-              </div>
+                      <div className="controls" style={{ marginTop: 0 }}>
+                          <button
+                              type="button"
+                              className="tips-btn"
+                              style={{ width: '100%', whiteSpace: 'nowrap' }}
+                              onClick={() => { setIconsQuery(''); setIconsOpen(true); }}
+                              aria-haspopup="dialog"
+                              aria-expanded={iconsOpen}
+                              title="Shortcut: I"
+                          >
+                              Effect Icons
+                          </button>
+                      </div>
 
-              <div className="controls" style={{ marginTop: 6 }}>
-                  <button
-                      type="button"
-                      className="tips-btn"
-                      onClick={() => setTurnOpen(true)}
-                      aria-haspopup="dialog"
-                      aria-expanded={turnOpen}
-                  >
-                      Turn Structure
-                  </button>
-              </div>
+                      <div className="controls" style={{ marginTop: 0 }}>
+                          <button
+                              type="button"
+                              className="tips-btn"
+                              style={{ width: '100%', whiteSpace: 'nowrap' }}
+                              onClick={() => { setElementsQuery(''); setElementsOpen(true); }}
+                              aria-haspopup="dialog"
+                              aria-expanded={elementsOpen}
+                              title="Shortcut: E"
+                          >
+                              Element Chart
+                          </button>
+                      </div>
 
-              <div className="controls" style={{ marginTop: 6 }}>
-                  <button
-                      type="button"
-                      className="tips-btn"
-                      onClick={() => setLayoutOpen(true)}
-                      aria-haspopup="dialog"
-                      aria-expanded={layoutOpen}
-                  >
-                      Card Layout
-                  </button>
-              </div>
+                      <div className="controls" style={{ marginTop: 0 }}>
+                          <button
+                              type="button"
+                              className="tips-btn"
+                              style={{ width: '100%', whiteSpace: 'nowrap' }}
+                              onClick={() => setTurnOpen(true)}
+                              aria-haspopup="dialog"
+                              aria-expanded={turnOpen}
+                          >
+                              Turn Structure
+                          </button>
+                      </div>
 
+                      <div className="controls" style={{ marginTop: 0 }}>
+                          <button
+                              type="button"
+                              className="tips-btn"
+                              style={{ width: '100%', whiteSpace: 'nowrap' }}
+                              onClick={() => setLayoutOpen(true)}
+                              aria-haspopup="dialog"
+                              aria-expanded={layoutOpen}
+                          >
+                              Card Layout
+                          </button>
+                      </div>
+                  </div>
+
+                  {/* keep your stacked shortcuts block below, unchanged */}
+                  <div className="controls" style={{ marginTop: 10 }}>
+                      <div className="small">
+                          <strong>Keyboard shortcuts:</strong>
+                          <div>? or Shift+/ or H — Tips &amp; Features</div>
+                          <div>K — Keywords</div>
+                          <div>I — Effect Icons</div>
+                          <div>E — Element Chart</div>
+                          <div>T — Turn Structure</div>
+                          <div>L — Card Layout</div>
+                          <div>S — Deck Stats</div>
+                          <div>V — Toggle Stack View</div>
+                          <div>Esc — Close modals</div>
+                      </div>
+                  </div>
+              </div>
       </aside>
 
       {/* GRID */}
@@ -2023,10 +2090,13 @@ export default function App() {
                   const inDeck = qty > 0
                   const isTokenCard = isToken(c) // ⬅ NEW
                   const isPartnerCard = isPartner(c)
-                  const otherPartnerInDeck =
-                      isPartnerCard &&
-                      Object.keys(deck).some(k => k !== id && isPartner(getById(k)) && (deck[k] ?? 0) > 0)
-                  const offElement = isOffElementForPartner(c);
+                  const offElement = isOffElementForPartner(c); // NEW
+                  const rc = getRarityCapMap();
+                  const partnerCap = Number.isFinite(rc?.Partner) ? rc.Partner : 1;
+                  const partnerTotal = isPartnerCard
+                      ? Object.entries(deck).reduce((s, [k, q]) => s + (isPartner(getById(k)) ? (q || 0) : 0), 0)
+                      : 0;
+                  const partnerCapReached = isPartnerCard && partnerTotal >= partnerCap;
 
                   // back side lookup within the current dataset pool (not filtered)
                   const backId = backIdFor(id)
@@ -2072,7 +2142,7 @@ export default function App() {
                               title="Zoom card art"
                               onClick={(e) => {
                                   e.stopPropagation()
-                                  openZoom(currentImgSrc, displayCard.CardName)
+                                  openZoom(currentImgSrc, displayCard.CardName, id)
                               }}
                               onPointerDown={(e) => e.stopPropagation()} // don’t trigger flip long-press
                           >
@@ -2144,6 +2214,12 @@ export default function App() {
                           />
 
                           <h4>{displayCard.CardName}</h4>
+                          {/* Card rules text under the name */}
+                          {displayCard.CardText && (
+                              <div className="small" style={{ marginTop: 4, marginBottom: 8 }}>
+                                  {displayCard.CardText}
+                              </div>
+                          )}
                           <div className="row small">
                               <span className="badge">{displayCard.Rarity}</span>
                               <span className="badge">{displayCard.CardType}</span>
@@ -2178,12 +2254,25 @@ export default function App() {
                           </div>
                           {!isTokenCard && (
                               <div className="row">
+
+                                  {/* New Flip toggle (styled like a badge and highlights when back is showing) */}
+                                  <button
+                                      type="button"
+                                      className="flip-btn"
+                                      aria-pressed={!!showingBack}   // toggles highlight style
+                                      title="Flip this card"
+                                      onClick={(e) => { e.stopPropagation(); flipCard(id); }}
+                                      onMouseDown={(e) => e.preventDefault()}
+                                  >
+                                      Flip
+                                  </button>
+                                  
                                   <button
                                       onClick={() => add(id, +1)}
-                                      disabled={otherPartnerInDeck || atCap || isDeckFull || offElement}
+                                      disabled={partnerCapReached || atCap || isDeckFull || offElement}
                                       title={
-                                          otherPartnerInDeck
-                                              ? 'Only one Partner is allowed in a deck'
+                                          partnerCapReached
+                                              ? `Only ${partnerCap} Partner${partnerCap === 1 ? '' : 's'} allowed`
                                               : offElement
                                                   ? 'Off-element for current Partner'
                                                   : isDeckFull
@@ -2193,13 +2282,13 @@ export default function App() {
                                   >
                                       + Add
                                   </button>
+                                                                    
                                   <button onClick={() => add(id, -1)} disabled={qty === 0}>-1</button>
                                   <span className="small">
                                       In deck: {qty}{Number.isFinite(cap) ? ` / ${cap}` : ''}
                                   </span>
                               </div>
                           )}
-                          <div className="small">{displayCard.CardText}</div>
                       </div>
                   )
               })}
@@ -2453,13 +2542,69 @@ export default function App() {
                   <div className="zoom-backdrop" onClick={closeZoom} aria-modal="true" role="dialog">
                       <div className="zoom-modal" onClick={(e) => e.stopPropagation()}>
                           <button className="zoom-close" aria-label="Close" onClick={closeZoom}>✕</button>
-                          <img
-                              className="zoom-img"
-                              src={zoom.src || defaultBack}
-                              alt={zoom.alt || 'Card art'}
-                              onError={(e) => { e.currentTarget.src = defaultBack }}
-                              draggable={false}
-                          />
+                          <div className="zoom-stack">
+                              <img
+                                  className="zoom-img"
+                                  src={zoom.src || defaultBack}
+                                  alt={zoom.alt || 'Card art'}
+                                  onError={(e) => { e.currentTarget.src = defaultBack }}
+                                  draggable={false}
+                                  onContextMenu={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      const frontId = zoom?.id ? normalizeToFront(zoom.id) : null;
+                                      if (!frontId) return;
+
+                                      const backId = backIdFor(frontId);
+                                      const backCard = allById.get(backId) || null;
+
+                                      // compute next side (mirror gallery behavior) then flip global state
+                                      const nextShowingBack = !flipped[frontId];
+                                      flipCard(frontId);
+
+                                      const nextSrc = nextShowingBack
+                                          ? (backCard ? primaryImg(backId) : defaultBack)
+                                          : primaryImg(frontId);
+                                      const nextAlt = nextShowingBack
+                                          ? (backCard?.CardName || zoom.alt || 'Card art')
+                                          : (allById.get(frontId)?.CardName || zoom.alt || 'Card art');
+
+                                      setZoom(z => ({ ...z, src: nextSrc, alt: nextAlt }));
+                                  }}
+                              />
+
+                              <div className="row" style={{ justifyContent: 'center', marginTop: 8 }}>
+                                  <button
+                                      type="button"
+                                      className="flip-btn"
+                                      aria-pressed={!!(zoom?.id && flipped[normalizeToFront(zoom.id)])}
+                                      title="Flip this card"
+                                      onClick={(e) => {
+                                          e.stopPropagation();
+                                          const frontId = zoom?.id ? normalizeToFront(zoom.id) : null;
+                                          if (!frontId) return;
+
+                                          const backId = backIdFor(frontId);
+                                          const backCard = allById.get(backId) || null;
+
+                                          const nextShowingBack = !flipped[frontId];
+                                          flipCard(frontId);
+
+                                          const nextSrc = nextShowingBack
+                                              ? (backCard ? primaryImg(backId) : defaultBack)
+                                              : primaryImg(frontId);
+                                          const nextAlt = nextShowingBack
+                                              ? (backCard?.CardName || zoom.alt || 'Card art')
+                                              : (allById.get(frontId)?.CardName || zoom.alt || 'Card art');
+
+                                          setZoom(z => ({ ...z, src: nextSrc, alt: nextAlt }));
+                                      }}
+                                      onMouseDown={(e) => e.preventDefault()}
+                                  >
+                                      Flip
+                                  </button>
+                              </div>
+                          </div>
                       </div>
                   </div>,
                   document.body
@@ -3246,7 +3391,7 @@ export default function App() {
                                                                               <button
                                                                                   className="zoom-btn"
                                                                                   title="Zoom card art"
-                                                                                  onClick={(e) => { e.stopPropagation(); openZoom(currentImgSrc, displayName); }}
+                                                                                  onClick={(e) => { e.stopPropagation(); openZoom(currentImgSrc, displayName, id); }}
                                                                                   onPointerDown={(e) => e.stopPropagation()}
                                                                               >
                                                                                   <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">

@@ -1244,3 +1244,71 @@ img.cardart {
     line-height: 1.25;
 }
 
+/* Collapsible Filters header: keep existing look, just align text + arrow */
+.filters-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Make the arrow button look unobtrusive */
+.chev-btn {
+    all: unset;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+    color: var(--muted);
+    padding: 2px 4px;
+}
+
+    /* Rotate the arrow when expanded */
+    .chev-btn .chev {
+        display: inline-block;
+        transition: transform 120ms ease;
+        transform: rotate(0deg); /* collapsed (▸) */
+    }
+
+    .chev-btn[aria-expanded="true"] .chev {
+        transform: rotate(90deg); /* expanded (▾) */
+    }
+
+/* Preserve spacing that used to rely on adjacent-sibling of .section-title */
+.left .section-title + #filters-body {
+    margin-top: 6px;
+}
+
+/* Flip button: same base button look; highlight when active */
+.flip-btn[aria-pressed="true"] {
+    background: #eab308; /* match your warn/yellow tone */
+    color: #0b1220; /* readable on yellow */
+    border-color: #eab308;
+}
+
+/* Constrain the popup and stack image + button vertically */
+.zoom-modal {
+    display: flex;
+    flex-direction: column;
+    max-height: 92vh; /* keep the whole popup inside the viewport */
+}
+
+    .zoom-modal .zoom-stack {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1 1 auto; /* take remaining space in modal */
+        overflow: auto; /* scroll inside if image is very tall */
+    }
+
+    /* Image now respects the stack’s available space */
+    .zoom-modal .zoom-img {
+        max-width: 90vw;
+        height: auto;
+        max-height: 100%;
+    }
+    /* Wider Flip button in the zoom popup */
+    .zoom-modal .flip-btn {
+        min-width: 120px; /* make it wider */
+        justify-content: center;
+    }
+
