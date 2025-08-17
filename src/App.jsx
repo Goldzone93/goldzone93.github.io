@@ -16,6 +16,62 @@ const GALLERY_HEADER_STYLE = {
 
 // ====== Simple Canvas Charts (no external libs) ======
 
+// --- Gallery card size slider — tweak here ---
+const GALLERY_BASE_TILE_MIN = 230; // px (current CSS min card width)
+const GALLERY_SCALE_MIN = 0.70; // 30% smaller
+const GALLERY_SCALE_MAX = 1.75; // 75% larger
+const GALLERY_SLIDER_RANGE = { min: 0, max: 100, step: 1 }; // 0→MIN, 50→1.0x, 100→MAX
+const GALLERY_SLIDER_WIDTH = 160; // px — width of the slider + label block
+
+
+// How far the thumb needs to extend past each end so its CENTER hits the track ends.
+// Tweak if your thumb size/skin changes (10–16px is typical).
+const GALLERY_SLIDER_OVERFLOW = 14; // px
+
+// Space between the slider and the Reset button
+const GALLERY_SLIDER_GAP_AFTER = 8; // px
+
+// Default slider position and reset label — tweak here
+const GALLERY_SLIDER_DEFAULT = 50;       // middle = current size
+const GALLERY_RESET_LABEL = 'Reset';  // button text
+
+// --- Gallery slider icon — tweak here ---
+const GALLERY_SLIDER_ID = 'gallery-size';
+const GALLERY_ICON_SIZE = 30; // px (was 14)
+const GALLERY_ICON_WRAP_STYLE = {
+    marginRight: GALLERY_SLIDER_OVERFLOW + 2, // auto-accounts for knob width + tweak
+    opacity: 0.85,
+    display: 'flex',
+    alignItems: 'center',
+    color: 'var(--muted)'
+};
+
+// Inline SVG so no extra files needed. Tweak size via GALLERY_ICON_SIZE.
+const GALLERY_SLIDER_ICON = (
+    <svg
+        viewBox="0 0 24 24"
+        width={GALLERY_ICON_SIZE}
+        height={GALLERY_ICON_SIZE}
+        aria-hidden="true"
+        focusable="false"
+        style={{ display: 'block' }}
+    >
+        {/* outer card */}
+        <rect
+            x="5" y="3" width="14" height="18" rx="2" ry="2"
+            fill="none" stroke="currentColor" strokeWidth="2"
+        />
+        {/* small filled area to suggest art/window */}
+        <rect
+            x="8" y="6" width="8" height="5" rx="1" ry="1"
+            fill="currentColor" opacity="0.75"
+        />
+        {/* a corner pip */}
+        <circle cx="9.5" cy="16" r="1.2" fill="currentColor" opacity="0.9" />
+    </svg>
+);
+
+
 const DEFAULT_SERIES_COLORS = [
     '#3b82f6', '#22c55e', '#ef4444', '#f59e0b', '#8b5cf6',
     '#14b8a6', '#eab308', '#f43f5e', '#10b981', '#64748b'
@@ -361,6 +417,14 @@ export default function App() {
     // Collapsible Filters
     const [filtersCollapsed, setFiltersCollapsed] = useState(false);
     const [helpCollapsed, setHelpCollapsed] = useState(false);
+
+    // Gallery size slider (%). Uses default constant.
+    const [gallerySizePct, setGallerySizePct] = useState(GALLERY_SLIDER_DEFAULT);
+
+    // Derived: convert slider position into a scale between GALLERY_SCALE_MIN..MAX
+    const galleryScale = useMemo(() => (
+        GALLERY_SCALE_MIN + (GALLERY_SCALE_MAX - GALLERY_SCALE_MIN) * (gallerySizePct / 100)
+    ), [gallerySizePct]);
 
     // Modal search queries
     const [keywordsQuery, setKeywordsQuery] = useState('');
@@ -2094,12 +2158,68 @@ export default function App() {
       </aside>
 
       {/* GRID */}
-      <main className="grid">
+      <main
+              className="grid"
+              style={{
+                  gridTemplateColumns: `repeat(auto-fill, minmax(${Math.round(GALLERY_BASE_TILE_MIN * galleryScale)}px, 1fr))`
+              }}
+      >
               {/* Gallery Header (sticky) */}
               <div className="gallery-header" style={GALLERY_HEADER_STYLE}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                      <div style={{ fontWeight: 600 }}>{GALLERY_HEADER_TITLE}</div>
-                      <div style={{ fontSize: 12, opacity: 0.8 }}>{gallery.length} results</div>
+                      {/* Left: title + size slider */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                          <div style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{GALLERY_HEADER_TITLE}</div>
+                          <div style={GALLERY_ICON_WRAP_STYLE} title="Card Size" aria-label="Card size">
+                              {GALLERY_SLIDER_ICON}
+                          </div>
+                          <div
+                              style={{
+                                  width: GALLERY_SLIDER_WIDTH,
+                                  marginRight: GALLERY_SLIDER_GAP_AFTER + GALLERY_SLIDER_OVERFLOW,
+                                  position: 'relative'
+                              }}
+                          >
+                              <input
+                                  className="gallery-size-slider"
+                                  id={GALLERY_SLIDER_ID}
+                                  type="range"
+                                  min={GALLERY_SLIDER_RANGE.min}
+                                  max={GALLERY_SLIDER_RANGE.max}
+                                  step={GALLERY_SLIDER_RANGE.step}
+                                  value={gallerySizePct}
+                                  onChange={(e) => setGallerySizePct(Number(e.target.value))}
+                                  aria-label="Set gallery card size"
+                                  style={{
+                                      // widen by a full thumb width and shift by half so the knob center hits both ends
+                                      width: `calc(100% + ${GALLERY_SLIDER_OVERFLOW * 2}px)`,
+                                      transform: `translateX(-${GALLERY_SLIDER_OVERFLOW}px)`
+                                  }}
+                              />
+                          </div>
+                          <button
+                              type="button"
+                              onClick={() => setGallerySizePct(GALLERY_SLIDER_DEFAULT)}
+                              aria-label="Reset gallery card size to default"
+                              style={{
+                                  fontSize: 12,
+                                  padding: '4px 10px',
+                                  borderRadius: 6,
+                                  border: '1px solid rgba(255,255,255,0.12)',
+                                  background: 'transparent',
+                                  color: 'inherit',
+                                  cursor: 'pointer',
+                                  whiteSpace: 'nowrap'
+                              }}
+                          >
+                              {GALLERY_RESET_LABEL}
+                          </button>
+                      </div>
+
+                      {/* Right: result count */}
+                      <div style={{ fontSize: 12, opacity: 0.8, whiteSpace: 'nowrap' }}>
+                          {gallery.length} results
+                      </div>
                   </div>
               </div>
 
