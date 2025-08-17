@@ -1,6 +1,19 @@
 ﻿import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
+// --- Gallery header (sticky) — tweak here ---
+const GALLERY_HEADER_TITLE = 'Card Gallery';
+const GALLERY_HEADER_STYLE = {
+    position: 'sticky',
+    top: 0,
+    zIndex: 3,
+    gridColumn: '1 / -1', // span all gallery columns
+    background: 'var(--bg)',
+    padding: '8px 8px',
+    borderBottom: '1px solid rgba(255,255,255,0.08)'
+};
+// To adjust: edit title, padding, border, or background above.
+
 // ====== Simple Canvas Charts (no external libs) ======
 
 const DEFAULT_SERIES_COLORS = [
@@ -2082,6 +2095,14 @@ export default function App() {
 
       {/* GRID */}
       <main className="grid">
+              {/* Gallery Header (sticky) */}
+              <div className="gallery-header" style={GALLERY_HEADER_STYLE}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                      <div style={{ fontWeight: 600 }}>{GALLERY_HEADER_TITLE}</div>
+                      <div style={{ fontSize: 12, opacity: 0.8 }}>{gallery.length} results</div>
+                  </div>
+              </div>
+
               {gallery.map(c => {
                   const id = c.InternalName
                   const qty = deck[id] ?? 0
