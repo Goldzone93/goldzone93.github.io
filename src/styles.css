@@ -260,13 +260,6 @@ img.cardart {
         transform: scale(0.94);
     }
 
-/* larger numbers auto-fit */
-.deck-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
 /* (optional) subtle pop when count appears/changes */
 @media (prefers-reduced-motion: no-preference) {
     .deck-badge {
@@ -619,7 +612,6 @@ img.cardart {
 
     .modal-header h2 {
         margin: 0;
-        font-size: 16px;
     }
 
 /* Close button */
@@ -1041,14 +1033,6 @@ img.cardart {
 .card-bubble.b8 { top: 73.5%; }   /* Text Box            – left  */
 .card-bubble.b9 { bottom: 1.6%; } /* Card Stats          – right */
 
-.left, .right {
-    background: var(--panel);
-    padding: 12px;
-    border-radius: 12px;
-    overflow: auto; /* scroll inside the panel */
-    -webkit-overflow-scrolling: touch;
-}
-
 /* Uniform section headers (Filters, Help Section, etc.) */
 .section-title {
     margin: 8px 0 10px;
@@ -1141,11 +1125,6 @@ img.cardart {
     }
 }
 
-/* Put a stable gutter on the gallery scroller so its bar doesn't overlap the right panel's bar */
-.grid {
-    scrollbar-gutter: stable both-edges;
-}
-
 /* Safari fallback (no scrollbar-gutter support yet): reserve a bit of space */
 @supports not (scrollbar-gutter: stable) {
     .grid {
@@ -1156,12 +1135,11 @@ img.cardart {
 /* Full-viewport, responsive Stack View window */
 .modal-window.modal-stack {
     width: 100vw;
-    max-width: 100vw;
+    max-width: 100vw; /* no cap; stays dynamic as window resizes */
     height: 100vh; /* fill the browser height */
     max-height: 100vh; /* stay dynamic on resize */
     display: flex; /* let header sit on top, body fills rest */
     flex-direction: column;
-} max-width: 100vw; /* no cap; stays dynamic as window resizes */
 }
 
 .modal-window.modal-stack .modal-body {

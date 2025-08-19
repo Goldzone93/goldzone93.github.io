@@ -6,6 +6,13 @@
   "Element": ["Neutral", "Earth", "Fire", "Nature", "Storm", "Water", "Toxic", "Void", "Ice", "Synthetic"],
   "Set": ["CS1","CS2"],
   "Format": ["Freeform", "Story 1", "Story 2", "Example"],
+  "RarityColors": {
+  "Basic":      "#f06292",
+  "Common":     "#4dd0e1",
+  "Uncommon":   "#5677fc",
+  "Rare":       "#ffb300",
+  "Ultra Rare": "#f57c00"
+	},
   "TurnStructure": [
     {
       "section": "Start Phase",

@@ -19,7 +19,7 @@ const GALLERY_HEADER_STYLE = {
 // --- Gallery card size slider — tweak here ---
 const GALLERY_BASE_TILE_MIN = 230; // px (current CSS min card width)
 const GALLERY_SCALE_MIN = 0.70; // 30% smaller
-const GALLERY_SCALE_MAX = 1.75; // 75% larger
+const GALLERY_SCALE_MAX = 2.00; // 100% larger
 const GALLERY_SLIDER_RANGE = { min: 0, max: 100, step: 1 }; // 0→MIN, 50→1.0x, 100→MAX
 const GALLERY_SLIDER_WIDTH = 160; // px — width of the slider + label block
 
@@ -32,7 +32,7 @@ const GALLERY_SLIDER_OVERFLOW = 14; // px
 const GALLERY_SLIDER_GAP_AFTER = 8; // px
 
 // Default slider position and reset label — tweak here
-const GALLERY_SLIDER_DEFAULT = 50;       // middle = current size
+const GALLERY_SLIDER_DEFAULT = 25;       // middle = current size
 const GALLERY_RESET_LABEL = 'Reset';  // button text
 
 // --- Gallery slider icon — tweak here ---
@@ -146,14 +146,14 @@ function PieChart({ data = [], donut = false, width = 360, height = 240 }) {
         let start = -Math.PI / 2;
         const colors = DEFAULT_SERIES_COLORS;
 
-        // 1) draw slices
+        // 1) draw slices (prefer per-item color if provided)
         data.forEach((d, i) => {
             const val = Number(d.value) || 0;
             if (val <= 0) return;
             const ang = (val / total) * Math.PI * 2;
             ctx.beginPath();
             ctx.moveTo(cx, cy);
-            ctx.fillStyle = colors[i % colors.length];
+            ctx.fillStyle = (d && d.color) ? d.color : colors[i % colors.length];
             ctx.arc(cx, cy, radius, start, start + ang, false);
             ctx.closePath();
             ctx.fill();
@@ -905,7 +905,11 @@ export default function App() {
                         Format: Array.isArray(jTypes?.Format) ? jTypes.Format : [],
                         TurnStructure: Array.isArray(jTypes?.TurnStructure) ? jTypes.TurnStructure : [],
                         Tips: Array.isArray(jTypes?.Tips) ? jTypes.Tips : [],  // NEW
-                        CardLayout: jTypes?.CardLayout || null
+                        CardLayout: jTypes?.CardLayout || null,
+                        // NEW: rarity color map (supports either key)
+                        RarityColors: (jTypes && typeof jTypes.RarityColors === 'object') ? jTypes.RarityColors
+                            : (jTypes && typeof jTypes.RarityHexColor === 'object') ? jTypes.RarityHexColor
+                                : {}
                     });
                 }
 
@@ -1002,7 +1006,6 @@ export default function App() {
                 if (elementsOpen) setElementsOpen(false);
                 if (turnOpen) setTurnOpen(false);
                 if (layoutOpen) setLayoutOpen(false);
-                if (statsOpen) setStatsOpen(false);     // NEW: close Deck Stats
                 if (statsOpen) setStatsOpen(false);     // close Deck Stats
                 if (stackOpen) setStackOpen(false);     // close Stack View
                 return;
@@ -1071,6 +1074,30 @@ export default function App() {
     }, [cards, partners, tokens])
 
     const getById = useCallback((id) => allById.get(id) ?? null, [allById])
+
+    // Deck Metrics quick count (search ANY field on the card, similar to gallery search)
+    const [statsSearchText, setStatsSearchText] = useState('');
+    const statsSearchCount = useMemo(() => {
+        const q = statsSearchText.trim().toLowerCase();
+        if (!q) return 0;
+
+        // Robustly stringify any value (strings, numbers, arrays, nested objects)
+        const valueToString = (v) => {
+            if (v == null) return '';
+            if (Array.isArray(v)) return v.map(valueToString).join(' ');
+            if (typeof v === 'object') return Object.values(v).map(valueToString).join(' ');
+            return String(v);
+        };
+
+        let total = 0;
+        for (const [id, qty] of Object.entries(deck)) {
+            const c = getById(id);
+            if (!c) continue;
+            const blob = Object.values(c).map(valueToString).join(' ').toLowerCase();
+            if (blob.includes(q)) total += (Number(qty) || 0);
+        }
+        return total;
+    }, [statsSearchText, deck, getById]);
 
     // Filtered
     const filtered = useMemo(() => {
@@ -1282,10 +1309,15 @@ export default function App() {
         if (delta > 0) {
             const deckSizeLimit = getDeckSizeLimit()
             const currentTotal = getDeckCount()
-            if (Number.isFinite(deckSizeLimit) && currentTotal >= deckSizeLimit) {
+            if (Number.isFinite(deckSizeLimit) && currentTotal >= deckSizeLimit && !isPartner(card)) {
                 alert(`Deck is full (${deckSizeLimit} cards). Remove a card before adding more.`)
                 return
             }
+        }
+
+        // Auto-enable “Allowable Only” when adding a Partner (only if currently off)
+        if (delta > 0 && isPartner(card) && !allowOnly) {
+            setAllowOnly(true);
         }
 
         // Auto-create a deck the first time the user adds a card.
@@ -1329,7 +1361,7 @@ export default function App() {
             }, 0)
 
             const increment = delta > 0 ? 1 : (delta < 0 ? -1 : 0)
-            if (delta > 0 && Number.isFinite(deckSizeLimit) && currentTotal >= deckSizeLimit) {
+            if (delta > 0 && Number.isFinite(deckSizeLimit) && currentTotal >= deckSizeLimit && !isPartner(card)) {
                 return prev
             }
 
@@ -1338,8 +1370,8 @@ export default function App() {
                 delete next[frontId]
                 removedId = frontId
             } else {
-                // If adding 1 would overflow deck size, block
-                if (delta > 0 && Number.isFinite(deckSizeLimit) && (currentTotal + 1) > deckSizeLimit) {
+                // If adding 1 would overflow deck size, block (but allow Partner)
+                if (delta > 0 && Number.isFinite(deckSizeLimit) && (currentTotal + 1) > deckSizeLimit && !isPartner(card)) {
                     return prev
                 }
                 next[frontId] = newCount
@@ -1350,7 +1382,7 @@ export default function App() {
         if (removedId) {
             clearPreviewIf(h => h?.id === removedId)
         }
-    }, [normalizeToFront, getById, showNameInput, deck, setShowNameInput, setDeckName, clearPreviewIf, getRarityCapMap])
+    }, [normalizeToFront, getById, showNameInput, deck, setShowNameInput, setDeckName, clearPreviewIf, getRarityCapMap, allowOnly])
 
 
     // Use CardType if present, otherwise fall back to SuperType (e.g., "Token"), otherwise "Other"
@@ -1719,10 +1751,38 @@ export default function App() {
             .map(([label, value]) => ({ label, value }))
             .sort((a, b) => b.value - a.value);
 
+        // --- NEW: color the Element legend entries using elements.json HexColor ---
+        const colorByName = new Map();
+        for (const e of elements) {
+            const dn = String(e?.DisplayName ?? '').trim().toLowerCase();
+            const iname = String(e?.InternalName ?? '').trim().toLowerCase();
+            const hex = String(e?.HexColor ?? '').trim();
+            if (!hex) continue;
+            if (dn) colorByName.set(dn, hex);
+            if (iname) colorByName.set(iname, hex);
+        }
+        const elementsArr = toArr(elementMap);
+        const elementsWithColor = elementsArr.map(it => {
+            const key = String(it.label ?? '').trim().toLowerCase();
+            const hex = colorByName.get(key);
+            return hex ? { ...it, color: hex } : it;
+        });
+
+        // --- NEW: color the Rarity legend/slices using reference.json ---
+        const rarityColorsRaw = (refData && (refData.RarityColors || refData.RarityHexColor)) || {};
+        const rarityColorByName = new Map(
+            Object.entries(rarityColorsRaw).map(([k, v]) => [String(k).trim().toLowerCase(), String(v).trim()])
+        );
+        const raritiesWithColor = toArr(rarityMap).map(it => {
+            const key = String(it.label ?? '').trim().toLowerCase();
+            const hex = rarityColorByName.get(key);
+            return hex ? { ...it, color: hex } : it;
+        });
+
         return {
             types: toArr(typeMap),
-            rarities: toArr(rarityMap),
-            elements: toArr(elementMap),
+            rarities: raritiesWithColor,
+            elements: elementsWithColor,   // ← use colored items
             curve,
             totals: {
                 totalCC,
@@ -1734,7 +1794,7 @@ export default function App() {
             },
             costPips, // NEW
         };
-    }, [deck, getById, elements]);
+    }, [deck, getById, elements, refData]);
 
     // (now the original three lines)
     const deckSizeLimit = getDeckSizeLimit();
@@ -2314,7 +2374,7 @@ export default function App() {
                                       alert('That card has an element not allowed by your selected Partner.')
                                       return
                                   }
-                                  if (isDeckFull) {
+                                  if (isDeckFull && !isPartnerCard) {
                                       alert(`Deck is full (${deckSizeLimit} cards). Remove a card before adding more.`)
                                       return
                                   }
@@ -2410,13 +2470,13 @@ export default function App() {
                                   
                                   <button
                                       onClick={() => add(id, +1)}
-                                      disabled={partnerCapReached || atCap || isDeckFull || offElement}
+                                      disabled={partnerCapReached || atCap || (isDeckFull && !isPartnerCard) || offElement}
                                       title={
                                           partnerCapReached
                                               ? `Only ${partnerCap} Partner${partnerCap === 1 ? '' : 's'} allowed`
                                               : offElement
                                                   ? 'Off-element for current Partner'
-                                                  : isDeckFull
+                                                  : (isDeckFull && !isPartnerCard)
                                                       ? `Deck is full (${deckSizeLimit} cards)`
                                                       : (atCap ? 'Limit reached' : 'Add 1')
                                       }
@@ -2594,7 +2654,7 @@ export default function App() {
                                                       style={{ flex: 1, marginRight: 8, padding: '6px 8px', cursor: 'pointer' }}   // ⬅ widen hit area
                                                       onClick={(e) => {
                                                           e.stopPropagation();
-                                                          if (!(atCap || isDeckFull || offElement)) {
+                                                          if (!(atCap || (isDeckFull && !isPartner(row.c)) || offElement)) {
                                                               add(row.id, +1);
                                                           }
                                                       }}
@@ -2654,9 +2714,9 @@ export default function App() {
                                                               positionPreviewNearCursor(e);
                                                               add(row.id, +1);
                                                           }}
-                                                          disabled={atCap || isDeckFull || offElement}
+                                                          disabled={atCap || (isDeckFull && !isPartner(row.c)) || offElement}
                                                           title={
-                                                              isDeckFull
+                                                              (isDeckFull && !isPartner(row.c))
                                                                   ? `Deck is full (${deckSizeLimit} cards)`
                                                                   : offElement
                                                                       ? 'Off-element for current Partner'
@@ -3224,6 +3284,22 @@ export default function App() {
                                               <tr>
                                                   <th style={{ textAlign: 'left' }}>Name</th>
                                                   <th style={{ textAlign: 'right' }}>Value</th>
+                                              </tr>
+                                              {/* Search Value row (under Name header) */}
+                                              <tr>
+                                                  <th>
+                                                      <input
+                                                          type="text"
+                                                          value={statsSearchText}
+                                                          onChange={(e) => setStatsSearchText(e.target.value)}
+                                                          placeholder="Search Text Value (e.g. Keywords) "   // faded like other placeholders
+                                                          aria-label="Deck Metrics search value"
+                                                          style={{ width: '100%' }}
+                                                      />
+                                                  </th>
+                                                  <th style={{ textAlign: 'right' }}>
+                                                      {statsSearchText.trim() ? statsSearchCount : 0}
+                                                  </th>
                                               </tr>
                                           </thead>
                                           <tbody>
