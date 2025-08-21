@@ -388,6 +388,8 @@ export default function App() {
     const [keywordsOpen, setKeywordsOpen] = useState(false);
     const [keywords, setKeywords] = useState([]);
 
+    const [formatsOpen, setFormatsOpen] = useState(false)
+
     // Effect Icons modal + data
     const [iconsOpen, setIconsOpen] = useState(false);
     const [icons, setIcons] = useState([]);
@@ -431,6 +433,10 @@ export default function App() {
     const [iconsQuery, setIconsQuery] = useState('');
     const [elementsQuery, setElementsQuery] = useState('');
 
+    // Card Types modal
+    const [cardTypesOpen, setCardTypesOpen] = useState(false)
+    const [boardLayoutOpen, setBoardLayoutOpen] = useState(false)
+    const [cardTypesQuery, setCardTypesQuery] = useState('')
 
     // ===== Helpers for Element list rendering (must be inside component) =====
 
@@ -491,10 +497,28 @@ export default function App() {
         Element: [],
         Set: [],
         Format: [],          // NEW
+        Formats: [],
         TurnStructure: [],
         Tips: [],
-        CardLayout: null    // NEW
+        CardTypeInfo: [],    // NEW: backing data for the Card Types modal
+        CardLayout: null,     // NEW
+        BoardLayout: null
     })
+
+    // Build an ordered list for the popup using the Format IDs as the source of truth.
+    // Falls back gracefully if a description is missing.
+    const formatsList = useMemo(() => {
+        const ids = (refData?.Format ?? []);
+        const byId = new Map((refData?.Formats ?? []).map(f => [f.id, f]));
+        return ids.map(id => {
+            const entry = byId.get(id);
+            return {
+                id,
+                name: entry?.name ?? id,
+                desc: entry?.desc ?? ''
+            };
+        });
+    }, [refData]);
 
     // NEW: formats.json controls rarity caps & deck size behavior per Format ID
     const [formatsConfig, setFormatsConfig] = useState({});
@@ -530,12 +554,34 @@ export default function App() {
         return allowedSets.includes(card.Set);
     }, [getAllowedSetsForFormat]);
 
+    // NEW: ban list helpers
+    const getBanListForFormat = useCallback(() => {
+        const fmt = formatsConfig?.[formatId] || null;
+        const raw = fmt?.BanList;
+
+        if (!raw) return [];
+        if (Array.isArray(raw)) return raw.map(String);
+
+        // Handle simple string cases: "", "id", or "id1,id2"
+        const s = String(raw).trim();
+        if (!s) return [];
+        if (s.includes(',')) return s.split(',').map(x => x.trim()).filter(Boolean);
+        return [s];
+    }, [formatsConfig, formatId]);
+
+    const isCardBannedInFormat = useCallback((card) => {
+        if (!card) return false;
+        const banned = getBanListForFormat();
+        return banned.includes(card.InternalName);
+    }, [getBanListForFormat]);
+
     
   // existing filters
   const [q, setQ] = useState('')
   const [rarity, setRarity] = useState('Any Rarity')
   const [ccMin, setCcMin] = useState('')
   const [ccMax, setCcMax] = useState('')
+  const [ccExact, setCcExact] = useState('')
   const [setFilter, setSetFilter] = useState('Any Set')
 
   // SuperType rules
@@ -711,8 +757,10 @@ export default function App() {
         setTyp1(''); setTop1(''); setTyp2(''); setTop2('');
         setSub1(''); setTbop1('');
         setQ(''); setRarity('Any Rarity'); setSetFilter('Any Set');
-        setCcMin(''); setCcMax(''); setCostStr('');
-        setAtkMin(''); setAtkMax(''); setDefMin(''); setDefMax(''); setHpMin(''); setHpMax('');
+        setCcMin(''); setCcMax(''); setCcExact(''); setCostStr('');
+        setAtkMin(''); setAtkExact(''); setAtkMax('');
+        setDefMin(''); setDefExact(''); setDefMax('');
+        setHpMin(''); setHpExact(''); setHpMax('');
     }, []);
 
     // Click handler for the Clear Filters button
@@ -735,6 +783,9 @@ export default function App() {
   const [defMax, setDefMax] = useState('')
   const [hpMin,  setHpMin]  = useState('')
   const [hpMax,  setHpMax]  = useState('')
+  const [atkExact, setAtkExact] = useState('')
+  const [defExact, setDefExact] = useState('')
+  const [hpExact, setHpExact] = useState('')
 
   // Deck state
   const [deck, setDeck] = useState({})
@@ -903,10 +954,12 @@ export default function App() {
                         Element: Array.isArray(jTypes?.Element) ? jTypes.Element : [],
                         Set: Array.isArray(jTypes?.Set) ? jTypes.Set : [],
                         Format: Array.isArray(jTypes?.Format) ? jTypes.Format : [],
+                        Formats: Array.isArray(jTypes?.Formats) ? jTypes.Formats : [],
                         TurnStructure: Array.isArray(jTypes?.TurnStructure) ? jTypes.TurnStructure : [],
-                        Tips: Array.isArray(jTypes?.Tips) ? jTypes.Tips : [],  // NEW
+                        Tips: Array.isArray(jTypes?.Tips) ? jTypes.Tips : [],
+                        CardTypeInfo: Array.isArray(jTypes?.CardTypeInfo) ? jTypes.CardTypeInfo : [],
                         CardLayout: jTypes?.CardLayout || null,
-                        // NEW: rarity color map (supports either key)
+                        BoardLayout: jTypes?.BoardLayout || null,
                         RarityColors: (jTypes && typeof jTypes.RarityColors === 'object') ? jTypes.RarityColors
                             : (jTypes && typeof jTypes.RarityHexColor === 'object') ? jTypes.RarityHexColor
                                 : {}
@@ -1025,6 +1078,15 @@ export default function App() {
                 case 'k':
                     open(setKeywordsOpen, setKeywordsQuery);
                     break;
+                case 'c':
+                    open(setCardTypesOpen, setCardTypesQuery);
+                    break;
+                case 'f':
+                    open(setFormatsOpen);
+                    break;
+                case 'b':
+                    open(setBoardLayoutOpen);
+                    break;
                 case 'i':
                     open(setIconsOpen, setIconsQuery);
                     break;
@@ -1054,7 +1116,7 @@ export default function App() {
         window.addEventListener('keydown', onKey);
         return () => window.removeEventListener('keydown', onKey);
     }, [
-        tipsOpen, keywordsOpen, iconsOpen, elementsOpen, turnOpen, layoutOpen, statsOpen, stackOpen // added statsOpen
+        tipsOpen, keywordsOpen, cardTypesOpen, boardLayoutOpen, formatsOpen, iconsOpen, elementsOpen, turnOpen, layoutOpen, statsOpen, stackOpen // added statsOpen
     ]);
 
     const rawData = useMemo(() => {
@@ -1112,6 +1174,11 @@ export default function App() {
 
         const h_lo = hpMin === '' ? -Infinity : safeNum(hpMin, -Infinity)
         const h_hi = hpMax === '' ? Infinity : safeNum(hpMax, Infinity)
+
+        const cc_eq = ccExact === '' ? null : safeNum(ccExact, null)
+        const a_eq = atkExact === '' ? null : safeNum(atkExact, null)
+        const d_eq = defExact === '' ? null : safeNum(defExact, null)
+        const h_eq = hpExact === '' ? null : safeNum(hpExact, null)
 
         const costNeedle = costStr.trim().toUpperCase()
 
@@ -1207,6 +1274,7 @@ export default function App() {
 
                 const cc = Number(c.ConvertedCost ?? 0)
                 if (!Number.isFinite(cc) || cc < cc_lo || cc > cc_hi) return false
+                if (cc_eq != null && cc !== cc_eq) return false
 
                 if (q) {
                     const blob = `${c.CardName} ${c.CardText} ${c.InternalName} ${c.SubType}`.toLowerCase()
@@ -1224,6 +1292,9 @@ export default function App() {
                 if (atk < a_lo || atk > a_hi) return false
                 if (def < d_lo || def > d_hi) return false
                 if (hp < h_lo || hp > h_hi) return false
+                if (a_eq != null && atk !== a_eq) return false
+                if (d_eq != null && def !== d_eq) return false
+                if (h_eq != null && hp !== h_eq) return false
 
                 return true
             })
@@ -1245,8 +1316,10 @@ export default function App() {
         // subtype (1)
         sub1, tbop1,
         // the rest
-        ccMin, ccMax, q, costStr,
-        atkMin, atkMax, defMin, defMax, hpMin, hpMax,
+        ccMin, ccMax, ccExact, q, costStr,
+        atkMin, atkExact, atkMax,
+        defMin, defExact, defMax,
+        hpMin, hpExact, hpMax,
         setFilter,
         getAllowedSetsForFormat
     ])
@@ -1284,6 +1357,12 @@ export default function App() {
 
         // ❌ Block tokens entirely
         if (isToken(card)) return
+
+        // 🚫 Banlist: block any banned card for the current format
+        if (delta > 0 && isCardBannedInFormat(card)) {
+            alert('That card is banned in the selected format.');
+            return;
+        }
 
         // ✅ Enforce: total Partners allowed by selected format (formats.json → rarityCap.Partner)
         if (isPartner(card) && delta > 0) {
@@ -2044,32 +2123,38 @@ export default function App() {
          </div>
 
         {/* CC bounds */}
-              <div className="controls">
-                  <span className="label small filter-label">Cost</span>
-                  <input className="filter-input" placeholder="Min CC" value={ccMin} onChange={e => setCcMin(e.target.value)} />
-                  <input className="filter-input" placeholder="Max CC" value={ccMax} onChange={e => setCcMax(e.target.value)} />
-              </div>
+                  <div className="controls bounds-row">
+                      <span className="label small filter-label">Cost</span>
+                      <input className="filter-input" placeholder="Min" value={ccMin} onChange={e => setCcMin(e.target.value)} />
+                      <input className="filter-input" placeholder="Exact" value={ccExact} onChange={e => setCcExact(e.target.value)} />
+                      <input className="filter-input" placeholder="Max" value={ccMax} onChange={e => setCcMax(e.target.value)} />
+                  </div>
 
         {/* ATK bounds */}
-              <div className="controls">
-                  <span className="label small filter-label">ATK</span>
-                  <input className="filter-input" placeholder="Min" value={atkMin} onChange={e => setAtkMin(e.target.value)} />
-                  <input className="filter-input" placeholder="Max" value={atkMax} onChange={e => setAtkMax(e.target.value)} />
-              </div>
+                  <div className="controls bounds-row">
+                      <span className="label small filter-label">ATK</span>
+                      <input className="filter-input" placeholder="Min" value={atkMin} onChange={e => setAtkMin(e.target.value)} />
+                      <input className="filter-input" placeholder="Exact" value={atkExact} onChange={e => setAtkExact(e.target.value)} />
+                      <input className="filter-input" placeholder="Max" value={atkMax} onChange={e => setAtkMax(e.target.value)} />
+                  </div>
 
         {/* DEF bounds */}
-              <div className="controls">
-                  <span className="label small filter-label">DEF</span>
-                  <input className="filter-input" placeholder="Min" value={defMin} onChange={e => setDefMin(e.target.value)} />
-                  <input className="filter-input" placeholder="Max" value={defMax} onChange={e => setDefMax(e.target.value)} />
-              </div>
+                  <div className="controls bounds-row">
+                      <span className="label small filter-label">DEF</span>
+                      <input className="filter-input" placeholder="Min" value={defMin} onChange={e => setDefMin(e.target.value)} />
+                      <input className="filter-input" placeholder="Exact" value={defExact} onChange={e => setDefExact(e.target.value)} />
+                      <input className="filter-input" placeholder="Max" value={defMax} onChange={e => setDefMax(e.target.value)} />
+                  </div>
 
         {/* HP bounds */}
-              <div className="controls">
-                  <span className="label small filter-label">HP</span>
-                  <input className="filter-input" placeholder="Min" value={hpMin} onChange={e => setHpMin(e.target.value)} />
-                  <input className="filter-input" placeholder="Max" value={hpMax} onChange={e => setHpMax(e.target.value)} />
-              </div>
+                  <div className="controls bounds-row">
+                      <span className="label small filter-label">HP</span>
+                      <input className="filter-input" placeholder="Min" value={hpMin} onChange={e => setHpMin(e.target.value)} />
+                      <input className="filter-input" placeholder="Exact" value={hpExact} onChange={e => setHpExact(e.target.value)} />
+                      <input className="filter-input" placeholder="Max" value={hpMax} onChange={e => setHpMax(e.target.value)} />
+                  </div>
+
+              <h3 className="section-title">Filter Actions</h3>
 
               {/* Allowable Only + Clear Filters */}
               <div className="controls" style={{ margin: '8px 0', justifyContent: 'space-between' }}>
@@ -2125,6 +2210,7 @@ export default function App() {
                               onClick={() => setTipsOpen(true)}
                               aria-haspopup="dialog"
                               aria-expanded={tipsOpen}
+                              title="Shortcut: H"
                           >
                               Tips &amp; Features
                           </button>
@@ -2180,11 +2266,12 @@ export default function App() {
                               onClick={() => setTurnOpen(true)}
                               aria-haspopup="dialog"
                               aria-expanded={turnOpen}
+                              title="Shortcut: T"
                           >
                               Turn Structure
                           </button>
                       </div>
-
+                                            
                       <div className="controls" style={{ marginTop: 0 }}>
                           <button
                               type="button"
@@ -2193,10 +2280,52 @@ export default function App() {
                               onClick={() => setLayoutOpen(true)}
                               aria-haspopup="dialog"
                               aria-expanded={layoutOpen}
+                              title="Shortcut: L"
                           >
                               Card Layout
                           </button>
                       </div>
+                  </div>
+
+                  {/* Formats + Card Types side-by-side */}
+                  <div className="controls" style={{ marginTop: 0 }}>
+                      <button
+                          type="button"
+                          className="tips-btn"
+                          style={{ flex: 1, whiteSpace: 'nowrap' }}
+                          onClick={() => setFormatsOpen(true)}
+                          aria-haspopup="dialog"
+                          aria-expanded={formatsOpen}
+                          title="Shortcut: F"
+                      >
+                          Formats
+                      </button>
+
+                      <button
+                          type="button"
+                          className="tips-btn"
+                          style={{ flex: 1, whiteSpace: 'nowrap' }}
+                          onClick={() => { setCardTypesQuery(''); setCardTypesOpen(true); }}
+                          aria-haspopup="dialog"
+                          aria-expanded={cardTypesOpen}
+                          title="Shortcut: C"
+                      >
+                          Card Types
+                      </button>
+                  </div>
+
+                  <div className="controls" style={{ marginTop: 8 }}>
+                      <button
+                          type="button"
+                          className="tips-btn"
+                          style={{ width: '100%', whiteSpace: 'nowrap' }}
+                          onClick={() => setBoardLayoutOpen(true)}
+                          aria-haspopup="dialog"
+                          aria-expanded={boardLayoutOpen}
+                          title="Shortcut: B"
+                      >
+                          Board Layout
+                      </button>
                   </div>
 
                   {/* keep your stacked shortcuts block below, unchanged */}
@@ -2204,12 +2333,10 @@ export default function App() {
                       <div className="small">
                           <strong>Keyboard shortcuts:</strong>
                           <div>? or Shift+/ or H — Tips &amp; Features</div>
-                          <div>K — Keywords</div>
-                          <div>I — Effect Icons</div>
-                          <div>E — Element Chart</div>
-                          <div>T — Turn Structure</div>
-                          <div>L — Card Layout</div>
-                          <div>S — Deck Stats</div>
+                          <div>K — Keywords, I — Effect Icons</div>
+                          <div>E — Element Chart, T — Turn Structure</div>
+                          <div>F — Formats, L — Card Layout</div>
+                          <div>B — Board Layout, S — Deck Stats</div>
                           <div>V — Toggle Stack View</div>
                           <div>Esc — Close modals</div>
                       </div>
@@ -2292,6 +2419,7 @@ export default function App() {
                   const isTokenCard = isToken(c) // ⬅ NEW
                   const isPartnerCard = isPartner(c)
                   const offElement = isOffElementForPartner(c); // NEW
+                  const banned = isCardBannedInFormat(c);
                   const rc = getRarityCapMap();
                   const partnerCap = Number.isFinite(rc?.Partner) ? rc.Partner : 1;
                   const partnerTotal = isPartnerCard
@@ -2321,7 +2449,7 @@ export default function App() {
 
 
                   return (
-                      <div key={id} className={`card ${inDeck ? 'in-deck' : ''}`}>
+                      <div key={id} className={`card ${inDeck ? 'in-deck' : ''} ${banned ? 'is-banned' : ''}`}>
                           {qty > 0 && !isTokenCard && (
                               <div
                                   className="deck-badge"
@@ -2353,6 +2481,9 @@ export default function App() {
                           </button>
 
                           {/* Existing card image */}
+                          {banned && (
+                              <div className="ban-overlay" aria-hidden="true">BANNED</div>
+                          )}
                           <img
                               className="cardart clickable"
                               alt={displayCard.CardName}
@@ -2595,7 +2726,8 @@ export default function App() {
                                           // Format legality + off-element (front-only) highlight
                                           const notAllowed = !isCardAllowedInFormat(row.c);
                                           const offElement = isOffElementForPartner(row.c);
-                                          const warnNotAllowed = notAllowed || offElement;
+                                          const banned = isCardBannedInFormat(row.c);
+                                          const warnNotAllowed = notAllowed || offElement || banned;
 
                                           return (
                                               <div
@@ -2605,7 +2737,8 @@ export default function App() {
                                                       warnNotAllowed
                                                           ? [
                                                               notAllowed ? 'Not legal in the selected format' : null,
-                                                              offElement ? 'Off-element for current Partner' : null
+                                                              offElement ? 'Off-element for current Partner' : null,
+                                                              banned ? 'Banned in the selected format' : null
                                                           ].filter(Boolean).join(' • ')
                                                           : undefined
                                                   }
@@ -2669,9 +2802,10 @@ export default function App() {
                                                           CC {row.c?.ConvertedCost ?? '-'}
                                                           {row.c?.Cost ? ` | Cost: ${row.c.Cost}` : ''}
                                                           {row.c?.Hold ? ` | Hold: ${row.c.Hold}` : ''}
-                                                          {(notAllowed || offElement) && (
+                                                          {(notAllowed || offElement || banned) && (
                                                               <span className="badge warn" style={{ marginLeft: 6 }}>
                                                                   {[
+                                                                      banned ? 'Banned' : null,
                                                                       notAllowed ? 'Not in format' : null,
                                                                       offElement ? 'Off element' : null
                                                                   ].filter(Boolean).join(' • ')}
@@ -3166,6 +3300,140 @@ export default function App() {
                   document.body
               )}
 
+              {formatsOpen && createPortal(
+                  <div
+                      className="modal-backdrop"
+                      onClick={() => setFormatsOpen(false)}
+                      role="none"
+                  >
+                      <div
+                          className="modal-window modal-formats"
+                          role="dialog"
+                          aria-modal="true"
+                          aria-labelledby="formats-title"
+                          onClick={(e) => e.stopPropagation()}
+                      >
+                          <div className="modal-header">
+                              <h2 id="formats-title">Formats</h2>
+                              <button
+                                  className="modal-close"
+                                  aria-label="Close Formats"
+                                  onClick={() => setFormatsOpen(false)}
+                              >
+                                  ×
+                              </button>
+                          </div>
+
+                          <div className="modal-body">
+                              {Array.isArray(formatsList) && formatsList.length ? (
+                                  <table className="stats-table" style={{ width: '100%' }}>
+                                      <thead>
+                                          <tr>
+                                              <th style={{ textAlign: 'left' }}>Format</th>
+                                              <th style={{ textAlign: 'left' }}>Details</th>
+                                          </tr>
+                                      </thead>
+                                      <tbody>
+                                          {formatsList.map(f => {
+                                              const cfg = (formatsConfig && formatsConfig[f.id]) || {};
+
+                                              // Deck size text
+                                              const deckSizeText = (() => {
+                                                  const dsz = cfg.deckSize;
+                                                  if (!dsz || dsz.type === 'none') return 'No deck size limit';
+                                                  if (dsz.type === 'fixed') {
+                                                      const n = Number(dsz.values);
+                                                      return Number.isFinite(n) ? `${n} cards` : 'No deck size limit';
+                                                  }
+                                                  if (dsz.type === 'byElements') {
+                                                      const vals = dsz.values || {};
+                                                      const pairs = Object.entries(vals)
+                                                          .sort((a, b) => Number(a[0]) - Number(b[0]))
+                                                          .map(([k, v]) => `${k} → ${v}`);
+                                                      return `By Partner elements: ${pairs.join(', ')}`;
+                                                  }
+                                                  return 'No deck size limit';
+                                              })();
+
+                                              // Allowed sets text
+                                              const allowedSetsText = (() => {
+                                                  const allowed = cfg.allowedSets;
+                                                  if (!allowed || allowed === '*' || (Array.isArray(allowed) && allowed.length === 0)) {
+                                                      return 'All sets';
+                                                  }
+                                                  return Array.isArray(allowed) ? allowed.join(', ') : 'All sets';
+                                              })();
+
+                                              // Rarity cap text
+                                              const rarityCapText = (() => {
+                                                  const rc = cfg.rarityCap || {};
+                                                  const order = ['Common', 'Uncommon', 'Rare', 'Ultra Rare', 'Partner'];
+                                                  const parts = order
+                                                      .filter(r => rc[r] != null)
+                                                      .map(r => `${r}: ${rc[r]}`);
+                                                  // include any unexpected keys too
+                                                  Object.keys(rc).forEach(k => {
+                                                      if (!order.includes(k)) parts.push(`${k}: ${rc[k]}`);
+                                                  });
+                                                  return parts.join(' · ');
+                                              })();
+
+                                              // Ban list text (maps InternalName → card/partner name if available)
+                                              const banListText = (() => {
+                                                  const raw = cfg?.BanList;
+                                                  if (!raw) return '';
+
+                                                  // Normalize to an array of InternalName strings
+                                                  let ids = [];
+                                                  if (Array.isArray(raw)) {
+                                                      ids = raw.map(String);
+                                                  } else {
+                                                      const s = String(raw).trim();
+                                                      if (s) ids = s.includes(',') ? s.split(',').map(x => x.trim()).filter(Boolean) : [s];
+                                                  }
+                                                  if (!ids.length) return '';
+
+                                                  // Try to show CardName; fall back to the InternalName
+                                                  return ids
+                                                      .map(id => (getById ? (getById(id)?.CardName || id) : id))
+                                                      .join(', ');
+                                              })();
+
+                                              return (
+                                                  <tr key={f.id}>
+                                                      <td style={{ verticalAlign: 'top', whiteSpace: 'nowrap' }}>{f.name}</td>
+                                                      <td style={{ verticalAlign: 'top' }}>
+                                                          {/* Reference description (from reference.json) */}
+                                                          <div style={{ marginBottom: 6 }}>
+                                                              {f.desc || <span style={{ opacity: 0.7 }}>(no description yet)</span>}
+                                                          </div>
+
+                                                          {/* Formats.json details */}
+                                                          <div className="small" style={{ opacity: 0.95, lineHeight: 1.5 }}>
+                                                              <div><strong>Deck Size:</strong> {deckSizeText}</div>
+                                                              <div><strong>Allowed Sets:</strong> {allowedSetsText}</div>
+                                                              {rarityCapText && (
+                                                                  <div><strong>Rarity Caps:</strong> {rarityCapText}</div>
+                                                              )}
+                                                              {banListText && (
+                                                                  <div><strong>Ban List:</strong> {banListText}</div>
+                                                              )}
+                                                          </div>
+                                                      </td>
+                                                  </tr>
+                                              );
+                                          })}
+                                      </tbody>
+                                  </table>
+                              ) : (
+                                  <div className="small">No formats found in reference.json.</div>
+                              )}
+                          </div>
+                      </div>
+                  </div>,
+                  document.body
+              )}
+
               {layoutOpen && createPortal(
                   <div className="modal-backdrop" onClick={() => setLayoutOpen(false)} role="none">
                       <div
@@ -3638,6 +3906,137 @@ export default function App() {
                   </div>,
                   document.body
               )}
+
+              {cardTypesOpen && createPortal(
+                  <div
+                      className="modal-backdrop"
+                      onClick={() => setCardTypesOpen(false)}
+                      role="none"
+                  >
+                      <div
+                          className="modal-window modal-keywords"  // reuse sizing from keywords modal
+                          role="dialog"
+                          aria-modal="true"
+                          aria-labelledby="cardtypes-title"
+                          onClick={(e) => e.stopPropagation()}
+                      >
+                          <div className="modal-header">
+                              <h2 id="cardtypes-title">Card Types</h2>
+                              <button
+                                  className="modal-close"
+                                  aria-label="Close Card Types"
+                                  onClick={() => setCardTypesOpen(false)}
+                              >
+                                  ×
+                              </button>
+                          </div>
+
+                          <div className="modal-body">
+                              {(!Array.isArray(refData?.CardTypeInfo) || refData.CardTypeInfo.length === 0) ? (
+                                  <div className="small">No card types found. Add a top-level "CardTypeInfo" array to reference.json.</div>
+                              ) : (
+                                  <>
+                                      <div className="modal-search">
+                                          <input
+                                              type="text"
+                                              placeholder="Filter card types (name, description)"
+                                              value={cardTypesQuery}
+                                              onChange={e => setCardTypesQuery(e.target.value)}
+                                          />
+                                      </div>
+
+                                      <div className="keywords-table-wrap cardtypes-table">{/* reuse table styles */}
+                                          <table className="keywords-table">
+                                                  <thead>
+                                                      <tr>
+                                                          <th style={{ width: 120, minWidth: 120 }}>Type</th>
+                                                          <th>Description</th>
+                                                      </tr>
+                                                  </thead>
+                                              <tbody>
+                                                  {refData.CardTypeInfo
+                                                      .filter(ct => {
+                                                          const q = cardTypesQuery.trim().toLowerCase()
+                                                          if (!q) return true
+                                                          const blob = [
+                                                              ct.CardType,
+                                                              ct.CardTypeDescription
+                                                          ].map(x => String(x || '').toLowerCase()).join(' ')
+                                                          return blob.includes(q)
+                                                      })
+                                                      .map(ct => (
+                                                          <tr key={String(ct.CardType || Math.random())}>
+                                                              <td style={{ width: 120, minWidth: 120 }}>{ct.CardType ?? ''}</td>
+                                                              <td>{ct.CardTypeDescription ?? ''}</td>
+                                                          </tr>
+                                                      ))}
+                                              </tbody>
+                                          </table>
+                                      </div>
+                                  </>
+                              )}
+                          </div>
+                      </div>
+                  </div>,
+                  document.body
+              )}
+
+              {boardLayoutOpen && createPortal(
+                  <div
+                      className="modal-backdrop"
+                      onClick={() => setBoardLayoutOpen(false)}
+                      role="none"
+                  >
+                      <div
+                          className="modal-window modal-boardlayout"
+                          role="dialog"
+                          aria-modal="true"
+                          aria-labelledby="boardlayout-title"
+                          onClick={(e) => e.stopPropagation()}
+                      >
+                          <div className="modal-header">
+                              <h2 id="boardlayout-title">{refData?.BoardLayout?.title || 'Board Layout'}</h2>
+                              <button
+                                  className="modal-close"
+                                  aria-label="Close Board Layout"
+                                  onClick={() => setBoardLayoutOpen(false)}
+                              >
+                                  ×
+                              </button>
+                          </div>
+
+                          <div className="modal-body">
+                              <figure className="board-layout-figure">
+                                  <img
+                                      src={refData?.BoardLayout?.image || '/images/game_board_layout.png'}
+                                      alt="Board layout"
+                                      className="board-layout-img"
+                                  />
+                                  {(refData?.BoardLayout?.markers || []).map(m => (
+                                      <span
+                                          key={m.id}
+                                          className="bl-bubble"
+                                          style={{ left: `${m.x}%`, top: `${m.y}%` }}
+                                      >
+                                          {m.id}
+                                      </span>
+                                  ))}
+                              </figure>
+
+                              <ol className="board-layout-list">
+                                  {(refData?.BoardLayout?.zones || []).map(z => (
+                                      <li key={z.ZoneNum}>
+                                          <span className="cl-title">{z.ZoneName}</span>
+                                          <div>{z.ZoneDescription}</div>
+                                      </li>
+                                  ))}
+                              </ol>
+                          </div>
+                      </div>
+                  </div>,
+                  document.body
+              )}
+
 
               <h3 className="section-title">Deck Actions</h3>
               <div className="row">

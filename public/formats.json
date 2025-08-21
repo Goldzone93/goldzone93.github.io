@@ -2,21 +2,25 @@
   "Freeform": {
     "rarityCap": { "Common": 4, "Uncommon": 3, "Rare": 2, "Ultra Rare": 1, "Partner": 1 },
 	"deckSize": { "type": "fixed", "values": 75 }, 
-	"allowedSets": "*"
+	"allowedSets": "*",
+	"BanList": ""
   },
   "Story 1": {
     "rarityCap": { "Common": 4, "Uncommon": 3, "Rare": 2, "Ultra Rare": 1, "Partner": 1 },
     "deckSize": { "type": "byElements", "values": { "1": 25, "2": 50, "3": 75 } },
-    "allowedSets": ["CS1"]
+    "allowedSets": ["CS1"],
+	"BanList": ""
   },
   "Story 2": {
     "rarityCap": { "Common": 4, "Uncommon": 3, "Rare": 2, "Ultra Rare": 1, "Partner": 1 },
     "deckSize": { "type": "byElements", "values": { "1": 25, "2": 50, "3": 75 } },
-    "allowedSets": "*"
+    "allowedSets": "*",
+	"BanList": ""
   },  
   "Example": {
     "rarityCap": { "Common": 3, "Uncommon": 2, "Rare": 3, "Ultra Rare": 4, "Partner": 2 },
     "deckSize": { "type": "fixed", "values": 60 },
-    "allowedSets": ["CS2"]
+    "allowedSets": ["CS2"],
+	"BanList": ["card0361_a", "partner0026_a"]
   }
 }

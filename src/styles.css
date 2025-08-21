@@ -228,6 +228,39 @@ img.cardart {
     position: relative;
 }
 
+    /* Gallery: banned state */
+    .card.is-banned .badge {
+        background: #ff4d4f !important; /* override per-badge colors */
+        border-color: #ff4d4f !important;
+        color: #111 !important;
+        font-weight: 700;
+        box-shadow: none !important; /* remove any subtle outline */
+    }
+
+    /* “BANNED” ribbon over the card art */
+    .card .ban-overlay {
+        display: none; /* only show when banned */
+        position: absolute;
+        left: 8px;
+        right: 8px;
+        top: 30%;
+        transform: rotate(-12deg);
+        text-align: center;
+        padding: 6px 0;
+        background: rgba(255, 77, 79, 0.85); /* similar to deck highlight */
+        color: #111;
+        font-weight: 900;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        border-radius: 6px;
+        pointer-events: none; /* don’t block clicks */
+        z-index: 2;
+    }
+
+    .card.is-banned .ban-overlay {
+        display: block;
+    }
+
 /* top-left deck count badge */
 .deck-badge {
     position: absolute;
@@ -251,6 +284,34 @@ img.cardart {
     align-items: center;
     justify-content: center;
 }
+
+/* Gallery: deck count badge turns red on banned cards */
+.card.is-banned .deck-badge {
+    background: #ff4d4f !important;
+    color: #111 !important;
+}
+
+/* Gallery: softly red-tint the whole card background when banned */
+.card.is-banned {
+    --card: rgba(255, 77, 79, 0.12); /* soft version of the banned red */
+    background: var(--card) !important;
+}
+
+    /* Gallery: action buttons turn red on banned cards */
+    .card.is-banned .row > button,
+    .card.is-banned .row > button:hover,
+    .card.is-banned .row > button:focus {
+        background: #ff4d4f !important;
+        border-color: #ff4d4f !important;
+        color: #111 !important;
+        box-shadow: none !important;
+    }
+
+        /* Keep disabled buttons readable but clearly inactive */
+        .card.is-banned .row > button[disabled] {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
 
     .deck-badge:hover {
         filter: brightness(1.05);
@@ -557,6 +618,25 @@ img.cardart {
 .controls .filter-input {
     width: 80px;
 }
+
+/* Bounds rows: label + up to 3 inputs fit the panel with gaps */
+.controls.bounds-row {
+    display: grid;
+    grid-template-columns: max-content minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);
+    gap: 8px;
+    align-items: center;
+}
+
+    /* Let the boxes shrink/grow without overlap */
+    .controls.bounds-row .filter-input {
+        width: 100%;
+        min-width: 0;
+    }
+
+    /* The single wide text input (e.g., “Cost string contains…”) spans all input columns */
+    .controls.bounds-row input.filter-input[type="text"] {
+        grid-column: 2 / -1;
+    }
 
 /* Tips button */
 .tips-btn {
@@ -1289,4 +1369,82 @@ img.cardart {
         min-width: 120px; /* make it wider */
         justify-content: center;
     }
+
+/* ===== Card Types modal table overrides ===== */
+.cardtypes-table .keywords-table th:first-child,
+.cardtypes-table .keywords-table td:first-child {
+    width: 120px !important;
+    min-width: 120px !important;
+}
+
+.cardtypes-table .keywords-table th:nth-child(2),
+.cardtypes-table .keywords-table td:nth-child(2) {
+    width: auto !important;
+    min-width: 0 !important;
+}
+
+/* --- Board Layout modal --- */
+.modal-window.modal-boardlayout {
+    width: 1100px;
+    max-width: 96vw;
+}
+
+.board-layout-figure {
+    position: relative;
+    display: grid;
+    place-items: center;
+    margin: 0 0 12px;
+}
+
+.board-layout-img {
+    width: min(1100px, 96%);
+    height: auto;
+    display: block;
+    border-radius: 8px;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.08) inset;
+}
+
+/* Numbered bubbles */
+.bl-bubble {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    background: #1f2937;
+    color: #fff;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.12), 0 2px 10px rgba(0,0,0,0.45);
+    user-select: none;
+    pointer-events: none;
+}
+
+.board-layout-list {
+    margin: 6px 2px 0;
+    padding-left: 1.25rem;
+    line-height: 1.45;
+}
+
+    .board-layout-list > li {
+        margin-bottom: 10px;
+    }
+
+    .board-layout-list .cl-num {
+        font-weight: 700;
+        margin-right: 6px;
+    }
+
+    .board-layout-list .cl-title {
+        font-weight: 700;
+        text-decoration: underline;
+    }
+
+.tips-btn {
+    display: flex; /* allow centering */
+    align-items: center; /* vertical center */
+    justify-content: center; /* horizontal center */
+    text-align: center; /* fallback for safety */
+}
 
