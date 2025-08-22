@@ -6,7 +6,7 @@ const GALLERY_HEADER_TITLE = 'Card Gallery';
 const GALLERY_HEADER_STYLE = {
     position: 'sticky',
     top: 0,
-    zIndex: 3,
+    zIndex: 10,
     gridColumn: '1 / -1', // span all gallery columns
     background: 'var(--bg)',
     padding: '8px 8px',
@@ -309,6 +309,71 @@ const aImg       = (id) => `/images/${id}_a.png`
 const bImg       = (id) => `/images/${id}_b.png`
 const defaultBack = '/images/card0000_b.png'
 
+// --- Virtualization helpers (grid) ---
+const estimateGalleryRowHeight = (tileMinWidthPx) => {
+    // rough: image + badges + buttons; tweak as needed
+    // makes row height scale with your slider
+    return Math.round(tileMinWidthPx * 1.6 + 220);
+};
+
+/**
+ * Virtualizes a CSS grid inside a scrollable container (your <main className="grid">).
+ * Renders a slice of items, plus top/bottom spacers to preserve scroll size.
+ */
+function useGridVirtual({
+    containerRef,
+    itemCount,
+    estimateRowHeight,
+    minColumnWidth,
+    gap = 12,
+    overscan = 3,
+}) {
+    const [state, setState] = React.useState({
+        start: 0,
+        end: Math.min(itemCount, 60),
+        padTop: 0,
+        padBottom: 0,
+    });
+
+    React.useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+
+        const calc = () => {
+            const width = el.clientWidth || 1;
+            const cols = Math.max(1, Math.floor((width + gap) / (minColumnWidth + gap)));
+            const rows = Math.max(1, Math.ceil(itemCount / cols));
+            const rowH = estimateRowHeight;
+
+            const scrollTop = el.scrollTop;
+            const viewH = el.clientHeight;
+
+            const startRow = Math.max(0, Math.floor(scrollTop / rowH) - overscan);
+            const endRow = Math.min(rows, Math.ceil((scrollTop + viewH) / rowH) + overscan);
+
+            const start = startRow * cols;
+            const end = Math.min(itemCount, endRow * cols);
+
+            const padTop = startRow * rowH;
+            const padBottom = Math.max(0, (rows - endRow) * rowH);
+
+            setState({ start, end, padTop, padBottom });
+        };
+
+        calc(); // initial
+        el.addEventListener('scroll', calc, { passive: true });
+        const ro = new ResizeObserver(calc);
+        ro.observe(el);
+
+        return () => {
+            el.removeEventListener('scroll', calc);
+            ro.disconnect();
+        };
+    }, [containerRef, itemCount, estimateRowHeight, minColumnWidth, gap, overscan]);
+
+    return state;
+}
+
 // --- icon helpers ---
 // Try in this order: /images/<InternalName>.png -> /icons/<InternalName>.png -> /images/icons/<InternalName>.png
 const iconSrcs = (internal) => [
@@ -431,7 +496,14 @@ export default function App() {
     // Modal search queries
     const [keywordsQuery, setKeywordsQuery] = useState('');
     const [iconsQuery, setIconsQuery] = useState('');
+    // Card Gallery sorting: 'UNSORTED' | 'COST' | 'NAME'
+    const [sortMode, setSortMode] = useState('UNSORTED');
+    // Reverse sorting toggle
+    const [reverseSort, setReverseSort] = useState(false);
     const [elementsQuery, setElementsQuery] = useState('');
+
+    // FAQ modal open/close
+    const [faqOpen, setFaqOpen] = useState(false);
 
     // Card Types modal
     const [cardTypesOpen, setCardTypesOpen] = useState(false)
@@ -500,6 +572,7 @@ export default function App() {
         Formats: [],
         TurnStructure: [],
         Tips: [],
+        FAQ: [],
         CardTypeInfo: [],    // NEW: backing data for the Card Types modal
         CardLayout: null,     // NEW
         BoardLayout: null
@@ -792,6 +865,7 @@ export default function App() {
   const [deckName, setDeckName] = useState('')
   const [showNameInput, setShowNameInput] = useState(false)
   const nameRef = useRef(null)
+  const galleryGridRef = useRef(null)
   const fileRef = useRef(null)
   const [importFileName, setImportFileName] = useState('')
   const [importFileHandle, setImportFileHandle] = useState(null) // for overwriting via File System Access API
@@ -957,6 +1031,7 @@ export default function App() {
                         Formats: Array.isArray(jTypes?.Formats) ? jTypes.Formats : [],
                         TurnStructure: Array.isArray(jTypes?.TurnStructure) ? jTypes.TurnStructure : [],
                         Tips: Array.isArray(jTypes?.Tips) ? jTypes.Tips : [],
+                        FAQ: Array.isArray(jTypes?.FAQ) ? jTypes.FAQ : [],
                         CardTypeInfo: Array.isArray(jTypes?.CardTypeInfo) ? jTypes.CardTypeInfo : [],
                         CardLayout: jTypes?.CardLayout || null,
                         BoardLayout: jTypes?.BoardLayout || null,
@@ -1099,6 +1174,9 @@ export default function App() {
                 case 'l':
                     open(setLayoutOpen);
                     break;
+                case 'q':
+                    open(setFaqOpen);
+                    break;
                 case 's':
                     // NEW: only open Deck Stats if the deck has cards
                     if (deckCountRef.current > 0) {
@@ -1116,7 +1194,7 @@ export default function App() {
         window.addEventListener('keydown', onKey);
         return () => window.removeEventListener('keydown', onKey);
     }, [
-        tipsOpen, keywordsOpen, cardTypesOpen, boardLayoutOpen, formatsOpen, iconsOpen, elementsOpen, turnOpen, layoutOpen, statsOpen, stackOpen // added statsOpen
+        tipsOpen, keywordsOpen, cardTypesOpen, boardLayoutOpen, formatsOpen, iconsOpen, elementsOpen, turnOpen, layoutOpen, statsOpen, stackOpen, faqOpen // added statsOpen
     ]);
 
     const rawData = useMemo(() => {
@@ -1349,6 +1427,57 @@ export default function App() {
         }
         return out
     }, [filtered, rawData, allowOnly, isOffElementForPartner])
+
+    // Apply sorting to the gallery when requested
+    const sortedGallery = useMemo(() => {
+        // start with the current gallery order
+        let arr = [...gallery];
+
+        // apply requested sort (leave UNSORTED as-is)
+        if (sortMode === 'COST') {
+            arr.sort((a, b) => {
+                const aCost = Number(a.ConvertedCost ?? 0) || 0;
+                const bCost = Number(b.ConvertedCost ?? 0) || 0;
+                const byCost = aCost - bCost;
+                if (byCost !== 0) return byCost;
+                const aName = String(a.CardName ?? '');
+                const bName = String(b.CardName ?? '');
+                return aName.localeCompare(bName);
+            });
+        } else if (sortMode === 'NAME') {
+            arr.sort((a, b) => {
+                const aName = String(a.CardName ?? '');
+                const bName = String(b.CardName ?? '');
+                return aName.localeCompare(bName);
+            });
+        } else if (sortMode === 'REFUND') {
+            arr.sort((a, b) => {
+                // Tolerate either RefundID or Refund fields
+                const aRef = Number(a.RefundID ?? a.Refund ?? 0) || 0;
+                const bRef = Number(b.RefundID ?? b.Refund ?? 0) || 0;
+                const byRef = aRef - bRef;
+                if (byRef !== 0) return byRef;
+                const aName = String(a.CardName ?? '');
+                const bName = String(b.CardName ?? '');
+                return aName.localeCompare(bName);
+            });
+        }
+
+        // reverse if toggle is active (works for UNSORTED too)
+        if (reverseSort) arr.reverse();
+
+        return arr;
+    }, [gallery, sortMode, reverseSort]);
+
+    // Virtualization state for the gallery grid
+    const galleryVirt = useGridVirtual({
+        containerRef: galleryGridRef,
+        itemCount: sortedGallery.length,
+        minColumnWidth: Math.round(GALLERY_BASE_TILE_MIN * galleryScale),
+        estimateRowHeight: estimateGalleryRowHeight(Math.round(GALLERY_BASE_TILE_MIN * galleryScale)),
+        gap: 12,
+        overscan: 3,
+    });
 
   // ---- Add/remove to deck ----
     const add = useCallback((id, delta = 1) => {
@@ -1880,6 +2009,72 @@ export default function App() {
     const deckCount = getDeckCount();
     const isDeckFull = Number.isFinite(deckSizeLimit) && deckCount >= deckSizeLimit;
 
+    /** Likelihood (single-card) controls — depends on deckList/deckCount */
+    const [likeCardName, setLikeCardName] = useState('');
+    const [likeQty, setLikeQty] = useState(0);     // successes in population (K)
+    const [likeDraws, setLikeDraws] = useState(1); // sample size (n)
+    const [likeDeckSize, setLikeDeckSize] = useState(0); // population size (N)
+
+    /* Unique card names present in the current deck */
+    const likeNames = useMemo(() => {
+        return Array.from(new Set(
+            deckList
+                .filter(r => !isPartner(r?.c))  // exclude Partners
+                .map(r => r?.c?.CardName)
+                .filter(Boolean)
+        )).sort();
+    }, [deckList]);
+
+    /* Count total copies of a card by CardName in the deck */
+    const countByName = useCallback((name) => {
+        if (!name) return 0;
+        return deckList.reduce((sum, row) => {
+            if (isPartner(row?.c)) return sum; // exclude Partner rows
+            return sum + ((row?.c?.CardName === name ? (Number(row?.qty) || 0) : 0));
+        }, 0);
+    }, [deckList]);
+
+    /* Default the deck size to your current deck count */
+    useEffect(() => {
+        setLikeDeckSize(deckCount);
+    }, [deckCount]);
+
+    /* Default the selector to the first available card name */
+    useEffect(() => {
+        if (!likeNames.length) {
+            if (likeCardName) setLikeCardName('');
+            return;
+        }
+        if (!likeCardName || !likeNames.includes(likeCardName)) {
+            setLikeCardName(likeNames[0]);
+        }
+    }, [likeCardName, likeNames]);
+
+    /* When the selected card changes, default Quantity to its total copies */
+    useEffect(() => {
+        if (likeCardName) setLikeQty(countByName(likeCardName));
+    }, [likeCardName, countByName]);
+
+    /* Likelihood = P(at least 1 success) = 1 − C(N−K, n) / C(N, n) */
+    const likeOdds = useMemo(() => {
+        const K = Math.max(0, Number(likeQty) || 0);
+        const n = Math.max(0, Number(likeDraws) || 0);
+        const N = Math.max(0, Number(likeDeckSize) || 0);
+        if (K <= 0 || n <= 0 || N <= 0 || n > N) return 0;
+
+        const choose = (a, b) => {
+            if (b < 0 || b > a) return 0;
+            if (b === 0 || b === a) return 1;
+            b = Math.min(b, a - b);
+            let num = 1, den = 1;
+            for (let i = 1; i <= b; i++) { num *= (a - (b - i)); den *= i; }
+            return num / den;
+        };
+
+        const zero = choose(N - K, n) / choose(N, n);
+        return Math.max(0, Math.min(1, 1 - zero));
+    }, [likeQty, likeDraws, likeDeckSize]);
+
     // When Deck Stats opens, initialize Deck Size to current deck count
     useEffect(() => {
         if (statsOpen) setProbDeckInput(String(deckCount));
@@ -2314,17 +2509,28 @@ export default function App() {
                       </button>
                   </div>
 
-                  <div className="controls" style={{ marginTop: 8 }}>
+                  <div className="controls" style={{ marginTop: 0 }}>
                       <button
                           type="button"
                           className="tips-btn"
-                          style={{ width: '100%', whiteSpace: 'nowrap' }}
+                          style={{ flex: 1, whiteSpace: 'nowrap' }}
                           onClick={() => setBoardLayoutOpen(true)}
                           aria-haspopup="dialog"
                           aria-expanded={boardLayoutOpen}
                           title="Shortcut: B"
                       >
                           Board Layout
+                      </button>
+
+                      <button
+                          type="button"
+                          className="tips-btn"
+                          style={{ flex: 1, whiteSpace: 'nowrap' }}
+                          onClick={() => setFaqOpen(true)}
+                          aria-haspopup="dialog"
+                          aria-expanded={faqOpen}
+                      >
+                          FAQ
                       </button>
                   </div>
 
@@ -2337,7 +2543,7 @@ export default function App() {
                           <div>E — Element Chart, T — Turn Structure</div>
                           <div>F — Formats, L — Card Layout</div>
                           <div>B — Board Layout, S — Deck Stats</div>
-                          <div>V — Toggle Stack View</div>
+                          <div>Q — FAQ, V — Toggle Stack View</div>
                           <div>Esc — Close modals</div>
                       </div>
                   </div>
@@ -2347,6 +2553,7 @@ export default function App() {
       {/* GRID */}
       <main
               className="grid"
+              ref={galleryGridRef}
               style={{
                   gridTemplateColumns: `repeat(auto-fill, minmax(${Math.round(GALLERY_BASE_TILE_MIN * galleryScale)}px, 1fr))`
               }}
@@ -2401,16 +2608,75 @@ export default function App() {
                           >
                               {GALLERY_RESET_LABEL}
                           </button>
+                          <select
+                              aria-label="Sort Card Gallery"
+                              value={sortMode}
+                              onChange={(e) => setSortMode(e.target.value)}
+                              style={{ marginLeft: 8 }}
+                          >
+                              <option value="UNSORTED">Unsorted</option>
+                              <option value="COST">Converted Cost</option>
+                              <option value="NAME">Name</option>
+                              {/* ADD: Refund sorting */}
+                              <option value="REFUND">Refund</option>
+                          </select>
+                          <button
+                              type="button"
+                              onClick={() => setReverseSort(v => !v)}
+                              aria-pressed={reverseSort}
+                              title="Reverse sort order"
+                              className={`gallery-toggle ${reverseSort ? 'active' : ''}`}
+                              style={{ marginLeft: 8 }}   // keep existing spacing only
+                          >
+                              Reverse
+                          </button>
                       </div>
 
-                      {/* Right: result count */}
-                      <div style={{ fontSize: 12, opacity: 0.8, whiteSpace: 'nowrap' }}>
-                          {gallery.length} results
+                      {/* Right: To Top + result count */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <button
+                              type="button"
+                              className="to-top-btn"
+                              title="Scroll Card Gallery to top"
+                              onClick={() => {
+                                  const el = galleryGridRef?.current;
+                                  if (el && typeof el.scrollTo === 'function') {
+                                      el.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+                                  } else {
+                                      window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+                                  }
+                              }}
+                          >
+                              To Top
+                          </button>
+
+                          {/* NEW: To Bottom (same style as To Top) */}
+                          <button
+                              type="button"
+                              className="to-top-btn"
+                              title="Scroll Card Gallery to bottom"
+                              onClick={() => {
+                                  const el = galleryGridRef?.current;
+                                  if (el && typeof el.scrollTo === 'function') {
+                                      el.scrollTo({ top: el.scrollHeight, left: 0, behavior: 'smooth' });
+                                  } else {
+                                      window.scrollTo({ top: document.documentElement.scrollHeight, left: 0, behavior: 'smooth' });
+                                  }
+                              }}
+                          >
+                              To Bottom
+                          </button>
+
+                          <div style={{ fontSize: 12, opacity: 0.8, whiteSpace: 'nowrap' }}>
+                              {gallery.length} results
+                          </div>
                       </div>
                   </div>
               </div>
 
-              {gallery.map(c => {
+              {/* Virtualized gallery */}
+              <div style={{ height: galleryVirt.padTop, gridColumn: '1 / -1' }} />
+              {sortedGallery.slice(galleryVirt.start, galleryVirt.end).map(c => {
                   const id = c.InternalName
                   const qty = deck[id] ?? 0
                   const cap = cardCap(c)
@@ -2624,6 +2890,7 @@ export default function App() {
                       </div>
                   )
               })}
+              <div style={{ height: galleryVirt.padBottom, gridColumn: '1 / -1' }} />
       </main>
 
       {/* RIGHT: DECK PANEL */}
@@ -3755,6 +4022,87 @@ export default function App() {
                                               })()}
                                           </tbody>
                                       </table>
+
+                                      {/* ⬇ Likelihood (single-card) calculator ⬇ */}
+                                      <div className="chart-card chart-span-2 likelihood-card">
+                                          <h3 className="chart-title">Likelihood</h3>
+
+                                          {/* Control bar: Card Selector, Quantity (K), To Draw (n), Deck Size (N) */}
+                                          <div className="likelihood-controls">
+                                              <label className="stats-label">
+                                                  <span>Card Selector</span>
+                                                  <select
+                                                      value={likeCardName}
+                                                      onChange={e => setLikeCardName(e.target.value)}
+                                                      aria-label="Card Selector"
+                                                      style={{ width: '100%' }}  // ~half-width
+                                                  >
+                                                      {likeNames.map(n => (<option key={n}>{n}</option>))}
+                                                  </select>
+                                              </label>
+
+                                              <label className="stats-label">
+                                                  <span>Quantity</span>
+                                                  <input
+                                                      className="stats-input"
+                                                      type="number"
+                                                      min="0"
+                                                      placeholder="Quantity"
+                                                      value={likeQty}
+                                                      onChange={e => setLikeQty(e.target.value)}
+                                                      aria-label="Quantity"
+                                                      style={{ width: 90 }}   // same as Probabilities → Quantity
+                                                  />
+                                              </label>
+
+                                              <label className="stats-label">
+                                                  <span>To Draw</span>
+                                                  <input
+                                                      className="stats-input"
+                                                      type="number"
+                                                      min="0"
+                                                      placeholder="To Draw"
+                                                      value={likeDraws}
+                                                      onChange={e => setLikeDraws(e.target.value)}
+                                                      aria-label="To Draw"
+                                                      style={{ width: 110 }}  // same as Probabilities → Hand Size
+                                                  />
+                                              </label>
+
+                                              <label className="stats-label">
+                                                  <span>Deck Size</span>
+                                                  <input
+                                                      className="stats-input"
+                                                      type="number"
+                                                      min="0"
+                                                      placeholder="Deck Size"
+                                                      value={likeDeckSize}
+                                                      onChange={e => setLikeDeckSize(e.target.value)}
+                                                      aria-label="Deck Size"
+                                                      style={{ width: 100 }}  // same as Probabilities → Deck Size
+                                                  />
+                                              </label>
+                                          </div>
+
+                                          {/* Single-row result */}
+                                          <table className="stats-table" style={{ width: '100%' }}>
+                                              <thead>
+                                                  <tr>
+                                                      <th style={{ textAlign: 'left' }}>Card Name</th>
+                                                      <th style={{ textAlign: 'right' }}>Quantity</th>
+                                                      <th style={{ textAlign: 'right' }}>Odds</th>
+                                                  </tr>
+                                              </thead>
+                                              <tbody>
+                                                  <tr>
+                                                      <td>{likeCardName || '—'}</td>
+                                                      <td style={{ textAlign: 'right' }}>{Number(likeQty) || 0}</td>
+                                                      <td style={{ textAlign: 'right' }}>{(likeOdds * 100).toFixed(2)}%</td>
+                                                  </tr>
+                                              </tbody>
+                                          </table>
+                                      </div>
+
                                   </div>
                               </div>
                           </div>
@@ -4037,6 +4385,50 @@ export default function App() {
                   document.body
               )}
 
+              {faqOpen && createPortal(
+                  <div className="modal-backdrop" onClick={() => setFaqOpen(false)} role="none">
+                      <div
+                          className="modal-window modal-faq"
+                          role="dialog"
+                          aria-modal="true"
+                          aria-labelledby="faq-title"
+                          onClick={(e) => e.stopPropagation()}
+                      >
+                          <div className="modal-header">
+                              <h2 id="faq-title">FAQ</h2>
+                              <button
+                                  className="modal-close"
+                                  aria-label="Close FAQ"
+                                  onClick={() => setFaqOpen(false)}
+                              >
+                                  ×
+                              </button>
+                          </div>
+
+                          <div className="modal-body">
+                              {(!refData?.FAQ || refData.FAQ.length === 0) ? (
+                                  <div className="small">
+                                      No FAQ entries found. Add an <code>"FAQ"</code> array to <code>reference.json</code>.
+                                  </div>
+                              ) : (
+                                  <div className="faq-list">
+                                      {refData.FAQ.map((item, idx) => (
+                                          <div key={idx} className="faq-item" style={{ marginBottom: 12 }}>
+                                              <div className="faq-q" style={{ fontWeight: 600 }}>
+                                                  {item.question}
+                                              </div>
+                                              <div className="faq-a" style={{ marginTop: 4, opacity: 0.9 }}>
+                                                  {item.answer}
+                                              </div>
+                                          </div>
+                                      ))}
+                                  </div>
+                              )}
+                          </div>
+                      </div>
+                  </div>,
+                  document.body
+              )}
 
               <h3 className="section-title">Deck Actions</h3>
               <div className="row">

@@ -569,6 +569,13 @@ img.cardart {
     font-weight: 700;
 }
 
+/* keep badge text on one line, but let the entire badge wrap to the next line */
+.badge {
+    display: inline-block; /* treat badge as an atomic unit for wrapping */
+    white-space: nowrap; /* prevent internal split like "Not in" / "format" */
+}
+
+
 /* State coverage so highlight doesn't wash out colors */
 .deckRow.not-allowed:hover,
 .deckRow.not-allowed.is-active,
@@ -607,6 +614,29 @@ img.cardart {
 
     .allowable-toggle.active {
         background: var(--accent, #3b82f6);
+        color: #fff;
+    }
+
+/* Card Gallery header: Reverse toggle (match other pill toggles) */
+.gallery-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 10px;
+    font-size: 12px;
+    height: 25px; /* same visual height as inputs/selects */
+    font-weight: 600;
+    border: 1px solid var(--border, #3a3a3a);
+    border-radius: 6px;
+    background: var(--bg2, #1f1f1f);
+    color: var(--ink);
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
+    white-space: nowrap;
+}
+
+    .gallery-toggle.active {
+        background: var(--accent, #3b82f6);
+        border-color: var(--accent, #3b82f6);
         color: #fff;
     }
 
@@ -1446,5 +1476,44 @@ img.cardart {
     align-items: center; /* vertical center */
     justify-content: center; /* horizontal center */
     text-align: center; /* fallback for safety */
+}
+
+/* Likelihood control bar lay-out */
+.likelihood-controls {
+    display: grid;
+    grid-template-columns: max-content max-content max-content max-content; /* pack left */
+    gap: 8px;
+    margin-bottom: 8px;
+    justify-content: flex-start;
+}
+
+    .likelihood-controls .stats-input {
+        width: 100%;
+    }
+
+    /* Labels above Likelihood controls (match Probabilities look) */
+    .likelihood-controls label {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 12px;
+    }
+
+/* Align Likelihood card flush with the left edge like Probabilities */
+.likelihood-card {
+    padding-left: 0;
+}
+
+/* Card Gallery header: Reset-style button (used by "To Top") */
+.to-top-btn {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    margin-right: 8px; /* spacing before the result count */
 }
 

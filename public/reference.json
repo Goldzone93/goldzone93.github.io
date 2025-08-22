@@ -329,5 +329,19 @@
       "ZoneDescription": "The cards in your hand are hidden from your opponent. At the beginning of the game you will draw seven cards to form your opening hand. You may choose any number of those cards and put them into your deck then draw that many cards."
     }
   ]
-}
+},
+"FAQ": [
+  {
+    "question": "How do I start the game?",
+    "answer": "Choose a Partner and shuffle your deck. Draw 7 cards as your opening hand. The player who goes first skips their Draw Step and Produce Step on their first turn."
+  },
+  {
+    "question": "What cards can I play during my Main Phase?",
+    "answer": "During your Main Phase, you can play up to two Shield cards and any number of Unit, Ability, Event, and Support cards. You can also activate Partner, Support, or Unit abilities."
+  },
+  {
+    "question": "What happens at the end of my turn?",
+    "answer": "Resolve any 'end of turn' triggers, gain refunds from cards with refund pips, clear 'until end of turn' effects, then check your hand limit."
+  }
+]
 }
