@@ -1,5 +1,6 @@
 ﻿import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { pluginHost, loadPlugins } from './pluginCore.jsx'
 
 // --- Gallery header (sticky) — tweak here ---
 const GALLERY_HEADER_TITLE = 'Card Gallery';
@@ -362,12 +363,20 @@ function useGridVirtual({
 
         calc(); // initial
         el.addEventListener('scroll', calc, { passive: true });
-        const ro = new ResizeObserver(calc);
-        ro.observe(el);
+
+        let ro = null;
+        if (typeof ResizeObserver !== 'undefined') {
+            ro = new ResizeObserver(calc);
+            ro.observe(el);
+        } else {
+            // Fallback: recompute on window resize
+            window.addEventListener('resize', calc, { passive: true });
+        }
 
         return () => {
             el.removeEventListener('scroll', calc);
-            ro.disconnect();
+            if (ro) ro.disconnect();
+            else window.removeEventListener('resize', calc);
         };
     }, [containerRef, itemCount, estimateRowHeight, minColumnWidth, gap, overscan]);
 
@@ -446,25 +455,14 @@ export default function App() {
   const [partners, setPartners] = useState([])
   const [tokens, setTokens] = useState([])
 
-  // Tips & Features collapsed/expanded
-  const [tipsOpen, setTipsOpen] = useState(false); // start collapsed to save space
-
     // Keywords modal + data
-    const [keywordsOpen, setKeywordsOpen] = useState(false);
     const [keywords, setKeywords] = useState([]);
 
-    const [formatsOpen, setFormatsOpen] = useState(false)
-
     // Effect Icons modal + data
-    const [iconsOpen, setIconsOpen] = useState(false);
     const [icons, setIcons] = useState([]);
 
     // Element Chart modal + data
-    const [elementsOpen, setElementsOpen] = useState(false);
     const [elements, setElements] = useState([]);
-
-    // Turn Structure modal
-    const [turnOpen, setTurnOpen] = useState(false);
 
     // Deck Stats modal
     const [statsOpen, setStatsOpen] = useState(false);
@@ -478,37 +476,133 @@ export default function App() {
     const [probHandInput, setProbHandInput] = useState('7');        // Hand Size (n)
     const [probDeckInput, setProbDeckInput] = useState('');         // Deck Size (N)
 
-    // near other modal booleans
-    const [layoutOpen, setLayoutOpen] = useState(false);
-
     // Collapsible Filters
     const [filtersCollapsed, setFiltersCollapsed] = useState(false);
     const [helpCollapsed, setHelpCollapsed] = useState(false);
 
-    // Gallery size slider (%). Uses default constant.
-    const [gallerySizePct, setGallerySizePct] = useState(GALLERY_SLIDER_DEFAULT);
-
-    // Derived: convert slider position into a scale between GALLERY_SCALE_MIN..MAX
-    const galleryScale = useMemo(() => (
-        GALLERY_SCALE_MIN + (GALLERY_SCALE_MAX - GALLERY_SCALE_MIN) * (gallerySizePct / 100)
-    ), [gallerySizePct]);
+    // Gallery size is now plugin-owned; subscribe to its value
+    const [galleryScale, setGalleryScale] = useState(pluginHost.getGalleryScale?.() ?? 1);
+    useEffect(() => pluginHost.onGalleryScaleChange?.(setGalleryScale), []);
 
     // Modal search queries
-    const [keywordsQuery, setKeywordsQuery] = useState('');
-    const [iconsQuery, setIconsQuery] = useState('');
-    // Card Gallery sorting: 'UNSORTED' | 'COST' | 'NAME'
-    const [sortMode, setSortMode] = useState('UNSORTED');
-    // Reverse sorting toggle
-    const [reverseSort, setReverseSort] = useState(false);
-    const [elementsQuery, setElementsQuery] = useState('');
+    // (moved to plugin: gallery-header-buttons controls its own sort state)
+    const [sortTick, setSortTick] = useState(0); // incremented when a plugin signals sort change
 
-    // FAQ modal open/close
-    const [faqOpen, setFaqOpen] = useState(false);
+    // === Toasts (non-blocking status messages) ===
+    const [toasts, setToasts] = useState([]); // [{ id, message, type }]
+    const dismissToast = useCallback((id) => {
+        setToasts(t => t.filter(x => x.id !== id));
+    }, []);
+    const pushToast = useCallback((message, opts = {}) => {
+        const id = Math.random().toString(36).slice(2);
+        const duration = Number.isFinite(opts.duration) ? opts.duration : 3500;
+        const type = opts.type || 'info'; // 'info' | 'success' | 'warn' | 'error'
+        setToasts(t => [...t, { id, message, type }]);
+        if (duration > 0) {
+            setTimeout(() => dismissToast(id), duration);
+        }
+    }, [dismissToast]);
 
-    // Card Types modal
-    const [cardTypesOpen, setCardTypesOpen] = useState(false)
-    const [boardLayoutOpen, setBoardLayoutOpen] = useState(false)
-    const [cardTypesQuery, setCardTypesQuery] = useState('')
+    // === Mobile Edge Scroll (left edge scrubber) ===============================
+    const [edgeEnabled, setEdgeEnabled] = useState(false);
+    const edgeRailRef = useRef(null);
+    const edgeThumbRef = useRef(null);
+
+    useEffect(() => {
+        // show on small screens only (avoid deprecated addListener/removeListener)
+        const mq = window.matchMedia('(max-width: 900px)');
+        const apply = () => setEdgeEnabled(mq.matches);
+        apply();
+
+        if (typeof mq.addEventListener === 'function') {
+            mq.addEventListener('change', apply);
+            return () => mq.removeEventListener('change', apply);
+        } else {
+            // Fallback for very old browsers: re-evaluate on window resize
+            const onResize = () => apply();
+            window.addEventListener('resize', onResize);
+            return () => window.removeEventListener('resize', onResize);
+        }
+    }, []);
+
+    const scrollMax = useCallback(() => {
+        const el = document.scrollingElement || document.documentElement || document.body;
+        return Math.max(0, el.scrollHeight - el.clientHeight);
+    }, []);
+
+    const syncThumb = useCallback(() => {
+        if (!edgeRailRef.current || !edgeThumbRef.current) return;
+        const el = document.scrollingElement || document.documentElement || document.body;
+        const rail = edgeRailRef.current.getBoundingClientRect();
+        const max = scrollMax();
+        const y = el.scrollTop || 0;
+        const p = max ? y / max : 0;                   // 0..1
+        const thumbH = 48;                              // keep in sync with CSS --thumb-h
+        const offset = 8;                               // rail top/bottom inset in CSS
+        const trackH = Math.max(0, rail.height - 2 * offset - thumbH);
+        edgeThumbRef.current.style.transform = `translateY(${(p * trackH) + offset}px)`;
+    }, [scrollMax]);
+
+    useEffect(() => {
+        if (!edgeEnabled) return;
+        syncThumb();
+        window.addEventListener('scroll', syncThumb, { passive: true });
+        window.addEventListener('resize', syncThumb);
+        return () => {
+            window.removeEventListener('scroll', syncThumb);
+            window.removeEventListener('resize', syncThumb);
+        };
+    }, [edgeEnabled, syncThumb]);
+
+    // Re-sync the edge scroll thumb when page height changes (e.g., Filters/Help collapse/expand)
+    useEffect(() => {
+        if (!edgeEnabled) return;
+
+        const getScroller = () => document.scrollingElement || document.documentElement || document.body;
+        let lastH = getScroller().scrollHeight;
+
+        const target = document.body;
+        const obs = new MutationObserver(() => {
+            const curH = getScroller().scrollHeight;
+            if (curH !== lastH) {
+                lastH = curH;
+                syncThumb();
+            }
+        });
+
+        // Watch for DOM changes that affect layout height
+        obs.observe(target, { childList: true, subtree: true, attributes: true });
+
+        // Safety: also re-sync periodically for CSS transitions
+        const interval = setInterval(syncThumb, 300);
+
+        return () => {
+            obs.disconnect();
+            clearInterval(interval);
+        };
+    }, [edgeEnabled, syncThumb]);
+
+    const onEdgePointerDown = useCallback((e) => {
+        if (!edgeRailRef.current) return;
+        const el = document.scrollingElement || document.documentElement || document.body;
+        const moveTo = (clientY) => {
+            const rect = edgeRailRef.current.getBoundingClientRect();
+            const offset = 8; // must match CSS
+            const thumbH = 48;
+            const track = Math.max(0, rect.height - 2 * offset - thumbH);
+            const y = Math.min(Math.max(clientY - rect.top - offset, 0), track);
+            const p = track > 0 ? (y / track) : 0;
+            el.scrollTop = scrollMax() * p; // direct, reliable scroll
+        };
+        moveTo(e.clientY);
+        const onMove = (ev) => moveTo(ev.clientY);
+        const onUp = () => {
+            window.removeEventListener('pointermove', onMove);
+            window.removeEventListener('pointerup', onUp);
+        };
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', onUp);
+    }, [scrollMax]);
 
     // ===== Helpers for Element list rendering (must be inside component) =====
 
@@ -657,6 +751,9 @@ export default function App() {
   const [ccExact, setCcExact] = useState('')
   const [setFilter, setSetFilter] = useState('Any Set')
 
+    // "Allowable Only" filter toggle (partner-restricted gallery)
+    const [allowOnly, setAllowOnly] = useState(false)
+
   // SuperType rules
   const [sup1, setSup1] = useState(""); const [sop1, setSop1] = useState("");
 
@@ -739,10 +836,10 @@ export default function App() {
     // Find the single Partner card currently in the deck (if any)
     const getPartnerInDeck = () => {
         for (const id of Object.keys(deck)) {
-            const c = getById(id)
-            if (isPartner(c) && (deck[id] ?? 0) > 0) return c
+            const c = getById(id);
+            if (isPartner(c) && (deck[id] ?? 0) > 0) return c;
         }
-        return null
+        return null;
     }
 
     // --- Partner off-element detection (front side only) ---
@@ -823,6 +920,20 @@ export default function App() {
   const d2 = !el1;
   const d3 = !el2;
 
+    // added filters (MOVED ABOVE resetFilters to avoid TDZ)
+    const [costStr, setCostStr] = useState('')
+
+    // NEW: min/max bounds for stats (MOVED ABOVE resetFilters)
+    const [atkMin, setAtkMin] = useState('')
+    const [atkMax, setAtkMax] = useState('')
+    const [defMin, setDefMin] = useState('')
+    const [defMax, setDefMax] = useState('')
+    const [hpMin, setHpMin] = useState('')
+    const [hpMax, setHpMax] = useState('')
+    const [atkExact, setAtkExact] = useState('')
+    const [defExact, setDefExact] = useState('')
+    const [hpExact, setHpExact] = useState('')
+
     // Reset every filter back to its initial/empty state
     const resetFilters = React.useCallback(() => {
         setEl1(''); setOp1(''); setEl2(''); setOp2(''); setEl3(''); setOp3('');
@@ -843,25 +954,29 @@ export default function App() {
         resetFilters();
     };
 
-  // added filters
-  const [costStr, setCostStr] = useState('')
+   // --- Plugin Core: load all plugins once ---
+    useEffect(() => {
+        loadPlugins();
+    }, []);
 
-  // NEW: Show only cards that are allowable with the selected Partner
-  const [allowOnly, setAllowOnly] = useState(false);
-
-  // NEW: min/max bounds for stats
-  const [atkMin, setAtkMin] = useState('')
-  const [atkMax, setAtkMax] = useState('')
-  const [defMin, setDefMin] = useState('')
-  const [defMax, setDefMax] = useState('')
-  const [hpMin,  setHpMin]  = useState('')
-  const [hpMax,  setHpMax]  = useState('')
-  const [atkExact, setAtkExact] = useState('')
-  const [defExact, setDefExact] = useState('')
-  const [hpExact, setHpExact] = useState('')
+    // Listen for plugin-driven sort changes (from gallery-header-buttons)
+    useEffect(() => {
+        const off = pluginHost.onGallerySortChange(() => setSortTick(t => t + 1));
+        return off;
+    }, []);
 
   // Deck state
   const [deck, setDeck] = useState({})
+  const [maybe, setMaybe] = useState({})                 // Maybe (sideboard) list map
+    const [activeBoard, setActiveBoard] = useState(
+        () => (localStorage.getItem('activeBoard') === 'MAYBE' ? 'MAYBE' : 'DECK')
+    ); // 'DECK' | 'MAYBE'
+  const getActiveMap = () => (activeBoard === 'DECK' ? deck : maybe)
+    // --- Refs the plugin API will read (kept current every render)
+    const deckRef = useRef(deck); deckRef.current = deck;
+    const maybeRef = useRef(maybe); maybeRef.current = maybe;
+    const formatIdRef = useRef(formatId); formatIdRef.current = formatId;
+    const activeBoardRef = useRef(activeBoard); activeBoardRef.current = activeBoard;
   const [deckName, setDeckName] = useState('')
   const [showNameInput, setShowNameInput] = useState(false)
   const nameRef = useRef(null)
@@ -870,8 +985,7 @@ export default function App() {
   const [importFileName, setImportFileName] = useState('')
   const [importFileHandle, setImportFileHandle] = useState(null) // for overwriting via File System Access API
 
-    // ADD THIS:
-    const deckCountRef = useRef(0)
+
 
     // Keep formatId in sync with reference.json (fallback: Freeform / Standard)
     useEffect(() => {
@@ -1113,27 +1227,31 @@ export default function App() {
     }, [activeDataset])
 
     useEffect(() => {
-        if (deckPreview.show && deckPreview.id && !deck[deckPreview.id]) {
-            setDeckPreview({ id: null, x: 0, y: 0, show: false })
-        }
-    }, [deck, deckPreview.show, deckPreview.id])
+        if (!deckPreview.show || !deckPreview.id) return;
+        const id = deckPreview.id;
+        const inDeck = !!deck[id];
+        const inMaybe = !!maybe[id];
 
-    // Global keyboard shortcuts for help modals
+        // Hide if the hovered row no longer exists in the visible list,
+        // or if it no longer exists anywhere.
+        if ((activeBoard === 'DECK' && !inDeck) ||
+            (activeBoard === 'MAYBE' && !inMaybe) ||
+            (!inDeck && !inMaybe)) {
+            setDeckPreview({ id: null, x: 0, y: 0, show: false });
+        }
+    }, [deck, maybe, activeBoard, deckPreview.show, deckPreview.id])
+
+    // ADD THIS:
+    const deckCountRef = useRef(0)
+
+    // Global keyboard shortcuts (non-Help). Help modals are handled inside /src/plugins/help-section.jsx
     useEffect(() => {
         const onKey = (e) => {
             const tag = (e.target?.tagName || '').toLowerCase();
             const isTyping = tag === 'input' || tag === 'textarea' || tag === 'select' || e.target?.isContentEditable;
             if (isTyping) return;
 
-            const open = (setter, reset) => { setter(true); reset?.(''); };
-
             if (e.key === 'Escape') {
-                if (tipsOpen) setTipsOpen(false);
-                if (keywordsOpen) setKeywordsOpen(false);
-                if (iconsOpen) setIconsOpen(false);
-                if (elementsOpen) setElementsOpen(false);
-                if (turnOpen) setTurnOpen(false);
-                if (layoutOpen) setLayoutOpen(false);
                 if (statsOpen) setStatsOpen(false);     // close Deck Stats
                 if (stackOpen) setStackOpen(false);     // close Stack View
                 return;
@@ -1141,61 +1259,21 @@ export default function App() {
 
             const k = e.key.toLowerCase();
             switch (k) {
-                case '?':
-                    open(setTipsOpen);
-                    break;
-                case '/':
-                    if (e.shiftKey) { open(setTipsOpen); }
-                    break;
-                case 'h':
-                    open(setTipsOpen);
-                    break;
-                case 'k':
-                    open(setKeywordsOpen, setKeywordsQuery);
-                    break;
-                case 'c':
-                    open(setCardTypesOpen, setCardTypesQuery);
-                    break;
-                case 'f':
-                    open(setFormatsOpen);
-                    break;
-                case 'b':
-                    open(setBoardLayoutOpen);
-                    break;
-                case 'i':
-                    open(setIconsOpen, setIconsQuery);
-                    break;
-                case 'e':
-                    open(setElementsOpen, setElementsQuery);
-                    break;
-                case 't':
-                    open(setTurnOpen);
-                    break;
-                case 'l':
-                    open(setLayoutOpen);
-                    break;
-                case 'q':
-                    open(setFaqOpen);
-                    break;
                 case 's':
-                    // NEW: only open Deck Stats if the deck has cards
-                    if (deckCountRef.current > 0) {
-                        setStatsOpen(true);
-                    }
+                    // Only open Deck Stats if the deck has cards
+                    if (deckCountRef.current > 0) setStatsOpen(true);
                     break;
                 case 'v':
                     // Toggle Stack View if the deck has cards
-                    if (deckCountRef.current > 0) {
-                        setStackOpen(prev => !prev);
-                    }
+                    if (deckCountRef.current > 0) setStackOpen(prev => !prev);
+                    break;
+                default:
                     break;
             }
         };
         window.addEventListener('keydown', onKey);
         return () => window.removeEventListener('keydown', onKey);
-    }, [
-        tipsOpen, keywordsOpen, cardTypesOpen, boardLayoutOpen, formatsOpen, iconsOpen, elementsOpen, turnOpen, layoutOpen, statsOpen, stackOpen, faqOpen // added statsOpen
-    ]);
+    }, [statsOpen, stackOpen]);
 
     const rawData = useMemo(() => {
         switch (activeDataset) {
@@ -1230,14 +1308,14 @@ export default function App() {
         };
 
         let total = 0;
-        for (const [id, qty] of Object.entries(deck)) {
+        for (const [id, qty] of Object.entries(getActiveMap())) {
             const c = getById(id);
             if (!c) continue;
             const blob = Object.values(c).map(valueToString).join(' ').toLowerCase();
             if (blob.includes(q)) total += (Number(qty) || 0);
         }
         return total;
-    }, [statsSearchText, deck, getById]);
+    }, [statsSearchText, deck, maybe, activeBoard, getById]);
 
     // Filtered
     const filtered = useMemo(() => {
@@ -1402,6 +1480,8 @@ export default function App() {
         getAllowedSetsForFormat
     ])
 
+    // SAFE alias so we never throw even if allowOnly hasn't initialized yet
+    const allowOnlyDep = (typeof allowOnly === 'undefined') ? false : allowOnly;
 
     // Collapse fronts/backs so only one gallery tile shows (prefer the _a "front")
     const gallery = useMemo(() => {
@@ -1422,52 +1502,58 @@ export default function App() {
         }
 
         // NEW: if Allowable Only is on, keep only cards that are NOT off-element
-        if (allowOnly) {
-            return out.filter(card => !isOffElementForPartner(card))
+        if (allowOnlyDep) {
+            return out.filter(card => !isOffElementForPartner(card));
         }
-        return out
-    }, [filtered, rawData, allowOnly, isOffElementForPartner])
+        return out;
+    }, [filtered, rawData, allowOnlyDep, isOffElementForPartner])
 
-    // Apply sorting to the gallery when requested
+    // keep gallery available to plugins without stale closures
+    const galleryRef = useRef(gallery); galleryRef.current = gallery;
+
+    // --- Plugin Core: expose minimal app API to plugins (stable; reads from refs) ---
+    useEffect(() => {
+        pluginHost.setAppApi({
+            // Smooth scroll helpers
+            scrollGalleryTop: () => {
+                const el = galleryGridRef?.current;
+                if (el?.scrollTo) el.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+                else window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+            },
+            scrollGalleryBottom: () => {
+                const el = galleryGridRef?.current;
+                if (el?.scrollTo) el.scrollTo({ top: el.scrollHeight, left: 0, behavior: 'smooth' });
+                else window.scrollTo({ top: document.documentElement.scrollHeight, left: 0, behavior: 'smooth' });
+            },
+
+            // Always read the latest values during render
+            getActiveBoard: () => activeBoardRef.current,
+            setActiveBoard: (val) => {
+                const next = (val === 'MAYBE') ? 'MAYBE' : 'DECK';
+                setActiveBoard(next);
+                try { localStorage.setItem('activeBoard', next); } catch { }
+            },
+
+            // Lightweight snapshot for plugins
+            getState: () => ({
+                formatId: formatIdRef.current,
+                deck: deckRef.current,
+                maybe: maybeRef.current,
+                gallery: galleryRef.current,
+                activeBoard: activeBoardRef.current,
+            }),
+        });
+        // Run once; values are live via refs.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Apply sorting via plugins (plugin owns the sort state)
     const sortedGallery = useMemo(() => {
-        // start with the current gallery order
-        let arr = [...gallery];
-
-        // apply requested sort (leave UNSORTED as-is)
-        if (sortMode === 'COST') {
-            arr.sort((a, b) => {
-                const aCost = Number(a.ConvertedCost ?? 0) || 0;
-                const bCost = Number(b.ConvertedCost ?? 0) || 0;
-                const byCost = aCost - bCost;
-                if (byCost !== 0) return byCost;
-                const aName = String(a.CardName ?? '');
-                const bName = String(b.CardName ?? '');
-                return aName.localeCompare(bName);
-            });
-        } else if (sortMode === 'NAME') {
-            arr.sort((a, b) => {
-                const aName = String(a.CardName ?? '');
-                const bName = String(b.CardName ?? '');
-                return aName.localeCompare(bName);
-            });
-        } else if (sortMode === 'REFUND') {
-            arr.sort((a, b) => {
-                // Tolerate either RefundID or Refund fields
-                const aRef = Number(a.RefundID ?? a.Refund ?? 0) || 0;
-                const bRef = Number(b.RefundID ?? b.Refund ?? 0) || 0;
-                const byRef = aRef - bRef;
-                if (byRef !== 0) return byRef;
-                const aName = String(a.CardName ?? '');
-                const bName = String(b.CardName ?? '');
-                return aName.localeCompare(bName);
-            });
+        if (pluginHost?.sortGallery) {
+            return pluginHost.sortGallery(gallery);
         }
-
-        // reverse if toggle is active (works for UNSORTED too)
-        if (reverseSort) arr.reverse();
-
-        return arr;
-    }, [gallery, sortMode, reverseSort]);
+        return [...gallery];
+    }, [gallery, sortTick]);
 
     // Virtualization state for the gallery grid
     const galleryVirt = useGridVirtual({
@@ -1479,119 +1565,250 @@ export default function App() {
         overscan: 3,
     });
 
+    // Count current cards in the deck (tokens never get into the deck UI already)
+    const getDeckCount = () => {
+        let total = 0;
+        for (const [id, qty] of Object.entries(getActiveMap())) {
+            const c = getById(id);
+            if (!c) continue;
+            if (isToken(c)) continue;
+            if (isPartner(c)) continue; // ignore the Partner
+            total += qty || 0;
+        }
+        return total;
+    };
+
   // ---- Add/remove to deck ----
     const add = useCallback((id, delta = 1) => {
-        const frontId = normalizeToFront(id)
-        const card = getById(frontId)
+        const frontId = normalizeToFront(id);
+        const card = getById(frontId);
+        if (isToken(card)) return;
 
-        // ❌ Block tokens entirely
-        if (isToken(card)) return
-
-        // 🚫 Banlist: block any banned card for the current format
+        // 🚫 Banlist still enforced in both boards
         if (delta > 0 && isCardBannedInFormat(card)) {
-            alert('That card is banned in the selected format.');
+            pushToast('That card is banned in the selected format.', { type: 'error' });
             return;
         }
 
-        // ✅ Enforce: total Partners allowed by selected format (formats.json → rarityCap.Partner)
+        const activeMap = getActiveMap();
+        const setMap = (activeBoard === 'DECK') ? setDeck : setMaybe;
+
+        // ✅ Partner rules
         if (isPartner(card) && delta > 0) {
-            const rc = getRarityCapMap();                          // pulls from formats.json for current formatId
+            // NEW: Partners cannot be added to the Maybe board
+            if (activeBoard === 'MAYBE') {
+                pushToast('Partner cards cannot be added to the Maybe list. Add Partners to your Deck.', { type: 'warn' });
+                return;
+            }
+
+            // Deck partner cap applies only when adding to the Deck
+            const rc = getRarityCapMap();
             const partnerCap = Number.isFinite(rc?.Partner) ? rc.Partner : 1;
-            const currentPartnerTotal = Object.entries(deck).reduce((s, [k, q]) => {
+            const currentPartnerTotal = Object.entries(activeMap).reduce((s, [k, q]) => {
                 const kc = getById(k);
                 return s + (isPartner(kc) ? (q || 0) : 0);
             }, 0);
             if (currentPartnerTotal >= partnerCap) {
-                alert(`Only ${partnerCap} Partner${partnerCap === 1 ? '' : 's'} allowed in this format.`);
+                pushToast(`Only ${partnerCap} Partner${partnerCap === 1 ? '' : 's'} allowed in this format.`, { type: 'warn' });
                 return;
             }
         }
 
-        // 🚫 Block adding off-element cards when a Partner is chosen
-        if (delta > 0 && isOffElementForPartner(card)) {
-            alert('That card has an element not allowed by your selected Partner.');
+        // Enforce deck size limit ONLY for main deck
+        const deckSizeLimit = getDeckSizeLimit();
+        const isDeckFull = (activeBoard === 'DECK') && Number.isFinite(deckSizeLimit) && (getDeckCount() >= deckSizeLimit);
+
+        // Enforce Partner element restrictions across both boards when enabled
+        const allowOnlyNow = (typeof allowOnly === 'undefined') ? false : allowOnly;
+        if (delta > 0 && allowOnlyNow && isOffElementForPartner(card)) {
+            pushToast('That card is not allowable with your current Partner elements.', { type: 'warn' });
             return;
         }
 
-        // ✅ Enforce DeckSize based on current Partner
-        if (delta > 0) {
-            const deckSizeLimit = getDeckSizeLimit()
-            const currentTotal = getDeckCount()
-            if (Number.isFinite(deckSizeLimit) && currentTotal >= deckSizeLimit && !isPartner(card)) {
-                alert(`Deck is full (${deckSizeLimit} cards). Remove a card before adding more.`)
-                return
-            }
+        // Auto-enable “Allowable Only” when adding a Partner to the Deck
+        if (activeBoard === 'DECK' && delta > 0 && isPartner(card) && !allowOnlyNow) {
+            setAllowOnly?.(true);
         }
 
-        // Auto-enable “Allowable Only” when adding a Partner (only if currently off)
-        if (delta > 0 && isPartner(card) && !allowOnly) {
-            setAllowOnly(true);
+        // If user adds to either board and no deck has been started yet, start one now
+        // (lets you add to Maybe first and still get the naming UX)
+        if (
+            delta > 0 &&
+            !showNameInput &&
+            Object.keys(deck).length === 0 &&
+            Object.keys(maybe).length === 0
+        ) {
+            setShowNameInput(true);
+            setDeckName((n) => n || 'New Deck');
+            setTimeout(() => nameRef.current?.focus(), 0);
         }
 
-        // Auto-create a deck the first time the user adds a card.
-        if (delta > 0 && !showNameInput && Object.keys(deck).length === 0) {
-            setShowNameInput(true)
-            setDeckName((n) => n || 'New Deck')
-            setTimeout(() => nameRef.current?.focus(), 0)
-        }
+        const cap = cardCap(card);
+        let removedId = null;
 
-        const cap = cardCap(card)
-
-        let removedId = null
-        setDeck(prev => {
-            const next = { ...prev }
+        setMap(prev => {
+            const next = { ...prev };
 
             // migrate any legacy _b count into the front
-            const backId = frontId.replace(/_a$/, '_b')
+            const backId = frontId.replace(/_a$/, '_b');
             if (next[backId]) {
-                next[frontId] = (next[frontId] ?? 0) + next[backId]
-                delete next[backId]
+                next[frontId] = (next[frontId] ?? 0) + next[backId];
+                delete next[backId];
             }
 
-            const cur = next[frontId] ?? 0
+            const cur = next[frontId] ?? 0;
+            // For Maybe board, ignore per-card cap? Keep existing per-card cap for consistency.
+            const newCount = Math.max(0, Math.min(cur + delta, cap));
 
-            // Block going over per-card cap
-            if (delta > 0 && cur >= cap) {
-                if (Number.isFinite(cap)) {
-                    alert(`Limit reached: ${cap} cop${cap === 1 ? 'y' : 'ies'} for ${card?.Rarity || 'this rarity'}.`)
-                }
-                return prev
-            }
-
-            // Apply change (also re-check deck size if needed)
-            const deckSizeLimit = getDeckSizeLimit()
-            const currentTotal = Object.entries(next).reduce((s, [cid, q]) => {
-                const cc = getById(cid)
-                if (!cc) return s
-                if (isToken(cc)) return s
-                if (isPartner(cc)) return s       // <-- ignore the Partner
-                return s + (q || 0)
-            }, 0)
-
-            const increment = delta > 0 ? 1 : (delta < 0 ? -1 : 0)
-            if (delta > 0 && Number.isFinite(deckSizeLimit) && currentTotal >= deckSizeLimit && !isPartner(card)) {
-                return prev
-            }
-
-            const newCount = Math.max(0, Math.min(cur + delta, cap))
             if (newCount <= 0) {
-                delete next[frontId]
-                removedId = frontId
+                delete next[frontId];
+                removedId = frontId;
             } else {
-                // If adding 1 would overflow deck size, block (but allow Partner)
-                if (delta > 0 && Number.isFinite(deckSizeLimit) && (currentTotal + 1) > deckSizeLimit && !isPartner(card)) {
-                    return prev
-                }
-                next[frontId] = newCount
+                // Extra safety: main deck size limit check is already handled above
+                next[frontId] = newCount;
             }
-            return next
-        })
+            return next;
+        });
 
-        if (removedId) {
-            clearPreviewIf(h => h?.id === removedId)
+        if (removedId) clearPreviewIf(h => h?.id === removedId);
+    }, [activeBoard, normalizeToFront, getById, showNameInput, deck, getDeckSizeLimit, getDeckCount, setShowNameInput, setDeckName, clearPreviewIf, getRarityCapMap, allowOnly]);
+
+    // NEW: When viewing Maybe list, move all copies of a card into the Deck (up to limits)
+    const moveAllToDeck = useCallback((id) => {
+        const frontId = normalizeToFront(id);
+        const card = getById(frontId);
+        if (!card) return;
+        if (isToken(card)) return;
+
+        // Banned cards can't go to the deck
+        if (isCardBannedInFormat(card)) {
+            pushToast('That card is banned in the selected format.', { type: 'error' });
+            return;
         }
-    }, [normalizeToFront, getById, showNameInput, deck, setShowNameInput, setDeckName, clearPreviewIf, getRarityCapMap, allowOnly])
 
+        // Respect "Allowable Only" restriction when a Partner is chosen
+        if (allowOnly && isOffElementForPartner(card)) {
+            pushToast('That card is not allowable with your current Partner elements.', { type: 'warn' });
+            return;
+        }
+
+        // How many of this card are in Maybe right now?
+        const maybeMap = maybeRef.current || {};
+        const deckMap = deckRef.current || {};
+        const qtyInMaybe = Math.max(0, Number(maybeMap[frontId] || 0));
+        if (qtyInMaybe <= 0) return;
+
+        // Determine remaining room in the main Deck (non-token, non-partner)
+        const deckLimit = getDeckSizeLimit();
+        let mainCount = 0;
+        for (const [did, q] of Object.entries(deckMap)) {
+            const dc = getById(did);
+            if (!dc) continue;
+            if (isToken(dc)) continue;
+            if (isPartner(dc)) continue;
+            mainCount += q || 0;
+        }
+        const slotsLeft = Number.isFinite(deckLimit) ? Math.max(0, deckLimit - mainCount) : Infinity;
+
+        // Per-card cap left in the Deck for this specific card
+        const cap = cardCap(card);
+        const already = Math.max(0, Number(deckMap[frontId] || 0));
+        const perCardLeft = Number.isFinite(cap) ? Math.max(0, cap - already) : Infinity;
+
+        // Also must be allowed by Format (set whitelist)
+        if (!isCardAllowedInFormat(card)) {
+            pushToast('That card is not legal in the selected format.', { type: 'error' });
+            return;
+        }
+
+        // Compute how many we can move right now
+        const canMove = Math.max(0, Math.min(qtyInMaybe, slotsLeft, perCardLeft));
+
+        if (canMove <= 0) {
+            // Either deck is already full or this card has hit its limit
+            pushToast('Deck List is full.', { type: 'warn' });
+            return;
+        }
+
+        // Apply changes
+        const leftAfter = Math.max(0, qtyInMaybe - canMove);
+
+        setDeck(prev => {
+            const next = { ...prev };
+            next[frontId] = (next[frontId] || 0) + canMove;
+            return next;
+        });
+
+        setMaybe(prev => {
+            const next = { ...prev };
+            if (leftAfter <= 0) {
+                delete next[frontId];
+            } else {
+                next[frontId] = leftAfter;
+            }
+            return next;
+        });
+
+        // If the card fully left the Maybe list, close the hover preview
+        if (leftAfter <= 0 && deckPreview?.id === frontId) {
+            setDeckPreview({ id: null, x: 0, y: 0, show: false });
+        }
+
+        // If we hit the deck max as a result, tell the user (include moved count)
+        if (Number.isFinite(deckLimit) && (mainCount + canMove) >= deckLimit) {
+            pushToast(`Moved ${canMove} to Deck. Deck List is full.`, { type: 'warn' });
+        }
+    }, [
+        normalizeToFront,
+        getById,
+        isToken,
+        isPartner,
+        isCardBannedInFormat,
+        isCardAllowedInFormat,
+        isOffElementForPartner,
+        allowOnly,
+        getDeckSizeLimit,
+        cardCap
+    ]);
+
+    // NEW: When viewing Deck list, move all copies of a card into the Maybe list
+    const moveAllToMaybe = useCallback((id) => {
+        const frontId = normalizeToFront(id);
+        const card = getById(frontId);
+        if (!card) return;
+        if (isToken(card)) return;
+
+        const deckMap = deckRef.current || {};
+        const maybeMap = maybeRef.current || {};
+        const qtyInDeck = Math.max(0, Number(deckMap[frontId] || 0));
+        if (qtyInDeck <= 0) return;
+
+        // Respect per-card cap in Maybe (same behavior as add())
+        const cap = cardCap(card);
+        const already = Math.max(0, Number(maybeMap[frontId] || 0));
+        const perCardLeft = Number.isFinite(cap) ? Math.max(0, cap - already) : Infinity;
+
+        const canMove = Math.max(0, Math.min(qtyInDeck, perCardLeft));
+        const leftAfter = Math.max(0, qtyInDeck - canMove);
+
+        setMaybe(prev => {
+            const next = { ...prev };
+            next[frontId] = (next[frontId] || 0) + canMove;
+            return next;
+        });
+
+        setDeck(prev => {
+            const next = { ...prev };
+            if (leftAfter <= 0) delete next[frontId];
+            else next[frontId] = leftAfter;
+            return next;
+        });
+
+        // If the card fully left the Deck, close the hover preview
+        if (leftAfter <= 0 && deckPreview?.id === frontId) {
+            setDeckPreview({ id: null, x: 0, y: 0, show: false });
+        }
+    }, [normalizeToFront, getById, isToken, cardCap, deckPreview, setDeckPreview]);
 
     // Use CardType if present, otherwise fall back to SuperType (e.g., "Token"), otherwise "Other"
     const getTypeTag = (c) =>
@@ -1601,15 +1818,15 @@ export default function App() {
 
     // Which card types are actually present in the current deck?
     const presentTypes = useMemo(() => {
-        const ids = Object.keys(deck)
-        const set = new Set()
+        const ids = Object.keys(getActiveMap());
+        const set = new Set();
         for (const id of ids) {
-            const c = getById(id)
-            const tag = getTypeTag(c)
-            if (tag) set.add(tag)
+            const c = getById(id);
+            const tag = getTypeTag(c);
+            if (tag) set.add(tag);
         }
-        return Array.from(set)
-    }, [deck, getById])
+        return Array.from(set);
+    }, [deck, maybe, activeBoard, getById])
 
     // Final order: types from types.json (or fallback) + any extra ones found in deck
     const typeOrder = useMemo(() => {
@@ -1622,7 +1839,7 @@ export default function App() {
 
     // Build deck list (now safe to sort using typeOrder)
     const deckList = useMemo(() => {
-        const list = Object.entries(deck).map(([id, qty]) => {
+        const list = Object.entries(getActiveMap()).map(([id, qty]) => {
             const c = getById(id)
             return { id, qty, c }
         })
@@ -1636,30 +1853,39 @@ export default function App() {
             if (typeIndexA !== typeIndexB) return typeIndexA - typeIndexB
             return (a.c?.CardName || '').localeCompare(b.c?.CardName || '')
         })
-    }, [deck, typeOrder, getById])
+    }, [deck, maybe, activeBoard, typeOrder, getById])
+
+    // ADD: New Deck handler (clears both lists, focuses name input)
+    const onNewDeck = () => {
+        if (!confirmDanger('Start a new deck? This will clear the deck name and all cards.')) return;
+        setDeck({});
+        setMaybe({});
+        setActiveBoard('DECK');
+        try { localStorage.setItem('activeBoard', 'DECK'); } catch { }
+        setDeckName('');
+        setShowNameInput(true);
+        if (fileRef.current) fileRef.current.value = '';
+        setImportFileName('');
+        setImportFileHandle(null);
+        setTimeout(() => nameRef.current?.focus(), 0);
+    };
 
   // ---- Deck actions ----
-  const onNewDeck = () => {
-    if (!confirmDanger('Start a new deck? This will clear the deck name and all cards.')) return
-    setDeck({})
-    setDeckName('')
-    setShowNameInput(true)  // keep the name box up for immediate typing
-    if (fileRef.current) fileRef.current.value = ''
-    setTimeout(()=> nameRef.current?.focus(), 0)
-  }
-
     const onClearDeck = () => {
-        if (!confirmDanger('Clear this deck? This will remove the deck name and all cards.')) return
-        setDeck({})
-        setDeckName('')
-        setShowNameInput(false) // restore New Deck button
-        setFormatId('Freeform') // reset format filter
-        if (fileRef.current) fileRef.current.value = ''
-        setImportFileName('')   // also clear the "Load File" label
-    }
-
+        if (!confirmDanger('Clear this deck? This will remove the deck name and all cards.')) return;
+        setDeck({});
+        setMaybe({});
+        setActiveBoard('DECK');
+        try { localStorage.setItem('activeBoard', 'DECK'); } catch { }
+        setDeckName('');
+        setShowNameInput(false);
+        setFormatId('Freeform');
+        if (fileRef.current) fileRef.current.value = '';
+        setImportFileName('');
+    };
+        
   const exportJSON = () => {
-    const payload = { name: deckName || 'New Deck', formatId, list: deck }
+    const payload = { name: deckName || 'New Deck', formatId, list: deck, maybe }
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -1667,16 +1893,39 @@ export default function App() {
     URL.revokeObjectURL(url)
   }
 
-  const exportCSV = () => {
-    const rows = ['InternalName,Qty,FormatId'].concat(
-        deckList.map(r => `${r.id},${r.qty},${formatId}`)
-    ).join('\n')
-    const blob = new Blob([rows], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url; a.download = `${(deckName || 'deck').replace(/[^\w\-]+/g,'_')}.csv`; a.click()
-    URL.revokeObjectURL(url)
-  }
+    const exportCSV = () => {
+        // Always export BOTH boards and include Deck Name as a column.
+        // Import stays backward-compatible (reader uses only first 2 columns).
+        const esc = (s) => `"${String(s ?? '').replace(/"/g, '""')}"`;
+        const safeName = deckName?.trim() ? deckName : 'New Deck';
+
+        // Header: keep InternalName,Qty first so import logic still works
+        const rows = ['InternalName,Qty,FormatId,Board,DeckName'];
+
+        const pushMap = (map, board) => {
+            for (const [id, qty] of Object.entries(map)) {
+                const c = getById(id);
+                if (!c) continue;
+                if (isToken(c)) continue;                 // never export tokens
+                const q = Math.max(0, Number(qty) || 0);
+                if (q <= 0) continue;
+                rows.push(`${id},${q},${formatId},${board},${esc(safeName)}`);
+            }
+        };
+
+        // Main deck first, then Maybe
+        pushMap(deck, 'Deck');
+        pushMap(maybe, 'Maybe');
+
+        const csv = rows.join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${(safeName || 'deck').replace(/[^\w\-]+/g, '_')}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
 
     // ADD BELOW exportCSV and ABOVE handleImport
     const saveLoadedFile = async () => {
@@ -1684,11 +1933,25 @@ export default function App() {
         const lower = (importFileName || '').toLowerCase();
         const ext = lower.endsWith('.csv') ? 'csv' : (lower.endsWith('.json') ? 'json' : 'json');
 
-        // Build content once
-        const csvRows = ['InternalName,Qty,FormatId'].concat(
-            deckList.map(r => `${r.id},${r.qty},${formatId}`)
-        ).join('\n');
-        const jsonPayload = JSON.stringify({ name: deckName || 'New Deck', formatId, list: deck }, null, 2);
+        // Build CSV exactly like exportCSV (Deck + Maybe + DeckName)
+        const esc = (s) => `"${String(s ?? '').replace(/"/g, '""')}"`;
+        const safeName = deckName?.trim() ? deckName : 'New Deck';
+        const rowsCsv = ['InternalName,Qty,FormatId,Board,DeckName'];
+        const pushMapCsv = (map, board) => {
+            for (const [id, qty] of Object.entries(map)) {
+                const c = getById(id);
+                if (!c) continue;
+                if (isToken(c)) continue;
+                const q = Math.max(0, Number(qty) || 0);
+                if (q <= 0) continue;
+                rowsCsv.push(`${id},${q},${formatId},${board},${esc(safeName)}`);
+            }
+        };
+        pushMapCsv(deck, 'Deck');
+        pushMapCsv(maybe, 'Maybe');
+        const csvRows = rowsCsv.join('\n');
+
+        const jsonPayload = JSON.stringify({ name: deckName || 'New Deck', formatId, list: deck, maybe }, null, 2);
         const mime = ext === 'csv' ? 'text/csv' : 'application/json';
         const data = ext === 'csv' ? csvRows : jsonPayload;
 
@@ -1743,60 +2006,131 @@ export default function App() {
         const data = JSON.parse(text)
         // Accept either { name, list } or a raw map { id: qty }
           if (data && typeof data === 'object') {
-              const input = (data.list && typeof data.list === 'object') ? data.list : data
-              const normalized = {}
+              const input = (data.list && typeof data.list === 'object') ? data.list : data;
+              const normalized = {};
               for (const [rawId, qty] of Object.entries(input)) {
-                  const frontId = normalizeToFront(rawId)
-                  const nQty = Math.max(0, Number(qty) || 0)
-                  if (nQty > 0) normalized[frontId] = (normalized[frontId] ?? 0) + nQty
+                  const frontId = normalizeToFront(rawId);
+                  const nQty = Math.max(0, Number(qty) || 0);
+                  if (nQty > 0) normalized[frontId] = (normalized[frontId] ?? 0) + nQty;
               }
-              setDeck(normalized)
-              setDeckName(typeof data.name === 'string' ? data.name : '')
-              if (typeof data.formatId === 'string') setFormatId(data.formatId)
-              setShowNameInput(true)
+              setDeck(normalized);
+
+              // Maybe list (optional)
+              const maybeInput = (data.maybe && typeof data.maybe === 'object') ? data.maybe : {};
+              const maybeNorm = {};
+              for (const [rawId, qty] of Object.entries(maybeInput)) {
+                  const frontId = normalizeToFront(rawId);
+                  const nQty = Math.max(0, Number(qty) || 0);
+                  if (nQty > 0) maybeNorm[frontId] = (maybeNorm[frontId] ?? 0) + nQty;
+              }
+              setMaybe(maybeNorm);
+
+              // Ensure we show the main Deck after loading
+              setActiveBoard('DECK');
+
+              setDeckName(typeof data.name === 'string' ? data.name : '');
+              if (typeof data.formatId === 'string') setFormatId(data.formatId);
+              setShowNameInput(true);
           }
       } else if (file.name.toLowerCase().endsWith('.csv')) {
-          const lines = text.trim().split(/\r?\n/)
-          const map = {}
-          for (let i = 1; i < lines.length; i++) {
-              const [id, qty] = lines[i].split(',')
-              if (!id) continue
-              const frontId = normalizeToFront(id.trim())
-              const nQty = Math.max(0, Number((qty ?? '').trim()) || 0)
-              if (nQty > 0) map[frontId] = (map[frontId] ?? 0) + nQty
+          // Parse BOTH boards if present. Backward-compatible with old 2-col CSV.
+          const lines = text.trim().split(/\r?\n/).filter(Boolean);
+          if (lines.length === 0) return;
+
+          // CSV splitter that respects quotes and doubled quotes
+          const splitCsv = (line) => {
+              const out = [];
+              let cur = '';
+              let inQ = false;
+              for (let i = 0; i < line.length; i++) {
+                  const ch = line[i];
+                  if (ch === '"') {
+                      if (inQ && line[i + 1] === '"') { cur += '"'; i++; } else { inQ = !inQ; }
+                  } else if (ch === ',' && !inQ) {
+                      out.push(cur); cur = '';
+                  } else {
+                      cur += ch;
+                  }
+              }
+              out.push(cur);
+              return out;
+          };
+
+          const header = splitCsv(lines[0]).map(s => s.trim());
+          const hasHeader = /internalname/i.test(header[0] || '');
+          const start = hasHeader ? 1 : 0;
+
+          // Column indexes (default for old CSV: [0]=InternalName, [1]=Qty)
+          const idxName = hasHeader ? header.findIndex(h => /internalname/i.test(h)) : 0;
+          const idxQty = hasHeader ? header.findIndex(h => /^qty$/i.test(h)) : 1;
+          const idxBoard = hasHeader ? header.findIndex(h => /^board$/i.test(h)) : -1;
+          const idxDName = hasHeader ? header.findIndex(h => /^deckname$/i.test(h)) : -1;
+          const idxFmtId = hasHeader ? header.findIndex(h => /^formatid$/i.test(h)) : -1;
+
+          const deckMap = {};
+          const maybeMap = {};
+          let csvName = '';
+          let csvFormatId = '';
+
+          for (let i = start; i < lines.length; i++) {
+              const cols = splitCsv(lines[i]);
+              const idRaw = (cols[idxName] ?? '').trim();
+              const qtyRaw = (cols[idxQty] ?? '').trim();
+              if (!idRaw) continue;
+
+              const nQty = Math.max(0, Number(qtyRaw) || 0);
+              if (nQty <= 0) continue;
+
+              const frontId = normalizeToFront(idRaw);
+              const card = getById(frontId);
+              if (!card) continue;
+              if (isToken(card)) continue; // never import tokens
+
+              // Optional columns
+              const boardRaw = (idxBoard >= 0 ? (cols[idxBoard] ?? '') : '').trim().toLowerCase();
+              const board = boardRaw === 'maybe' ? 'MAYBE' : 'DECK';
+              const dname = (idxDName >= 0 ? (cols[idxDName] ?? '') : '').trim();
+              if (!csvName && dname) csvName = dname;
+              const fmtId = (idxFmtId >= 0 ? (cols[idxFmtId] ?? '') : '').trim();
+              if (!csvFormatId && fmtId) csvFormatId = fmtId;
+
+              // Partners are never allowed in Maybe; put them into Deck instead
+              const target = (board === 'MAYBE' && isPartner(card)) ? deckMap
+                  : (board === 'MAYBE' ? maybeMap : deckMap);
+
+              target[frontId] = (target[frontId] ?? 0) + nQty;
           }
-          setDeck(map)
-        // CSV has no canonical name; keep existing or empty
-        setShowNameInput(true)
+
+          setDeck(deckMap);
+          setMaybe(maybeMap);
+
+          // If CSV contained a deck name, use it; otherwise keep existing
+          if (csvName) setDeckName(csvName);
+
+          // If CSV contained a FormatId that exists in reference.json, set it
+          if (csvFormatId && (refData?.Format || []).includes(csvFormatId)) {
+              setFormatId(csvFormatId);
+          }
+
+          // After import, show main deck; keep name input visible for edits
+          setActiveBoard('DECK');
+          setShowNameInput(true);
       }
     } catch (e) {
-      alert('Failed to import deck: ' + e.message)
+        pushToast('Failed to import deck: ' + e.message, { type: 'error' })
     } finally {
       if (fileRef.current) fileRef.current.value = ''
     }
   }
-
-    // Count current cards in the deck (tokens never get into the deck UI already)
-    const getDeckCount = () => {
-        let total = 0;
-        for (const [id, qty] of Object.entries(deck)) {
-            const c = getById(id);
-            if (!c) continue;
-            if (isToken(c)) continue;
-            if (isPartner(c)) continue; // ignore the Partner
-            total += qty || 0;
-        }
-        return total;
-    };
 
     // ---- Deck Statistics (excluding Partner and Tokens) ----
     const deckStats = useMemo(() => {
         const partner = getPartnerInDeck();
         const partnerId = partner?.InternalName || null;
 
-        // rows = deck entries we actually count
+        // rows = entries we actually count from the active board
         const rows = [];
-        for (const [id, qty] of Object.entries(deck)) {
+        for (const [id, qty] of Object.entries(getActiveMap())) {
             if (!qty) continue;
             const c = getById(id);
             if (!c) continue;
@@ -2002,12 +2336,13 @@ export default function App() {
             },
             costPips, // NEW
         };
-    }, [deck, getById, elements, refData]);
+    }, [deck, maybe, activeBoard, getById, elements, refData]);
 
     // (now the original three lines)
     const deckSizeLimit = getDeckSizeLimit();
     const deckCount = getDeckCount();
-    const isDeckFull = Number.isFinite(deckSizeLimit) && deckCount >= deckSizeLimit;
+    // Only the main Deck has a size limit; Maybe is unlimited
+    const isDeckFull = (activeBoard === 'DECK') && Number.isFinite(deckSizeLimit) && deckCount >= deckSizeLimit;
 
     /** Likelihood (single-card) controls — depends on deckList/deckCount */
     const [likeCardName, setLikeCardName] = useState('');
@@ -2387,152 +2722,12 @@ export default function App() {
                   </button>
               </h3>
               <div id="help-body" hidden={helpCollapsed}>
-                  {/* 2-per-row layout for Help buttons */}
-                  <div
-                      style={{
-                          display: 'grid',
-                          gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                          columnGap: 8,
-                          rowGap: 0,
-                          marginTop: 8
-                      }}
-                  >
-                      <div className="controls" style={{ marginTop: 0 }}>
-                          <button
-                              type="button"
-                              className="tips-btn"
-                              style={{ width: '100%', whiteSpace: 'nowrap' }}
-                              onClick={() => setTipsOpen(true)}
-                              aria-haspopup="dialog"
-                              aria-expanded={tipsOpen}
-                              title="Shortcut: H"
-                          >
-                              Tips &amp; Features
-                          </button>
-                      </div>
-
-                      <div className="controls" style={{ marginTop: 0 }}>
-                          <button
-                              type="button"
-                              className="tips-btn"
-                              style={{ width: '100%', whiteSpace: 'nowrap' }}
-                              onClick={() => { setKeywordsQuery(''); setKeywordsOpen(true); }}
-                              aria-haspopup="dialog"
-                              aria-expanded={keywordsOpen}
-                              title="Shortcut: K"
-                          >
-                              Keywords
-                          </button>
-                      </div>
-
-                      <div className="controls" style={{ marginTop: 0 }}>
-                          <button
-                              type="button"
-                              className="tips-btn"
-                              style={{ width: '100%', whiteSpace: 'nowrap' }}
-                              onClick={() => { setIconsQuery(''); setIconsOpen(true); }}
-                              aria-haspopup="dialog"
-                              aria-expanded={iconsOpen}
-                              title="Shortcut: I"
-                          >
-                              Effect Icons
-                          </button>
-                      </div>
-
-                      <div className="controls" style={{ marginTop: 0 }}>
-                          <button
-                              type="button"
-                              className="tips-btn"
-                              style={{ width: '100%', whiteSpace: 'nowrap' }}
-                              onClick={() => { setElementsQuery(''); setElementsOpen(true); }}
-                              aria-haspopup="dialog"
-                              aria-expanded={elementsOpen}
-                              title="Shortcut: E"
-                          >
-                              Element Chart
-                          </button>
-                      </div>
-
-                      <div className="controls" style={{ marginTop: 0 }}>
-                          <button
-                              type="button"
-                              className="tips-btn"
-                              style={{ width: '100%', whiteSpace: 'nowrap' }}
-                              onClick={() => setTurnOpen(true)}
-                              aria-haspopup="dialog"
-                              aria-expanded={turnOpen}
-                              title="Shortcut: T"
-                          >
-                              Turn Structure
-                          </button>
-                      </div>
-                                            
-                      <div className="controls" style={{ marginTop: 0 }}>
-                          <button
-                              type="button"
-                              className="tips-btn"
-                              style={{ width: '100%', whiteSpace: 'nowrap' }}
-                              onClick={() => setLayoutOpen(true)}
-                              aria-haspopup="dialog"
-                              aria-expanded={layoutOpen}
-                              title="Shortcut: L"
-                          >
-                              Card Layout
-                          </button>
-                      </div>
-                  </div>
-
-                  {/* Formats + Card Types side-by-side */}
-                  <div className="controls" style={{ marginTop: 0 }}>
-                      <button
-                          type="button"
-                          className="tips-btn"
-                          style={{ flex: 1, whiteSpace: 'nowrap' }}
-                          onClick={() => setFormatsOpen(true)}
-                          aria-haspopup="dialog"
-                          aria-expanded={formatsOpen}
-                          title="Shortcut: F"
-                      >
-                          Formats
-                      </button>
-
-                      <button
-                          type="button"
-                          className="tips-btn"
-                          style={{ flex: 1, whiteSpace: 'nowrap' }}
-                          onClick={() => { setCardTypesQuery(''); setCardTypesOpen(true); }}
-                          aria-haspopup="dialog"
-                          aria-expanded={cardTypesOpen}
-                          title="Shortcut: C"
-                      >
-                          Card Types
-                      </button>
-                  </div>
-
-                  <div className="controls" style={{ marginTop: 0 }}>
-                      <button
-                          type="button"
-                          className="tips-btn"
-                          style={{ flex: 1, whiteSpace: 'nowrap' }}
-                          onClick={() => setBoardLayoutOpen(true)}
-                          aria-haspopup="dialog"
-                          aria-expanded={boardLayoutOpen}
-                          title="Shortcut: B"
-                      >
-                          Board Layout
-                      </button>
-
-                      <button
-                          type="button"
-                          className="tips-btn"
-                          style={{ flex: 1, whiteSpace: 'nowrap' }}
-                          onClick={() => setFaqOpen(true)}
-                          aria-haspopup="dialog"
-                          aria-expanded={faqOpen}
-                      >
-                          FAQ
-                      </button>
-                  </div>
+                  {/* Help Section content provided by plugins */}
+                  {(pluginHost.getHelpSectionRenderers?.() || []).map(h => (
+                      h?.render
+                          ? <React.Fragment key={h.id}>{h.render(pluginHost.getAppApi?.())}</React.Fragment>
+                          : null
+                  ))}
 
                   {/* keep your stacked shortcuts block below, unchanged */}
                   <div className="controls" style={{ marginTop: 10 }}>
@@ -2560,112 +2755,43 @@ export default function App() {
       >
               {/* Gallery Header (sticky) */}
               <div className="gallery-header" style={GALLERY_HEADER_STYLE}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                      {/* Left: title + size slider */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                  <div className="gallery-header-row" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {/* Left: title + plugin-provided controls (size icon/slider/reset + sorting + reverse) */}
+                      <div className="gh-left" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                           <div style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{GALLERY_HEADER_TITLE}</div>
-                          <div style={GALLERY_ICON_WRAP_STYLE} title="Card Size" aria-label="Card size">
-                              {GALLERY_SLIDER_ICON}
-                          </div>
-                          <div
-                              style={{
-                                  width: GALLERY_SLIDER_WIDTH,
-                                  marginRight: GALLERY_SLIDER_GAP_AFTER + GALLERY_SLIDER_OVERFLOW,
-                                  position: 'relative'
-                              }}
-                          >
-                              <input
-                                  className="gallery-size-slider"
-                                  id={GALLERY_SLIDER_ID}
-                                  type="range"
-                                  min={GALLERY_SLIDER_RANGE.min}
-                                  max={GALLERY_SLIDER_RANGE.max}
-                                  step={GALLERY_SLIDER_RANGE.step}
-                                  value={gallerySizePct}
-                                  onChange={(e) => setGallerySizePct(Number(e.target.value))}
-                                  aria-label="Set gallery card size"
-                                  style={{
-                                      // widen by a full thumb width and shift by half so the knob center hits both ends
-                                      width: `calc(100% + ${GALLERY_SLIDER_OVERFLOW * 2}px)`,
-                                      transform: `translateX(-${GALLERY_SLIDER_OVERFLOW}px)`
-                                  }}
-                              />
-                          </div>
-                          <button
-                              type="button"
-                              onClick={() => setGallerySizePct(GALLERY_SLIDER_DEFAULT)}
-                              aria-label="Reset gallery card size to default"
-                              style={{
-                                  fontSize: 12,
-                                  padding: '4px 10px',
-                                  borderRadius: 6,
-                                  border: '1px solid rgba(255,255,255,0.12)',
-                                  background: 'transparent',
-                                  color: 'inherit',
-                                  cursor: 'pointer',
-                                  whiteSpace: 'nowrap'
-                              }}
-                          >
-                              {GALLERY_RESET_LABEL}
-                          </button>
-                          <select
-                              aria-label="Sort Card Gallery"
-                              value={sortMode}
-                              onChange={(e) => setSortMode(e.target.value)}
-                              style={{ marginLeft: 8 }}
-                          >
-                              <option value="UNSORTED">Unsorted</option>
-                              <option value="COST">Converted Cost</option>
-                              <option value="NAME">Name</option>
-                              {/* ADD: Refund sorting */}
-                              <option value="REFUND">Refund</option>
-                          </select>
-                          <button
-                              type="button"
-                              onClick={() => setReverseSort(v => !v)}
-                              aria-pressed={reverseSort}
-                              title="Reverse sort order"
-                              className={`gallery-toggle ${reverseSort ? 'active' : ''}`}
-                              style={{ marginLeft: 8 }}   // keep existing spacing only
-                          >
-                              Reverse
-                          </button>
+
+                          {(pluginHost.getGalleryHeaderLeftActions?.() || []).map(action => (
+                              action?.render
+                                  ? <React.Fragment key={action.id}>{action.render(pluginHost.getAppApi?.())}</React.Fragment>
+                                  : (
+                                      <button
+                                          key={action.id}
+                                          type="button"
+                                          className="to-top-btn"
+                                          onClick={() => action.onClick?.(pluginHost.getAppApi?.())}
+                                      >
+                                          {action.label}
+                                      </button>
+                                  )
+                          ))}
                       </div>
 
-                      {/* Right: To Top + result count */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <button
-                              type="button"
-                              className="to-top-btn"
-                              title="Scroll Card Gallery to top"
-                              onClick={() => {
-                                  const el = galleryGridRef?.current;
-                                  if (el && typeof el.scrollTo === 'function') {
-                                      el.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-                                  } else {
-                                      window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-                                  }
-                              }}
-                          >
-                              To Top
-                          </button>
-
-                          {/* NEW: To Bottom (same style as To Top) */}
-                          <button
-                              type="button"
-                              className="to-top-btn"
-                              title="Scroll Card Gallery to bottom"
-                              onClick={() => {
-                                  const el = galleryGridRef?.current;
-                                  if (el && typeof el.scrollTo === 'function') {
-                                      el.scrollTo({ top: el.scrollHeight, left: 0, behavior: 'smooth' });
-                                  } else {
-                                      window.scrollTo({ top: document.documentElement.scrollHeight, left: 0, behavior: 'smooth' });
-                                  }
-                              }}
-                          >
-                              To Bottom
-                          </button>
+                      {/* Right: Plugin actions + result count (To Top/Bottom moved to plugin) */}
+                      <div className="gh-right" style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
+                          {(pluginHost.getGalleryHeaderActions?.() || []).map(action => (
+                              action?.render
+                                  ? <React.Fragment key={action.id}>{action.render(pluginHost.getAppApi?.())}</React.Fragment>
+                                  : (
+                                      <button
+                                          key={action.id}
+                                          type="button"
+                                          className="to-top-btn"
+                                          onClick={() => action.onClick?.(pluginHost.getAppApi?.())}
+                                      >
+                                          {action.label}
+                                      </button>
+                                  )
+                          ))}
 
                           <div style={{ fontSize: 12, opacity: 0.8, whiteSpace: 'nowrap' }}>
                               {gallery.length} results
@@ -2678,7 +2804,7 @@ export default function App() {
               <div style={{ height: galleryVirt.padTop, gridColumn: '1 / -1' }} />
               {sortedGallery.slice(galleryVirt.start, galleryVirt.end).map(c => {
                   const id = c.InternalName
-                  const qty = deck[id] ?? 0
+                  const qty = (getActiveMap()[id] ?? 0)
                   const cap = cardCap(c)
                   const atCap = Number.isFinite(cap) && qty >= cap
                   const inDeck = qty > 0
@@ -2689,7 +2815,7 @@ export default function App() {
                   const rc = getRarityCapMap();
                   const partnerCap = Number.isFinite(rc?.Partner) ? rc.Partner : 1;
                   const partnerTotal = isPartnerCard
-                      ? Object.entries(deck).reduce((s, [k, q]) => s + (isPartner(getById(k)) ? (q || 0) : 0), 0)
+                      ? Object.entries(getActiveMap()).reduce((s, [k, q]) => s + (isPartner(getById(k)) ? (q || 0) : 0), 0)
                       : 0;
                   const partnerCapReached = isPartnerCard && partnerTotal >= partnerCap;
 
@@ -2768,11 +2894,11 @@ export default function App() {
                                   if (isTokenCard) return
                                   if (atCap) return
                                   if (offElement) {
-                                      alert('That card has an element not allowed by your selected Partner.')
+                                      pushToast('That card has an element not allowed by your selected Partner.', { type: 'warn' })
                                       return
                                   }
                                   if (isDeckFull && !isPartnerCard) {
-                                      alert(`Deck is full (${deckSizeLimit} cards). Remove a card before adding more.`)
+                                      pushToast(`Deck is full (${deckSizeLimit} cards). Remove a card before adding more.`, { type: 'warn' })
                                       return
                                   }
                                   add(id, +1)
@@ -2850,6 +2976,21 @@ export default function App() {
                                   <span className="badge">Refund {displayCard.Refund}</span>
                               )}
                           </div>
+                          {/* Plugin-provided badges */}
+                          {(() => {
+                              const nodes = pluginHost.getCardBadgeNodes({
+                                  card: displayCard,
+                                  banned,
+                                  isTokenCard
+                              });
+                              return nodes && nodes.length ? (
+                                  <div className="row small">
+                                      {nodes.map((node, i) => (
+                                          <React.Fragment key={`pbadge-${i}`}>{node}</React.Fragment>
+                                      ))}
+                                  </div>
+                              ) : null;
+                          })()}
                           {!isTokenCard && (
                               <div className="row">
 
@@ -2906,6 +3047,10 @@ export default function App() {
                   </select>
               </div>
         <h3 className="section-title">Deck</h3>
+              {/* Plugin deck header controls (e.g. Deck/Maybe toggle) */}
+              {(pluginHost.getDeckHeaderRenderers?.() || []).map((r) => (
+                  <React.Fragment key={r.id}>{r.render?.()}</React.Fragment>
+              ))}
 
         {/* Name area */}
         {!showNameInput ? (
@@ -2923,14 +3068,17 @@ export default function App() {
             />
                           <button
                               onClick={() => {
-                                  if (!confirmDanger('Cancel and clear the current deck? This will remove the deck name and all cards.')) return
+                                  if (!confirmDanger('Cancel and...clear the current deck? This will remove the deck name and all cards.')) return
                                   setDeck({})
+                                  setMaybe({})                // NEW
+                                  setActiveBoard('DECK');
+                                  try { localStorage.setItem('activeBoard', 'DECK'); } catch { }
                                   setDeckName('')
-                                  setFormatId('Freeform') // reset format filter
+                                  setFormatId('Freeform')     // reset format filter
                                   setShowNameInput(false)
                                   if (fileRef.current) fileRef.current.value = ''
-                                  setImportFileName('')        // NEW: reset displayed file name & hide Save button
-                                  setImportFileHandle(null)    // NEW: drop any existing file handle
+                                  setImportFileName('')       // reset displayed file name & hide Save button
+                                  setImportFileHandle(null)   // drop any existing file handle
                               }}
                               title="Cancel and clear deck"
                           >
@@ -2942,10 +3090,10 @@ export default function App() {
 
               <div className="small">
                   Cards: {getDeckCount()}
-                  {(() => {
-                      const lim = getDeckSizeLimit()
-                      return Number.isFinite(lim) ? ` / ${lim}` : ''
-                  })()}
+                  {activeBoard === 'DECK' ? (() => {
+                      const lim = getDeckSizeLimit();
+                      return Number.isFinite(lim) ? ` / ${lim}` : '';
+                  })() : ''}
               </div>
 
               <div style={{ marginTop: 8 }}>
@@ -3095,6 +3243,34 @@ export default function App() {
                                                           requestAnimationFrame(() => positionPreviewNearCursor(e));
                                                       }}
                                                   >
+                                                      {activeBoard === 'MAYBE' && (
+                                                          <button
+                                                              className="to-deck-btn"
+                                                              onMouseDown={(e) => e.preventDefault()}
+                                                              onClick={(e) => {
+                                                                  previewLockLeftRef.current = true;
+                                                                  positionPreviewNearCursor(e);
+                                                                  moveAllToDeck(row.id);
+                                                              }}
+                                                              title="Move all copies to your Deck (respects deck size & per-card limits)."
+                                                          >
+                                                              To Deck
+                                                          </button>
+                                                      )}
+                                                      {activeBoard === 'DECK' && !isPartner(getById(row.id)) && (
+                                                          <button
+                                                              className="to-deck-btn"
+                                                              onMouseDown={(e) => e.preventDefault()}
+                                                              onClick={(e) => {
+                                                                  previewLockLeftRef.current = true;
+                                                                  positionPreviewNearCursor(e);
+                                                                  moveAllToMaybe(row.id);
+                                                              }}
+                                                              title="Move all copies to your Maybe list."
+                                                          >
+                                                              To Maybe
+                                                          </button>
+                                                      )}
                                                       <button
                                                           onMouseDown={(e) => e.preventDefault()}
                                                           onClick={(e) => {
@@ -3211,567 +3387,13 @@ export default function App() {
                   </div>,
                   document.body
               )}
-
-              {tipsOpen && createPortal(
-                  <div
-                      className="modal-backdrop"
-                      onClick={() => setTipsOpen(false)}
-                      role="none"
-                  >
-                      <div
-                          className="modal-window"
-                          role="dialog"
-                          aria-modal="true"
-                          aria-labelledby="tips-title"
-                          onClick={(e) => e.stopPropagation()}
-                      >
-                          <div className="modal-header">
-                              <h2 id="tips-title">Tips &amp; Features</h2>
-                              <button
-                                  className="modal-close"
-                                  aria-label="Close Tips & Features"
-                                  onClick={() => setTipsOpen(false)}
-                              >
-                                  ×
-                              </button>
-                          </div>
-
-                          <div className="modal-body">
-                              {Array.isArray(refData.Tips) && refData.Tips.length > 0 ? (
-                                  <ul className="small">
-                                      {refData.Tips.map((tip, i) => (
-                                          <li key={i}>{tip}</li>
-                                      ))}
-                                  </ul>
-                              ) : (
-                                  <div className="small">No tips found. Add a top-level "Tips" array to reference.json.</div>
-                              )}
-                          </div>
-                      </div>
-                  </div>,
-                  document.body
-              )}
-
-              {keywordsOpen && createPortal(
-                  <div
-                      className="modal-backdrop"
-                      onClick={() => setKeywordsOpen(false)}
-                      role="none"
-                  >
-                      <div
-                          className="modal-window modal-keywords"
-                          role="dialog"
-                          aria-modal="true"
-                          aria-labelledby="keywords-title"
-                          onClick={(e) => e.stopPropagation()}
-                      >
-                          <div className="modal-header">
-                              <h2 id="keywords-title">Keywords</h2>
-                              <button
-                                  className="modal-close"
-                                  aria-label="Close Keywords"
-                                  onClick={() => setKeywordsOpen(false)}
-                              >
-                                  ×
-                              </button>
-                          </div>
-
-                          <div className="modal-body">
-                              {keywords.length === 0 ? (
-                                  <div className="small">No keywords found.</div>
-                              ) : (
-                                  <>
-                                      <div className="modal-search">
-                                          <input
-                                              type="text"
-                                              placeholder="Filter keywords (name, templating, rules, reminder). Shortcut: K"
-                                              value={keywordsQuery}
-                                              onChange={e => setKeywordsQuery(e.target.value)}
-                                          />
-                                      </div>
-                                      <div className="keywords-table-wrap">
-                                          <table className="keywords-table">
-                                              <thead>
-                                                  <tr>
-                                                      <th>Name</th>
-                                                      <th>Templating</th>
-                                                      <th>Rules Text</th>
-                                                      <th>Reminder Text</th>
-                                                  </tr>
-                                              </thead>
-                                              <tbody>
-                                                  {keywords
-                                                      .filter(k => {
-                                                          const q = keywordsQuery.trim().toLowerCase();
-                                                          if (!q) return true;
-                                                          const blob = [
-                                                              k.DisplayName, k.TemplateName, k.RulesText, k.ReminderText
-                                                          ].map(x => String(x || '').toLowerCase()).join(' ');
-                                                          return blob.includes(q);
-                                                      })
-                                                      .map(k => (
-                                                          <tr key={String(k.KeywordName || k.DisplayName || Math.random())}>
-                                                              <td>{k.DisplayName ?? ''}</td>
-                                                              <td>{k.TemplateName ?? ''}</td>
-                                                              <td>{k.RulesText ?? ''}</td>
-                                                              <td>{k.ReminderText ?? ''}</td>
-                                                          </tr>
-                                                      ))}
-                                              </tbody>
-                                          </table>
-                                      </div>
-                                  </>
-                              )}
-                          </div>
-                      </div>
-                  </div>,
-                  document.body
-              )}
-
-              {elementsOpen && createPortal(
-                  <div
-                      className="modal-backdrop"
-                      onClick={() => setElementsOpen(false)}
-                      role="none"
-                  >
-                      <div
-                          className="modal-window modal-elements"
-                          role="dialog"
-                          aria-modal="true"
-                          aria-labelledby="elements-title"
-                          onClick={(e) => e.stopPropagation()}
-                      >
-                          <div className="modal-header">
-                              <h2 id="elements-title">Element Chart</h2>
-                              <button
-                                  className="modal-close"
-                                  aria-label="Close Element Chart"
-                                  onClick={() => setElementsOpen(false)}
-                              >
-                                  ×
-                              </button>
-                          </div>
-
-                          <div className="modal-body">
-                              {elements.length === 0 ? (
-                                  <div className="small">No elements found.</div>
-                              ) : (
-                                  <>
-                                      <div className="modal-search">
-                                          <input
-                                              type="text"
-                                              placeholder="Filter elements (name, strong/weak lists). Shortcut: E"
-                                              value={elementsQuery}
-                                              onChange={e => setElementsQuery(e.target.value)}
-                                          />
-                                      </div>
-                                      <div className="elements-table-wrap">
-                                          <table className="elements-table">
-                                              <thead>
-                                                  <tr>
-                                                      <th>Display Name</th>
-                                                      <th>Image</th>
-                                                      <th>Strong Against</th>
-                                                      <th>Weak To</th>
-                                                  </tr>
-                                              </thead>
-                                              <tbody>
-                                                  {elements
-                                                      .filter(el => {
-                                                          const q = elementsQuery.trim().toLowerCase();
-                                                          if (!q) return true;
-                                                          const blob = [
-                                                              el.DisplayName, el.InternalName,
-                                                              ...(Array.isArray(el.StrongAgainst) ? el.StrongAgainst : []),
-                                                              ...(Array.isArray(el.WeakTo) ? el.WeakTo : []),
-                                                          ].map(x => String(x || '').toLowerCase()).join(' ');
-                                                          return blob.includes(q);
-                                                      })
-                                                      .map(el => (
-                                                          <tr key={String(el.InternalName || el.DisplayName || Math.random())}>
-                                                              <td>{el.DisplayName ?? ''}</td>
-                                                              <td className="elements-cell-img">
-                                                                  {el.InternalName ? (
-                                                                      <img
-                                                                          className="element-img"
-                                                                          src={getElementSrc(el.InternalName)}
-                                                                          alt={el.DisplayName || el.InternalName}
-                                                                          title={el.DisplayName || el.InternalName}
-                                                                          data-tried="0"
-                                                                          onError={makeElementImgErrorHandler(el.InternalName)}
-                                                                          draggable={false}
-                                                                      />
-                                                                  ) : null}
-                                                              </td>
-                                                              <td className="elements-list-cell">{renderElementList(el.StrongAgainst)}</td>
-                                                              <td className="elements-list-cell">{renderElementList(el.WeakTo)}</td>
-                                                          </tr>
-                                                      ))}
-                                              </tbody>
-                                          </table>
-                                      </div>
-                                  </>
-                              )}
-                          </div>
-                      </div>
-                  </div>,
-                  document.body
-              )}
-
-
-              {iconsOpen && createPortal(
-                  <div
-                      className="modal-backdrop"
-                      onClick={() => setIconsOpen(false)}
-                      role="none"
-                  >
-                      <div
-                          className="modal-window modal-icons"
-                          role="dialog"
-                          aria-modal="true"
-                          aria-labelledby="icons-title"
-                          onClick={(e) => e.stopPropagation()}
-                      >
-                          <div className="modal-header">
-                              <h2 id="icons-title">Effect Icons</h2>
-                              <button
-                                  className="modal-close"
-                                  aria-label="Close Effect Icons"
-                                  onClick={() => setIconsOpen(false)}
-                              >
-                                  ×
-                              </button>
-                          </div>
-
-                          <div className="modal-body">
-                              {icons.length === 0 ? (
-                                  <div className="small">No icons found.</div>
-                              ) : (
-                                  <>
-                                      <div className="modal-search">
-                                          <input
-                                              type="text"
-                                              placeholder="Filter icons (name, rules, search term). Shortcut: I"
-                                              value={iconsQuery}
-                                              onChange={e => setIconsQuery(e.target.value)}
-                                          />
-                                      </div>
-                                      <div className="icons-table-wrap">
-                                          <table className="icons-table">
-                                              <thead>
-                                                  <tr>
-                                                      <th>Display Name</th>
-                                                      <th>Image</th>
-                                                      <th>Rules Text</th>
-                                                      <th>Search Term</th>
-                                                  </tr>
-                                              </thead>
-                                              <tbody>
-                                                  {icons
-                                                      .filter(ic => {
-                                                          const q = iconsQuery.trim().toLowerCase();
-                                                          if (!q) return true;
-                                                          const blob = [
-                                                              ic.DisplayName, ic.RulesText, ic.SearchTerm, ic.InternalName
-                                                          ].map(x => String(x || '').toLowerCase()).join(' ');
-                                                          return blob.includes(q);
-                                                      })
-                                                      .map(ic => (
-                                                          <tr key={String(ic.InternalName || ic.DisplayName || Math.random())}>
-                                                              <td>{ic.DisplayName ?? ''}</td>
-                                                              <td className="icons-cell-img">
-                                                                  {ic.InternalName ? (
-                                                                      <img
-                                                                          className="icon-img"
-                                                                          src={getIconSrc(ic.InternalName)}
-                                                                          alt={ic.DisplayName || ic.InternalName}
-                                                                          data-tried="0"
-                                                                          onError={makeIconErrorHandler(ic.InternalName)}
-                                                                          draggable={false}
-                                                                      />
-                                                                  ) : null}
-                                                              </td>
-                                                              <td>{ic.RulesText ?? ''}</td>
-                                                              <td>{ic.SearchTerm ?? ''}</td>
-                                                          </tr>
-                                                      ))}
-                                              </tbody>
-                                          </table>
-                                      </div>
-                                  </>
-                              )}
-                          </div>
-                      </div>
-                  </div>,
-                  document.body
-              )}
-
-              {turnOpen && createPortal(
-                  <div
-                      className="modal-backdrop"
-                      onClick={() => setTurnOpen(false)}
-                      role="none"
-                  >
-                      <div
-                          className="modal-window modal-turn"
-                          role="dialog"
-                          aria-modal="true"
-                          aria-labelledby="turn-title"
-                          onClick={(e) => e.stopPropagation()}
-                      >
-                          <div className="modal-header">
-                              <h2 id="turn-title">Turn Structure</h2>
-                              <button
-                                  className="modal-close"
-                                  aria-label="Close Turn Structure"
-                                  onClick={() => setTurnOpen(false)}
-                              >
-                                  ×
-                              </button>
-                          </div>
-
-                          <div className="modal-body">
-                              {Array.isArray(refData.TurnStructure) && refData.TurnStructure.length > 0 ? (
-                                  refData.TurnStructure.map((section) => (
-                                      <section key={section.section || section.phase} className="turn-section">
-                                          <div className="turn-section-title">
-                                              {section.section || section.phase}
-                                          </div>
-                                          <ul className="turn-list">
-                                              {(section.items || []).map((step) => (
-                                                  <li key={step.name}>
-                                                      <span className="turn-step-name">{step.name}:</span>{" "}
-                                                      <span className="turn-step-desc">{step.desc}</span>
-
-                                                      {Array.isArray(step.subitems) && step.subitems.length > 0 && (
-                                                          <ul className="turn-sublist">
-                                                              {step.subitems.map((sub) => (
-                                                                  <li key={sub.name}>
-                                                                      <span className="turn-step-name">{sub.name}:</span>{" "}
-                                                                      <span className="turn-step-desc">{sub.desc}</span>
-                                                                  </li>
-                                                              ))}
-                                                          </ul>
-                                                      )}
-                                                  </li>
-                                              ))}
-                                          </ul>
-                                      </section>
-                                  ))
-                              ) : (
-                                  <div className="small">No turn structure found. Add "TurnStructure" to reference.json.</div>
-                              )}
-                          </div>
-                      </div>
-                  </div>,
-                  document.body
-              )}
-
-              {formatsOpen && createPortal(
-                  <div
-                      className="modal-backdrop"
-                      onClick={() => setFormatsOpen(false)}
-                      role="none"
-                  >
-                      <div
-                          className="modal-window modal-formats"
-                          role="dialog"
-                          aria-modal="true"
-                          aria-labelledby="formats-title"
-                          onClick={(e) => e.stopPropagation()}
-                      >
-                          <div className="modal-header">
-                              <h2 id="formats-title">Formats</h2>
-                              <button
-                                  className="modal-close"
-                                  aria-label="Close Formats"
-                                  onClick={() => setFormatsOpen(false)}
-                              >
-                                  ×
-                              </button>
-                          </div>
-
-                          <div className="modal-body">
-                              {Array.isArray(formatsList) && formatsList.length ? (
-                                  <table className="stats-table" style={{ width: '100%' }}>
-                                      <thead>
-                                          <tr>
-                                              <th style={{ textAlign: 'left' }}>Format</th>
-                                              <th style={{ textAlign: 'left' }}>Details</th>
-                                          </tr>
-                                      </thead>
-                                      <tbody>
-                                          {formatsList.map(f => {
-                                              const cfg = (formatsConfig && formatsConfig[f.id]) || {};
-
-                                              // Deck size text
-                                              const deckSizeText = (() => {
-                                                  const dsz = cfg.deckSize;
-                                                  if (!dsz || dsz.type === 'none') return 'No deck size limit';
-                                                  if (dsz.type === 'fixed') {
-                                                      const n = Number(dsz.values);
-                                                      return Number.isFinite(n) ? `${n} cards` : 'No deck size limit';
-                                                  }
-                                                  if (dsz.type === 'byElements') {
-                                                      const vals = dsz.values || {};
-                                                      const pairs = Object.entries(vals)
-                                                          .sort((a, b) => Number(a[0]) - Number(b[0]))
-                                                          .map(([k, v]) => `${k} → ${v}`);
-                                                      return `By Partner elements: ${pairs.join(', ')}`;
-                                                  }
-                                                  return 'No deck size limit';
-                                              })();
-
-                                              // Allowed sets text
-                                              const allowedSetsText = (() => {
-                                                  const allowed = cfg.allowedSets;
-                                                  if (!allowed || allowed === '*' || (Array.isArray(allowed) && allowed.length === 0)) {
-                                                      return 'All sets';
-                                                  }
-                                                  return Array.isArray(allowed) ? allowed.join(', ') : 'All sets';
-                                              })();
-
-                                              // Rarity cap text
-                                              const rarityCapText = (() => {
-                                                  const rc = cfg.rarityCap || {};
-                                                  const order = ['Common', 'Uncommon', 'Rare', 'Ultra Rare', 'Partner'];
-                                                  const parts = order
-                                                      .filter(r => rc[r] != null)
-                                                      .map(r => `${r}: ${rc[r]}`);
-                                                  // include any unexpected keys too
-                                                  Object.keys(rc).forEach(k => {
-                                                      if (!order.includes(k)) parts.push(`${k}: ${rc[k]}`);
-                                                  });
-                                                  return parts.join(' · ');
-                                              })();
-
-                                              // Ban list text (maps InternalName → card/partner name if available)
-                                              const banListText = (() => {
-                                                  const raw = cfg?.BanList;
-                                                  if (!raw) return '';
-
-                                                  // Normalize to an array of InternalName strings
-                                                  let ids = [];
-                                                  if (Array.isArray(raw)) {
-                                                      ids = raw.map(String);
-                                                  } else {
-                                                      const s = String(raw).trim();
-                                                      if (s) ids = s.includes(',') ? s.split(',').map(x => x.trim()).filter(Boolean) : [s];
-                                                  }
-                                                  if (!ids.length) return '';
-
-                                                  // Try to show CardName; fall back to the InternalName
-                                                  return ids
-                                                      .map(id => (getById ? (getById(id)?.CardName || id) : id))
-                                                      .join(', ');
-                                              })();
-
-                                              return (
-                                                  <tr key={f.id}>
-                                                      <td style={{ verticalAlign: 'top', whiteSpace: 'nowrap' }}>{f.name}</td>
-                                                      <td style={{ verticalAlign: 'top' }}>
-                                                          {/* Reference description (from reference.json) */}
-                                                          <div style={{ marginBottom: 6 }}>
-                                                              {f.desc || <span style={{ opacity: 0.7 }}>(no description yet)</span>}
-                                                          </div>
-
-                                                          {/* Formats.json details */}
-                                                          <div className="small" style={{ opacity: 0.95, lineHeight: 1.5 }}>
-                                                              <div><strong>Deck Size:</strong> {deckSizeText}</div>
-                                                              <div><strong>Allowed Sets:</strong> {allowedSetsText}</div>
-                                                              {rarityCapText && (
-                                                                  <div><strong>Rarity Caps:</strong> {rarityCapText}</div>
-                                                              )}
-                                                              {banListText && (
-                                                                  <div><strong>Ban List:</strong> {banListText}</div>
-                                                              )}
-                                                          </div>
-                                                      </td>
-                                                  </tr>
-                                              );
-                                          })}
-                                      </tbody>
-                                  </table>
-                              ) : (
-                                  <div className="small">No formats found in reference.json.</div>
-                              )}
-                          </div>
-                      </div>
-                  </div>,
-                  document.body
-              )}
-
-              {layoutOpen && createPortal(
-                  <div className="modal-backdrop" onClick={() => setLayoutOpen(false)} role="none">
-                      <div
-                          className="modal-window modal-cardlayout"
-                          role="dialog"
-                          aria-modal="true"
-                          aria-labelledby="cardlayout-title"
-                          onClick={(e) => e.stopPropagation()}
-                      >
-                          <div className="modal-header">
-                              <h2 id="cardlayout-title">Card Layout</h2>
-                              <button className="modal-close" aria-label="Close Card Layout" onClick={() => setLayoutOpen(false)}>×</button>
-                          </div>
-
-                          <div className="modal-body">
-                              {refData.CardLayout ? (
-                                  <div className="card-layout">
-                                      <h3 className="card-layout-title">
-                                          {refData.CardLayout.title || 'How to Read a Card'}
-                                      </h3>
-
-                                      <figure className="card-layout-figure">
-                                          <img
-                                              className="card-layout-img"
-                                              src={refData.CardLayout.image || '/images/card_layout_example.png'}
-                                              alt="Sample card with numbered callouts"
-                                              onError={(e) => { e.currentTarget.src = '/images/card_layout_example.png'; }}
-                                              draggable={false}
-                                          />
-                                          {(refData.CardLayout.markers || []).map(m => (
-                                              <div
-                                                  key={m.id}
-                                                  className="cl-bubble"
-                                                  style={{ left: `${m.x}%`, top: `${m.y}%` }}
-                                                  aria-label={`Marker ${m.id}`}
-                                              >
-                                                  {m.id}
-                                              </div>
-                                          ))}
-                                      </figure>
-
-                                      <ol className="card-layout-list">
-                                          {(refData.CardLayout.sections || []).map(sec => (
-                                              <li key={sec.id}>
-                                                  <span className="cl-num">{sec.id}.</span>{' '}
-                                                  <span className="cl-title">{sec.title}</span>{' '}
-                                                  <span className="cl-text">- {sec.text}</span>
-                                                  {Array.isArray(sec.subitems) && sec.subitems.length > 0 && (
-                                                      <ul className="card-layout-sublist">
-                                                          {sec.subitems.map(sub => (
-                                                              <li key={sub.id}>
-                                                                  <span className="cl-num">{sub.id}.</span>{' '}
-                                                                  <span className="cl-title">{sub.title}</span>{' '}
-                                                                  <span className="cl-text">- {sub.text}</span>
-                                                              </li>
-                                                          ))}
-                                                      </ul>
-                                                  )}
-                                              </li>
-                                          ))}
-                                      </ol>
-                                  </div>
-                              ) : (
-                                  <div className="small">No Card Layout data found. Add a top-level “CardLayout” object to reference.json.</div>
-                              )}
-                          </div>
-                      </div>
-                  </div>,
-                  document.body
-              )}
-
+              {/* moved to plugin: /src/plugins/help-section.jsx (Tips) */}
+              {/* moved to plugin: /src/plugins/help-section.jsx (Keywords) */}
+              {/* moved to plugin: /src/plugins/help-section.jsx (<Elements>) */}
+              {/* moved to plugin: /src/plugins/help-section.jsx (Effect Icons) */}
+              {/* moved to plugin: /src/plugins/help-section.jsx (<Turn Structure>) */}
+              {/* moved to plugin: /src/plugins/help-section.jsx (<Formats>) */}
+              {/* moved to plugin: /src/plugins/help-section.jsx (<Card Layout>) */}
               {statsOpen && createPortal(
                   <div className="modal-backdrop" onClick={() => setStatsOpen(false)} role="none">
                       <div
@@ -4254,182 +3876,9 @@ export default function App() {
                   </div>,
                   document.body
               )}
-
-              {cardTypesOpen && createPortal(
-                  <div
-                      className="modal-backdrop"
-                      onClick={() => setCardTypesOpen(false)}
-                      role="none"
-                  >
-                      <div
-                          className="modal-window modal-keywords"  // reuse sizing from keywords modal
-                          role="dialog"
-                          aria-modal="true"
-                          aria-labelledby="cardtypes-title"
-                          onClick={(e) => e.stopPropagation()}
-                      >
-                          <div className="modal-header">
-                              <h2 id="cardtypes-title">Card Types</h2>
-                              <button
-                                  className="modal-close"
-                                  aria-label="Close Card Types"
-                                  onClick={() => setCardTypesOpen(false)}
-                              >
-                                  ×
-                              </button>
-                          </div>
-
-                          <div className="modal-body">
-                              {(!Array.isArray(refData?.CardTypeInfo) || refData.CardTypeInfo.length === 0) ? (
-                                  <div className="small">No card types found. Add a top-level "CardTypeInfo" array to reference.json.</div>
-                              ) : (
-                                  <>
-                                      <div className="modal-search">
-                                          <input
-                                              type="text"
-                                              placeholder="Filter card types (name, description)"
-                                              value={cardTypesQuery}
-                                              onChange={e => setCardTypesQuery(e.target.value)}
-                                          />
-                                      </div>
-
-                                      <div className="keywords-table-wrap cardtypes-table">{/* reuse table styles */}
-                                          <table className="keywords-table">
-                                                  <thead>
-                                                      <tr>
-                                                          <th style={{ width: 120, minWidth: 120 }}>Type</th>
-                                                          <th>Description</th>
-                                                      </tr>
-                                                  </thead>
-                                              <tbody>
-                                                  {refData.CardTypeInfo
-                                                      .filter(ct => {
-                                                          const q = cardTypesQuery.trim().toLowerCase()
-                                                          if (!q) return true
-                                                          const blob = [
-                                                              ct.CardType,
-                                                              ct.CardTypeDescription
-                                                          ].map(x => String(x || '').toLowerCase()).join(' ')
-                                                          return blob.includes(q)
-                                                      })
-                                                      .map(ct => (
-                                                          <tr key={String(ct.CardType || Math.random())}>
-                                                              <td style={{ width: 120, minWidth: 120 }}>{ct.CardType ?? ''}</td>
-                                                              <td>{ct.CardTypeDescription ?? ''}</td>
-                                                          </tr>
-                                                      ))}
-                                              </tbody>
-                                          </table>
-                                      </div>
-                                  </>
-                              )}
-                          </div>
-                      </div>
-                  </div>,
-                  document.body
-              )}
-
-              {boardLayoutOpen && createPortal(
-                  <div
-                      className="modal-backdrop"
-                      onClick={() => setBoardLayoutOpen(false)}
-                      role="none"
-                  >
-                      <div
-                          className="modal-window modal-boardlayout"
-                          role="dialog"
-                          aria-modal="true"
-                          aria-labelledby="boardlayout-title"
-                          onClick={(e) => e.stopPropagation()}
-                      >
-                          <div className="modal-header">
-                              <h2 id="boardlayout-title">{refData?.BoardLayout?.title || 'Board Layout'}</h2>
-                              <button
-                                  className="modal-close"
-                                  aria-label="Close Board Layout"
-                                  onClick={() => setBoardLayoutOpen(false)}
-                              >
-                                  ×
-                              </button>
-                          </div>
-
-                          <div className="modal-body">
-                              <figure className="board-layout-figure">
-                                  <img
-                                      src={refData?.BoardLayout?.image || '/images/game_board_layout.png'}
-                                      alt="Board layout"
-                                      className="board-layout-img"
-                                  />
-                                  {(refData?.BoardLayout?.markers || []).map(m => (
-                                      <span
-                                          key={m.id}
-                                          className="bl-bubble"
-                                          style={{ left: `${m.x}%`, top: `${m.y}%` }}
-                                      >
-                                          {m.id}
-                                      </span>
-                                  ))}
-                              </figure>
-
-                              <ol className="board-layout-list">
-                                  {(refData?.BoardLayout?.zones || []).map(z => (
-                                      <li key={z.ZoneNum}>
-                                          <span className="cl-title">{z.ZoneName}</span>
-                                          <div>{z.ZoneDescription}</div>
-                                      </li>
-                                  ))}
-                              </ol>
-                          </div>
-                      </div>
-                  </div>,
-                  document.body
-              )}
-
-              {faqOpen && createPortal(
-                  <div className="modal-backdrop" onClick={() => setFaqOpen(false)} role="none">
-                      <div
-                          className="modal-window modal-faq"
-                          role="dialog"
-                          aria-modal="true"
-                          aria-labelledby="faq-title"
-                          onClick={(e) => e.stopPropagation()}
-                      >
-                          <div className="modal-header">
-                              <h2 id="faq-title">FAQ</h2>
-                              <button
-                                  className="modal-close"
-                                  aria-label="Close FAQ"
-                                  onClick={() => setFaqOpen(false)}
-                              >
-                                  ×
-                              </button>
-                          </div>
-
-                          <div className="modal-body">
-                              {(!refData?.FAQ || refData.FAQ.length === 0) ? (
-                                  <div className="small">
-                                      No FAQ entries found. Add an <code>"FAQ"</code> array to <code>reference.json</code>.
-                                  </div>
-                              ) : (
-                                  <div className="faq-list">
-                                      {refData.FAQ.map((item, idx) => (
-                                          <div key={idx} className="faq-item" style={{ marginBottom: 12 }}>
-                                              <div className="faq-q" style={{ fontWeight: 600 }}>
-                                                  {item.question}
-                                              </div>
-                                              <div className="faq-a" style={{ marginTop: 4, opacity: 0.9 }}>
-                                                  {item.answer}
-                                              </div>
-                                          </div>
-                                      ))}
-                                  </div>
-                              )}
-                          </div>
-                      </div>
-                  </div>,
-                  document.body
-              )}
-
+              {/* moved to plugin: /src/plugins/help-section.jsx (<Card Types>) */}
+              {/* moved to plugin: /src/plugins/help-section.jsx (<Board Layout>) */}
+              {/* moved to plugin: /src/plugins/help-section.jsx (<FAQ>) */}
               <h3 className="section-title">Deck Actions</h3>
               <div className="row">
                   <button
@@ -4531,6 +3980,31 @@ export default function App() {
                       </div>
                   )
               })(), document.body)}
+              {createPortal(
+                  <div className="toast-wrap" aria-live="polite" aria-atomic="true">
+                      {toasts.map(t => (
+                          <div key={t.id} className={`toast ${t.type || 'info'}`}>
+                              <span className="toast-msg">{t.message}</span>
+                              <button
+                                  className="toast-x"
+                                  onClick={() => dismissToast(t.id)}
+                                  aria-label="Dismiss"
+                                  title="Dismiss"
+                              >
+                                  ×
+                              </button>
+                          </div>
+                      ))}
+                  </div>,
+                  document.body
+              )}
+              {edgeEnabled && createPortal(
+                  <div className="edge-scroll" ref={edgeRailRef} onPointerDown={onEdgePointerDown} role="scrollbar" aria-label="Page scroll">
+                      <div className="edge-track"></div>
+                      <div className="edge-thumb" ref={edgeThumbRef} />
+                  </div>,
+                  document.body
+              )}
       </aside>
     </div>
   )

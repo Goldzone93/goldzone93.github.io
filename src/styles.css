@@ -1517,3 +1517,243 @@ img.cardart {
     margin-right: 8px; /* spacing before the result count */
 }
 
+/* Maybe → Deck action button */
+.to-deck-btn {
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    margin-right: 6px; /* sits just left of the - button */
+    border: 1px solid #263143;
+    background: rgba(255,255,255,0.06);
+    color: var(--ink);
+    cursor: pointer;
+}
+
+    .to-deck-btn:hover {
+        filter: brightness(1.05);
+    }
+
+/* === Toasts =============================================================== */
+.toast-wrap {
+    position: fixed;
+    top: calc(16px + env(safe-area-inset-top));
+    right: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 9999;
+    pointer-events: none; /* clicks pass through except on the toast itself */
+    max-height: 90vh;
+}
+
+.toast {
+    pointer-events: auto;
+    /* Fully opaque for max readability */
+    background: #1f2937; /* matches card tone, solid */
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-left: 8px solid #3b82f6; /* default: info */
+    border-radius: 12px;
+    padding: 12px 14px;
+    min-width: 220px;
+    max-width: 420px;
+    box-shadow: 0 12px 24px rgba(0,0,0,0.55);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    animation: toast-in 160ms ease-out;
+    /* removed translucency effects */
+}
+
+    /* Add a soft tint + colored outline so the whole toast is noticeable at a glance */
+    .toast.info {
+        border-left-color: #3b82f6;
+        box-shadow: 0 0 0 1px rgba(59,130,246,0.30), 0 14px 28px rgba(0,0,0,0.55);
+        background-image: linear-gradient(to bottom right, rgba(59,130,246,0.16), rgba(255,255,255,0));
+    }
+
+    .toast.success {
+        border-left-color: #22c55e;
+        box-shadow: 0 0 0 1px rgba(34,197,94,0.30), 0 14px 28px rgba(0,0,0,0.55);
+        background-image: linear-gradient(to bottom right, rgba(34,197,94,0.16), rgba(255,255,255,0));
+    }
+
+    .toast.warn {
+        border-left-color: #f59e0b;
+        box-shadow: 0 0 0 1px rgba(245,158,11,0.30), 0 14px 28px rgba(0,0,0,0.55);
+        background-image: linear-gradient(to bottom right, rgba(245,158,11,0.14), rgba(255,255,255,0));
+    }
+
+    .toast.error {
+        border-left-color: #ef4444;
+        box-shadow: 0 0 0 1px rgba(239,68,68,0.35), 0 14px 28px rgba(0,0,0,0.55);
+        background-image: linear-gradient(to bottom right, rgba(239,68,68,0.16), rgba(255,255,255,0));
+    }
+
+.toast-x {
+    background: transparent;
+    border: 0;
+    color: inherit;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.9;
+    padding: 4px;
+    border-radius: 8px;
+}
+
+    .toast-x:hover {
+        opacity: 1;
+    }
+
+.toast-msg {
+    font-weight: 600;
+}
+
+@keyframes toast-in {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    .toast {
+        animation: none;
+    }
+}
+
+/* === Mobile layout (<= 640px) ============================================ */
+@media (max-width: 640px) {
+    .toast-wrap {
+        top: auto;
+        right: auto;
+        left: 50%;
+        bottom: calc(12px + env(safe-area-inset-bottom));
+        transform: translateX(-50%);
+        width: min(94vw, 520px);
+        max-height: 35vh; /* many toasts -> scroll instead of covering UI */
+        overflow: auto;
+        gap: 12px;
+    }
+
+    .toast {
+        max-width: none;
+        width: 100%;
+        font-size: 15px;
+        line-height: 1.25;
+        padding: 14px 16px;
+        border-radius: 16px;
+        border-left-width: 10px; /* bolder accent on phones */
+        box-shadow: 0 14px 28px rgba(0,0,0,0.6);
+    }
+
+    .toast-x {
+        font-size: 22px;
+        padding: 8px;
+        margin-left: 6px;
+    }
+}
+/* === Card Gallery header: wrap ONLY when the viewport is small ========= */
+@media (max-width: 1100px) {
+    /* Let the header row wrap; default (wide) stays inline */
+    .gallery-header-row {
+        flex-wrap: wrap;
+        justify-content: flex-start; /* override any space-between */
+        gap: 8px;
+    }
+
+        /* Left & right clusters can wrap their children */
+        .gallery-header-row .gh-left,
+        .gallery-header-row .gh-right {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        /* When cramped, move the right cluster (To Top/Bottom + results) to a new line */
+        .gallery-header-row .gh-right {
+            flex-basis: 100%;
+            margin-top: 6px;
+            justify-content: flex-start;
+        }
+
+    /* Prevent the size slider from overhanging neighbors on small widths */
+    .gallery-header .gallery-size-slider {
+        width: 100% !important;
+        transform: none !important;
+    }
+
+    /* Keep the sort dropdown readable; don’t let it collapse */
+    .gallery-header select[aria-label="Sort Card Gallery"] {
+        min-width: 160px;
+        max-width: 100%;
+        flex: 0 0 auto;
+    }
+}
+/* === Mobile Edge Scroll (left-side scrubber) ============================== */
+.edge-scroll {
+    position: fixed;
+    right: max(0px, env(safe-area-inset-right));
+    top: 0;
+    height: 100vh;
+    width: 16px; /* slim so it doesn’t cover content */
+    z-index: 2147483645; /* below modals, above content */
+    display: none; /* hidden by default (desktop) */
+    pointer-events: auto;
+}
+
+.edge-track {
+    position: absolute;
+    right: 6px; /* centers a 4px rail in our 16px area */
+    top: calc(8px + env(safe-area-inset-top));
+    bottom: calc(8px + env(safe-area-inset-bottom));
+    width: 4px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 999px;
+}
+
+.edge-thumb {
+    --thumb-h: 48px;
+    position: absolute;
+    right: 2px;
+    width: 12px;
+    height: var(--thumb-h);
+    border-radius: 999px;
+    background: rgba(255,255,255,0.28);
+    border: 1px solid rgba(255,255,255,0.35);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.45);
+    touch-action: none; /* allow dragging without browser gestures */
+    will-change: transform;
+}
+
+/* Show it only on small screens */
+@media (max-width: 900px) {
+    .edge-scroll {
+        display: block;
+    }
+}
+
+/* Safety: don’t block pointer events behind the bar’s 16px strip unless used */
+@media (max-width: 900px) {
+    .edge-scroll {
+        opacity: 0.9;
+    }
+}
+/* Mobile: make the Card Gallery "Sort" dropdown about half width */
+@media (max-width: 640px) {
+    .gallery-header select[aria-label="Sort Card Gallery"] {
+        flex: 0 0 50%; /* take ~half of the row */
+        max-width: 50%;
+        min-width: 160px; /* still readable on very small phones */
+    }
+}

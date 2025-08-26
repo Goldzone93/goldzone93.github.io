@@ -3,7 +3,10 @@
 
 export const TYPE_OPTIONS = ['Any Type', 'Unit', 'Event', 'Ability', 'Support', 'Shield'];
 export const RARITY_OPTIONS = ['Any Rarity', 'Basic', 'Common', 'Uncommon', 'Rare', 'Ultra Rare'];
-export const ELEMENT_OPTIONS = ['Any Element', 'Earth', 'Fire', 'Ice', 'Nature', 'Neutral', 'Storm', 'Synthetic', 'Toxic', 'Void', 'Water'];
+export const ELEMENT_OPTIONS = [
+    'Any Element',
+    'Neutral', 'Earth', 'Fire', 'Nature', 'Storm', 'Water', 'Toxic', 'Void', 'Ice', 'Synthetic'
+];
 
 export const DEFAULT_FILTERS = {
   q: '',
