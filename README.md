@@ -1,4 +1,4 @@
-# TCG Deckbuilder (fixed4)
+# Personal Project
 
 This version fixes Vite issues where files inside `/public` were imported from JS.
 
