@@ -1,0 +1,22 @@
+/* /src/styles/hover-preview.css */
+.hp-hover-preview {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  transform: none; /* JS positions it */
+  display: none;
+}
+.hp-hover-preview.is-visible { display: block; }
+
+/* Reuse deck-builder look for the text line under badges */
+.hp-hover-preview .deck-preview-meta .text {
+  color: #9da3af;
+  font-size: 12px;
+  line-height: 1.35;
+  margin-top: 6px;
+}
+
+/* Disable on touch/coarse pointers (mobile/tablet) */
+@media (hover: none), (pointer: coarse) {
+  .hp-hover-preview { display: none !important; }
+}

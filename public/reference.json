@@ -6,6 +6,7 @@
   "Element": ["Neutral", "Earth", "Fire", "Nature", "Storm", "Water", "Toxic", "Void", "Ice", "Synthetic"],
   "Set": ["CS1","CS2"],
   "Format": ["Freeform", "Story 1", "Story 2", "Example"],
+  "Packs": ["Freeform", "CS1", "CS2", "Example"],
   "RarityColors": {
   "Basic":      "#f06292",
   "Common":     "#4dd0e1",

@@ -125,6 +125,8 @@ button, .btn {
     cursor: pointer;
 }
 
+
+
 /* Hide the real file input but keep it accessible */
 .file-input-visually-hidden {
     position: absolute;
@@ -552,14 +554,14 @@ img.cardart {
     background: #3a0e12; /* darker maroon for dark theme */
     border-left: 4px solid #ff4d4f;
 }
-
-    /* 2) Make the text readable on that darker background */
-    /* Target typical text nodes but avoid clobbering buttons/badges */
+/* 2) Make the text readable on that darker background */
+/* Avoid clobbering buttons/badges and our multi-line warn items */
     .deckRow.not-allowed,
     .deckRow.not-allowed .small,
     .deckRow.not-allowed > div,
-    .deckRow.not-allowed > div *:not(button):not(.badge):not(.warn) {
+    .deckRow.not-allowed > div *:not(button):not(.badge):not(.warn):not(.warn-item) {
         color: #fff !important;
+        border-radius: 10px;
     }
 
 /* 3) Warning badge stays high-contrast and obvious */
@@ -567,6 +569,7 @@ img.cardart {
     background: #ff4d4f;
     color: #111; /* dark text on bright badge */
     font-weight: 700;
+    border-radius: 10px;
 }
 
 /* keep badge text on one line, but let the entire badge wrap to the next line */
@@ -682,6 +685,21 @@ img.cardart {
     .tips-btn:hover {
         background: rgba(255,255,255,0.1);
     }
+
+    /* Deck Builder right-panel actions — match Pack Simulator "Open Packs" */
+.deck-action-btn {
+    padding: 6px 14px;
+    border: 1px solid #263143;
+    border-radius: 6px;
+    background: #0c1220;
+    color: var(--ink);
+    font-size: 15px;
+    cursor: pointer;
+}
+.deck-action-btn:hover {
+    background: rgba(255,255,255,0.10);
+}
+
 
 /* Modal backdrop */
 .modal-backdrop {
@@ -1517,6 +1535,10 @@ img.cardart {
     margin-right: 8px; /* spacing before the result count */
 }
 
+   .to-top-btn:hover {
+        background: rgba(255,255,255,0.06);
+    }
+
 /* Maybe → Deck action button */
 .to-deck-btn {
     font-size: 12px;
@@ -1524,13 +1546,14 @@ img.cardart {
     border-radius: 6px;
     margin-right: 6px; /* sits just left of the - button */
     border: 1px solid #263143;
-    background: rgba(255,255,255,0.06);
+    background: #0c1220;
     color: var(--ink);
     cursor: pointer;
 }
 
     .to-deck-btn:hover {
-        filter: brightness(1.05);
+        filter: brightness(1.5);
+        background: rgba(255,255,255,0.06);
     }
 
 /* === Toasts =============================================================== */
@@ -1756,4 +1779,61 @@ img.cardart {
         max-width: 50%;
         min-width: 160px; /* still readable on very small phones */
     }
+}
+
+/* === Collection badge on gallery art (only when a collection is imported) === */
+.card-art-wrap {
+    position: relative;
+    line-height: 0; /* remove stray gaps */
+}
+
+.collection-badge {
+    position: absolute;
+    left: 6px;
+    bottom: 6px;
+    width: 33px;
+    height: 33px;
+    border-radius: 999px;
+    background: #3780ff; /* blue */
+    color: #0b1220; /* high-contrast text */
+    font-weight: 700;
+    font-size: 18px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255,255,255,0.12);
+    z-index: 2;
+    pointer-events: none; /* never steal clicks from the art */
+}
+/* Multi-line warning badge (deck list) */
+.badge.warn.lines{
+  white-space: normal;      /* allow wrapping */
+  display: inline-block;
+  line-height: 1.2;
+}
+
+.badge.warn.lines .warn-item{
+  display: block;           /* one message per line */
+}
+/* Title row that holds the name and the (moved) collection badge */
+.card-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px; /* keeps spacing similar to the old h4 */
+}
+
+/* Reuse the same circle styles but make it participate in the row layout */
+.collection-badge.in-row {
+    position: static; /* no absolute positioning in the title row */
+    margin-left: auto; /* push to far right */
+    /* ensure it keeps the same look as the circle */
+    display: inline-grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 1;
+    /* leave the existing background/text color from .collection-badge */
 }

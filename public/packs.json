@@ -1,0 +1,18 @@
+{
+  "Freeform": {
+    "AllowedSets": "*",
+	"PackMake": { "PackSize": 6, "Rare": 1, "UR%": 18, "Uncommon": 2, "Common": 3 }
+  },
+  "CS1": {
+    "AllowedSets": ["CS1"],
+	"PackMake": { "PackSize": 6, "Rare": 1, "UR%": 18, "Uncommon": 2, "Common": 3 }
+  },
+  "CS2": {
+    "AllowedSets": ["CS1", "CS2"],
+	"PackMake": { "PackSize": 6, "Rare": 1, "UR%": 18, "Uncommon": 2, "Common": 3 }
+  },
+  "Example": {
+    "AllowedSets": ["CS2"],
+	"PackMake": { "PackSize": 10, "Rare": 1, "UR%": 18, "Uncommon": 2, "Common": 7 }
+  }
+}

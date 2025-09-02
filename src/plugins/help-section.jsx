@@ -726,12 +726,12 @@ function HelpSection() {
                     {section.section || section.phase}
                   </div>
                   <ul className="turn-list">
-                    {(section.items || []).map((step) => (
-                      <li key={step.name}>
-                        <span className="turn-step-name">{step.name}:</span>{' '}
-                        <span className="turn-step-desc">{step.desc}</span>
-                      </li>
-                    ))}
+                          {(section.items || []).map((step, idx) => (
+                              <li key={keyOrIdx(step?.name, idx, 'step')}>
+                                  <span className="turn-step-name">{step?.name ? `${step.name}:` : 'Step:'}</span>{' '}
+                                  <span className="turn-step-desc">{step?.desc ?? ''}</span>
+                              </li>
+                          ))}
                   </ul>
                 </section>
               ))
@@ -767,31 +767,31 @@ function HelpSection() {
                     onError={(e) => { e.currentTarget.src = '/images/card_layout_example.png'; }}
                     draggable={false}
                   />
-                  {(refData.CardLayout.markers || []).map(m => (
-                    <div key={m.id} className="cl-bubble" style={{ left: `${m.x}%`, top: `${m.y}%` }} aria-label={`Marker ${m.id}`}>
-                      {m.id}
-                    </div>
-                  ))}
+                              {(refData.CardLayout.markers || []).map((m, idx) => (
+                                  <div key={keyOrIdx(m?.id, idx, 'marker')} className="cl-bubble" style={{ left: `${m.x}%`, top: `${m.y}%` }} aria-label={`Marker ${m?.id ?? idx}`}>
+                                      {m?.id ?? idx}
+                                  </div>
+                              ))}
                 </figure>
                 <ol className="card-layout-list">
-                  {(refData.CardLayout.sections || []).map(sec => (
-                    <li key={sec.id}>
-                      <span className="cl-num">{sec.id}.</span>{' '}
-                      <span className="cl-title">{sec.title}</span>{' '}
-                      <span className="cl-text">- {sec.text}</span>
-                      {Array.isArray(sec.subitems) && sec.subitems.length > 0 && (
-                        <ul className="card-layout-sublist">
-                          {sec.subitems.map(sub => (
-                            <li key={sub.id}>
-                              <span className="cl-num">{sub.id}.</span>{' '}
-                              <span className="cl-title">{sub.title}</span>{' '}
-                              <span className="cl-text">- {sub.text}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </li>
-                  ))}
+                              {(refData.CardLayout.sections || []).map((sec, idx) => (
+                                  <li key={keyOrIdx(sec?.id, idx, 'section')}>
+                                      <span className="cl-num">{(sec?.id ?? idx)}.</span>{' '}
+                                      <span className="cl-title">{sec?.title}</span>{' '}
+                                      <span className="cl-text">- {sec?.text}</span>
+                                      {Array.isArray(sec?.subitems) && sec.subitems.length > 0 && (
+                                          <ul className="card-layout-sublist">
+                                              {sec.subitems.map((sub, jdx) => (
+                                                  <li key={keyOrIdx(sub?.id, jdx, 'sub')}>
+                                                      <span className="cl-num">{(sub?.id ?? jdx)}.</span>{' '}
+                                                      <span className="cl-title">{sub?.title}</span>{' '}
+                                                      <span className="cl-text">- {sub?.text}</span>
+                                                  </li>
+                                              ))}
+                                          </ul>
+                                      )}
+                                  </li>
+                              ))}
                 </ol>
               </div>
             ) : (
@@ -824,7 +824,7 @@ function HelpSection() {
                   </tr>
                 </thead>
                 <tbody>
-                  {formatsList.map(f => {
+                  {formatsList.map((f, idx) => {
                     const cfg = (formatsConfig && formatsConfig[f.id]) || {};
 
                     const deckSizeText = (() => {
@@ -880,7 +880,7 @@ function HelpSection() {
                     })();
 
                     return (
-                      <tr key={f.id}>
+                        <tr key={keyOrIdx(f?.id, idx, 'format')}>
                         <td style={{ verticalAlign: 'top', whiteSpace: 'nowrap' }}>{f.name}</td>
                         <td style={{ verticalAlign: 'top' }}>
                           <div style={{ marginBottom: 6 }}>
@@ -983,19 +983,19 @@ function HelpSection() {
                 alt="Board layout"
                 className="board-layout-img"
               />
-              {(refData?.BoardLayout?.markers || []).map(m => (
-                <span key={m.id} className="bl-bubble" style={{ left: `${m.x}%`, top: `${m.y}%` }}>
-                  {m.id}
-                </span>
-              ))}
+                      {(refData?.BoardLayout?.markers || []).map((m, idx) => (
+                          <span key={keyOrIdx(m?.id, idx, 'bl-marker')} className="bl-bubble" style={{ left: `${m.x}%`, top: `${m.y}%` }}>
+                              {m?.id ?? idx}
+                          </span>
+                      ))}
             </figure>
             <ol className="board-layout-list">
-              {(refData?.BoardLayout?.zones || []).map(z => (
-                <li key={z.ZoneNum}>
-                  <span className="cl-title">{z.ZoneName}</span>
-                  <div>{z.ZoneDescription}</div>
-                </li>
-              ))}
+                      {(refData?.BoardLayout?.zones || []).map((z, idx) => (
+                          <li key={keyOrIdx(z?.ZoneNum, idx, 'zone')}>
+                              <span className="cl-title">{z?.ZoneName}</span>
+                              <div>{z?.ZoneDescription}</div>
+                          </li>
+                      ))}
             </ol>
           </div>
         </div>,
@@ -1043,6 +1043,10 @@ function HelpSection() {
 
 // small utility
 function arr(x) { return Array.isArray(x) ? x : []; }
+function keyOrIdx(val, idx, prefix) {
+    const s = String(val ?? '').trim();
+    return s || `${prefix}-${idx}`;
+}
 
 // Minimal “createPortal” wrapper using the same backdrop behavior seen in App.jsx
 function createPortalLike(windowNode, onClose) {

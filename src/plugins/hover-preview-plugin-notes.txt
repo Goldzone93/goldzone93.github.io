@@ -1,0 +1,113 @@
+Hover Preview Plugin — Usage Notes
+===================================
+
+Files
+-----
+1) /src/plugins/hover-preview.jsx
+2) /src/styles/hover-preview.css
+
+What it does
+------------
+Provides a reusable React hook (useHoverPreview) to show a Deck‑Builder‑style hover
+preview (card image, white name line, badges for Rarity/Type/CC/Elements, and CardText).
+The preview follows the cursor and auto‑flips to stay inside the viewport.
+It is automatically disabled on touch/coarse pointers (mobile/tablet).
+
+Quick Start (any list or table of cards)
+----------------------------------------
+1) Import the hook in your component:
+   import { useHoverPreview } from '../plugins/hover-preview.jsx';
+
+2) Create the hook instance, telling it how to read your card fields and how to render the image.
+   Example (mirrors Pack Simulator):
+   const { onRowEnter, onRowMove, onRowLeave, overlay: hoverOverlay } = useHoverPreview({
+     getMeta: (card) => {
+       const elements = [card.ElementType1, card.ElementType2, card.ElementType3]
+         .filter(Boolean)
+         .join(' / ');
+       const ccNum = Number(card.ConvertedCost);
+       return {
+         id: normalizeToFront(card.InternalName),
+         name: card.CardName || card.InternalName,
+         rarity: card.Rarity || '',
+         typeTag: card.CardType?.trim() || card.SuperType?.trim() || 'Other',
+         elements,
+         cc: Number.isFinite(ccNum) ? ccNum : null,
+         cardText: card.CardText || '',
+       };
+     },
+     renderImage: (id, name) => (
+       <CardImg id={id} alt={name} draggable={false} loading='eager' className='deck-preview-img' />
+     ),
+   });
+
+3) Attach the handlers to the container for each row/list item (so the whole row is hot):
+   <div className='row'
+        onMouseEnter={(e) => onRowEnter(card, e)}
+        onMouseMove={onRowMove}
+        onMouseLeave={onRowLeave}>
+     ... your row content ...
+   </div>
+
+4) Render the overlay once near the end of that section’s root (so it can float above content):
+   {hoverOverlay}
+
+Where to put the overlay
+------------------------
+Place {hoverOverlay} as a child of the section’s outer container (e.g., the same element
+that wraps the list). It should not be inside a row, and it should be a direct child
+so that its fixed positioning isn’t clipped by overflow: hidden on inner elements.
+
+Styling & Customization
+-----------------------
+- The plugin uses your existing Deck‑Builder styles: deck-preview-float, deck-preview-img, .badge.
+- Plugin CSS lives in /src/styles/hover-preview.css and adds:
+  .hp-hover-preview  (container that follows cursor)
+  .hp-hover-preview .deck-preview-meta .text  (white CardText line)
+
+Common tweaks:
+- Preview size: add to /src/styles/hover-preview.css
+    .hp-hover-preview .deck-preview-img { width: 225px; }  /* or any value */
+- Margin from cursor: adjust the JS “offset” inside hover-preview.jsx (default 14px).
+- Viewport margin: adjust “pad” (default 8px) to keep the box off the edges.
+- Disable on mobile: already handled via (hover: none) / (pointer: coarse) media query.
+
+API (from useHoverPreview)
+--------------------------
+Input (options object):
+- getMeta(card)  => returns { id, name, rarity, typeTag, elements, cc, cardText }
+  You control how these are derived from your data (cards.json, etc.).
+- renderImage(id, name) => returns the image JSX to show (e.g., <CardImg ... />).
+
+Output:
+- onRowEnter(card, mouseEvent)  // call on mouse enter
+- onRowMove(mouseEvent)         // call on mouse move
+- onRowLeave()                  // call on mouse leave
+- overlay (hoverOverlay)        // JSX element: render once near the list root
+
+Behavior details
+----------------
+- Shows only on hover‑capable, fine‑pointer devices (PC). Uses matchMedia('(hover:hover) and (pointer:fine)').
+- Smart positioning: computes the overlay size and flips to the left/above if it would overflow the viewport.
+- Pointer events are disabled on the overlay so it never interferes with scrolling or clicking.
+
+Troubleshooting
+---------------
+- Overlay cut off by edges: ensure you’re rendering {hoverOverlay} as a direct child of the section root,
+  not inside a clipped container; the plugin also flips automatically.
+- Nothing shows on mobile: expected (suppressed for coarse pointers).
+- “Unexpected token” near handlers: verify the useCallback blocks are properly closed (`, [deps]);`).
+
+Reuse playbook
+--------------
+To add to another screen (e.g., Card Gallery):
+1) Import the hook.
+2) Provide getMeta(card) using that screen’s card object.
+3) Use your existing image component in renderImage.
+4) Attach handlers to each result row/card tile.
+5) Render {hoverOverlay} once near the end of that area’s root container.
+
+File Ownership
+--------------
+- /src/plugins/hover-preview.jsx — the hook component (logic + overlay markup)
+- /src/styles/hover-preview.css — styles scoped to the hover preview

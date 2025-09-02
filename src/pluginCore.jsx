@@ -13,20 +13,29 @@ export class PluginHost {
     this._gallerySortListeners = new Set(); // listeners for plugin-driven sort changes
     this._galleryScale = 1;
     this._scaleListeners = new Set();
+    this._seq = 1; // auto-id counter for plugins without ids
+  }
+
+  /** Replace or push by id; auto-id if missing */
+  _upsert(list, entry, prefix) {
+    if (!entry || typeof entry !== 'object') return;
+    if (!entry.id) entry.id = `${prefix || 'plugin'}-${this._seq++}`;
+    const i = list.findIndex(x => x?.id === entry.id);
+    if (i >= 0) list[i] = entry; else list.push(entry);
   }
 
   // Registration APIs exposed to plugins
   registerGalleryHeaderAction(action) {
-    if (!action || !action.id) return;
-    this.galleryHeaderActions.push(action);
+    if (!action) return;
+    this._upsert(this.galleryHeaderActions, action, 'gh-right');
   }
   registerCardBadgeRenderer(fn) {
     if (typeof fn === 'function') this.cardBadgeRenderers.push(fn);
   }
 
     registerGalleryHeaderLeftAction(action) {
-        if (!action || !action.id) return;
-        this.galleryHeaderLeftActions.push(action);
+        if (!action) return;
+        this._upsert(this.galleryHeaderLeftActions, action, 'gh-left');
     }
     getGalleryHeaderLeftActions() { return this.galleryHeaderLeftActions.slice(); }
 
@@ -35,14 +44,14 @@ export class PluginHost {
     }
 
     registerHelpSectionRenderer(action) {
-        if (action && action.id && (action.render || action.onClick)) {
-            this.helpSectionRenderers.push(action);
+        if (action && (action.render || action.onClick)) {
+            this._upsert(this.helpSectionRenderers, action, 'help');
         }
     }
 
     registerDeckHeaderRenderer(action) {
-        if (action && action.id && (action.render || action.onClick)) {
-            this.deckHeaderRenderers.push(action);
+        if (action && (action.render || action.onClick)) {
+            this._upsert(this.deckHeaderRenderers, action, 'deck-header');
         }
     }
     getDeckHeaderRenderers() {
@@ -118,7 +127,9 @@ export class PluginHost {
   }
 }
 
-export const pluginHost = new PluginHost();
+export const pluginHost =
+    (typeof window !== 'undefined' && (window.__tcgPluginHost ||= new PluginHost())) ||
+    new PluginHost();
 
 // Eager-load all .jsx plugins in /src/plugins (Vite import.meta.glob)
 export function loadPlugins() {

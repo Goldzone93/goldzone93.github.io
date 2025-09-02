@@ -1,0 +1,220 @@
+Card Zoom Plugin — How to Use
+
+This guide explains how to add the reusable magnifying‑glass zoom + Flip modal to any card in your app via /src/plugins/card-zoom.jsx.
+
+──────────────────────────────────
+
+1. File overview
+   ──────────────────────────────────
+   Path: /src/plugins/card-zoom.jsx
+   Exports:
+   • Named: CardZoom — the component you render in any card container.
+   • Default: activateCardZoom — a no‑op so pluginCore can safely invoke it.
+
+Assumptions:
+• Your global CSS already includes .zoom-btn, .zoom-backdrop, .zoom-modal, .zoom-stack, .zoom-img, .zoom-close, .flip-btn (from styles.css).
+• Card images live at /images/\${InternalName}.png, with optional \_a/\_b variants.
+• Container you place CardZoom into must be position: relative.
+
+──────────────────────────────────
+2\) Installation (once)
+──────────────────────────────────
+Create the plugin file:
+
+// /src/plugins/card-zoom.jsx
+import React, { useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
+
+const primaryImg  = (id) => `/images/${id}.png`;
+const defaultBack = '/images/card0000\_b.png';
+
+const normalizeToFront = (id) => (id?.endsWith('\_b') ? id.slice(0, -2) + '\_a' : id);
+const backIdFor       = (id) => (id?.endsWith('\_a') ? id.slice(0, -2) + '\_b' : id + '\_b');
+
+export function CardZoom({ id, name }) {
+const \[open, setOpen] = useState(false);
+const \[showBack, setShowBack] = useState(false);
+
+const frontId = normalizeToFront(id);
+const backId  = backIdFor(frontId);
+
+const src = showBack ? primaryImg(backId) : primaryImg(frontId);
+const alt = name || 'Card art';
+
+const flip  = useCallback(() => setShowBack(v => !v), \[]);
+const close = useCallback(() => { setOpen(false); setShowBack(false); }, \[]);
+
+return (
+<>
+\<button
+className="zoom-btn"
+title="Zoom card art"
+onClick={(e) => { e.stopPropagation(); setOpen(true); }}
+onPointerDown={(e) => e.stopPropagation()}
+\> <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"> <path fill="currentColor" d="M10 2a8 8 0 105.293 14.293l4.707 4.707 1.414-1.414-4.707-4.707A8 8 0 0010 2zm0 2a6 6 0 110 12A6 6 0 0110 4z" /> </svg> </button>
+
+```
+  {open && createPortal(
+    <div className="zoom-backdrop" onClick={close} aria-modal="true" role="dialog">
+      <div className="zoom-modal" onClick={(e) => e.stopPropagation()}>
+        <button className="zoom-close" aria-label="Close" onClick={close}>✕</button>
+
+        <div className="zoom-stack">
+          <img
+            className="zoom-img"
+            src={src}
+            alt={alt}
+            draggable={false}
+            onError={(e) => { e.currentTarget.src = defaultBack; }}
+            onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); flip(); }}
+          />
+
+          <div className="row" style={{ justifyContent: 'center', marginTop: 8 }}>
+            <button
+              type="button"
+              className="flip-btn"
+              aria-pressed={showBack}
+              title="Flip this card"
+              onClick={(e) => { e.stopPropagation(); flip(); }}
+              onMouseDown={(e) => e.preventDefault()}
+            >
+              Flip
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body
+  )}
+</>
+```
+
+);
+}
+
+export default function activateCardZoom() {}
+
+──────────────────────────────────
+3\) Basic usage (drop-in)
+──────────────────────────────────
+Rule: Place <CardZoom/> inside the same container as your card image — that container must be position: relative so .zoom-btn pins to the corner.
+
+Example:
+
+<div className="ps-card">                // has position: relative
+  <CardZoom id={card.InternalName} name={card.CardName} />
+  <img src={`/images/${card.InternalName}.png`} alt={card.CardName} />
+</div>
+
+──────────────────────────────────
+4\) Pack Simulator integration
+──────────────────────────────────
+A) Import once at top of file:
+
+// BEFORE
+// (no import)
+
+// AFTER
+import { CardZoom } from './card-zoom.jsx';
+
+B) For each card tile, add the component above the image:
+
+// BEFORE
+
+<div className="ps-card">
+  <CardImg id={c.InternalName} alt={c.CardName} />
+</div>
+
+// AFTER
+
+<div className="ps-card">
+  <CardZoom id={c.InternalName} name={c.CardName} />
+  <CardImg id={c.InternalName} alt={c.CardName} />
+</div>
+
+C) Partner image (with right‑click/long‑press flip already wired):
+
+// BEFORE
+
+<div className="ps-partner-art">
+  <img src={partnerImgSrc} alt={selectedPartner?.CardName || 'Default Partner'} />
+</div>
+
+// AFTER
+
+<div className="ps-partner-art">   // ensure this has position: relative in CSS
+  {selectedPartner && (
+    <CardZoom id={selectedPartner.InternalName} name={selectedPartner.CardName} />
+  )}
+  <img src={partnerImgSrc} alt={selectedPartner?.CardName || 'Default Partner'} />
+</div>
+
+──────────────────────────────────
+5\) Interactions & behavior
+──────────────────────────────────
+• Click the magnifying‑glass: opens the zoom modal.
+• Flip button: toggles between \_a and \_b sides (falls back to card0000\_b.png if missing).
+• Right‑click on the zoomed image: also flips (same as in deck builder).
+• The modal uses your existing deck‑builder styles for a 1:1 look.
+
+──────────────────────────────────
+6\) Styling hooks (already present)
+──────────────────────────────────
+• .zoom-btn — small circular icon button pinned top‑right.
+• .zoom-backdrop — fullscreen dim layer.
+• .zoom-modal — centered modal container.
+• .zoom-stack — vertical stack (image + controls).
+• .zoom-img — large card art image.
+• .zoom-close — top‑right close button in modal.
+• .flip-btn — wide flip button that matches gallery modal.
+
+If any are missing, copy their definitions from styles.css used by the deck builder.
+
+──────────────────────────────────
+7\) Accessibility
+──────────────────────────────────
+• Modal includes role=dialog and aria-modal=true.
+• Close button has aria-label="Close".
+• Flip button toggles aria-pressed.
+• Esc to close can be added if desired (see "Optional extensions").
+
+──────────────────────────────────
+8\) Troubleshooting
+──────────────────────────────────
+• Icon not visible: ensure the parent container has position: relative and no overflow clipping the corner.
+• Images not found: verify /images/\${id}.png exists. If only \_a exists, Flip will attempt \_b then fall back to /images/card0000\_b.png.
+• Modal looks different from gallery: confirm the CSS classes listed above are present in your global stylesheet and not overridden locally.
+
+──────────────────────────────────
+9\) Optional extensions (quick patches)
+──────────────────────────────────
+A) Hide Flip for single‑sided cards:
+– Add a prop showFlip (default true) and conditionally render the Flip button when you know a \_b exists.
+
+B) Move the icon:
+– Add a prop placement="top-right|top-left" and toggle a CSS class to reposition.
+
+C) Keyboard & ESC support:
+– Add a keydown listener while open to close on Escape and flip on F or Space.
+
+D) Analytics:
+– Add onOpen/onClose props to fire events.
+
+──────────────────────────────────
+10\) Quick copy/paste snippet (most common case)
+──────────────────────────────────
+import { CardZoom } from './card-zoom.jsx';
+
+function Tile({ card }) {
+return ( <div className="ps-card"> <CardZoom id={card.InternalName} name={card.CardName} />
+\<img src={`/images/${card.InternalName}.png`} alt={card.CardName} /> </div>
+);
+}
+
+──────────────────────────────────
+11\) Versioning notes
+──────────────────────────────────
+• The default export is a no‑op activator to keep pluginCore() from calling a hook component.
+• The named export CardZoom is the only piece you import into views.
+
+End of file.

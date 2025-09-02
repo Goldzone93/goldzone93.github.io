@@ -1,0 +1,428 @@
+﻿/* /src/styles/pack-simulator.css */
+.ps-root {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.ps-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  background: var(--bg);
+}
+.ps-title { font-weight: 700; font-size: 18px; }
+.ps-actions .tips-btn { white-space: nowrap; }
+
+/* Body layout: left controls + bands + pack area */
+.ps-body {
+    display: grid;
+    grid-template-columns: 320px 75px 1fr 320px; /* add right panel */
+    gap: 12px;
+    padding: 12px;
+    min-height: 0; /* allow children to be scroll containers */
+}
+
+.ps-left {
+  background: var(--panel);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 12px;
+  position: relative;
+  min-height: 400px;
+}
+
+.ps-group + .ps-group { margin-top: 12px; }
+
+.ps-label {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  display: inline-block;
+}
+.ps-select,
+.ps-input {
+    background: #0b1220;
+    border: 1px solid #263143;
+    color: var(--ink);
+    padding: 8px 10px; /* larger padding */
+    height: 36px; /* taller boxes */
+    font-size: 14px; /* slightly larger text */
+    border-radius: 8px;
+    width: 100%;
+}
+.ps-input[type="number"]::-webkit-outer-spin-button,
+.ps-input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+/* Wide text inputs (e.g., Collection Name) */
+.ps-input--wide {
+    width: 100% !important;
+    max-width: none;
+}
+/* Make a ps-row where the field spans full width (label stacks above) */
+.ps-row.ps-row--wide {
+    grid-template-columns: 1fr;
+}
+
+.ps-row {
+    display: grid;
+    grid-template-columns: 1fr 100px; /* label | field */
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.ps-hint { color: var(--muted); font-size: 11px; }
+
+.ps-elements {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+}
+.ps-el {
+  background: var(--card);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 8px;
+  text-align: center;
+  padding: 6px 4px;
+  font-size: 12px;
+  min-height: 32px;
+  display: grid;
+  place-items: center;
+}
+.ps-el.is-empty { opacity: 0.5; }
+.ps-el .ps-el-label { white-space: nowrap; }
+
+/* Buttons area */
+.ps-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+}
+    /* Make the top-row Open Pack button span full width */
+    .ps-buttons > .tips-btn {
+        width: 100%;
+    }
+/* Second row holds Clear + Reset side-by-side */
+.ps-buttons-row {
+    display: flex;
+    gap: 8px;
+}
+
+    .ps-buttons-row .tips-btn {
+        flex: 1;
+    }
+
+/* Make the Create button wider than Import; tweak --cc-flex to adjust */
+.ps-buttons-row--collection {
+    --cc-flex: 1.7;
+}
+    /* default ratio */
+    .ps-buttons-row--collection .create-btn {
+        flex: var(--cc-flex);
+    }
+
+    .ps-buttons-row--collection .import-btn {
+        flex: 1;
+    }
+
+/* Rarity side bands */
+.ps-bands {
+    display: grid;
+    grid-template-rows: auto auto auto; /* rows grow to match content */
+    gap: 12px;
+    position: relative;
+    z-index: 0; /* pack panel renders above */
+}
+.ps-band {
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    color: #0b0b0b;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-align: center;
+    overflow: hidden; /* don't spill into the gap/pack column */
+    position: relative; /* allow absolute centering of the label */
+}
+    .ps-band .ps-band-label {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-90deg); /* precise center */
+        white-space: nowrap;
+        color: #0b0b0b;
+        opacity: 0.9;
+        pointer-events: none; /* don't intercept clicks */
+    }
+
+/* Pack area */
+.ps-pack {
+    background: var(--panel);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 8px;
+    display: grid;
+    grid-template-rows: 1fr; /* no header row */
+    min-height: 400px;
+    position: relative;
+    z-index: 2; /* render above colored bands */
+}
+.ps-pack-rows {
+    display: grid;
+    grid-template-rows: auto auto auto; /* rows grow with card wrap height */
+    gap: 12px;
+}
+
+.ps-pack-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 12px;
+    align-content: start;
+}
+.ps-card {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: var(--card);
+}
+.ps-card img {
+  width: 100%;
+  display: block;
+  aspect-ratio: 2.5 / 3.5;
+  object-fit: cover;
+}
+
+/* Total row */
+.ps-total { margin-top: 10px; display: grid; grid-template-columns: 1fr auto; }
+.ps-total .ok   { color: #34d399; }
+.ps-total .warn { color: #f87171; }
+
+/* Match Deck Builder button look for simulator actions */
+/* Only style the left-panel action buttons; let the header's 'Return to Menu' use the app's .tips-btn */
+.ps-buttons .tips-btn,
+.ps-right .tips-btn {
+    background: #0b1220;
+    border: 1px solid #263143;
+    color: var(--ink);
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+.ps-partner-art {
+    position: relative; /* allow zoom button to pin in corner */
+    margin: 6px 0 10px;
+    width: 100%; /* span the full panel content width */
+}
+.ps-partner-art img {
+  display: block;
+  width: 100%;                /* always as wide as the panel */
+  height: auto;
+  aspect-ratio: 2.5 / 3.5;    /* keep card ratio */
+  object-fit: contain;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.45);
+}
+/* Quantity badge on first instance of duplicates */
+.ps-card .ps-qty-badge {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    width: 33px;
+    height: 33px;
+    border-radius: 999px;
+    background: #facc15; /* amber-400, close to screenshot */
+    border: 2px solid #f5c542; /* dark border for contrast */
+    color: #1a1a1a;
+    font-weight: 700;
+    font-size: 18px;
+    display: grid;
+    place-items: center;
+    line-height: 1px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.25);
+    pointer-events: none; /* don’t block zoom/flip interactions */
+    z-index: 2;
+}
+/* Right panel mirrors left panel */
+.ps-right {
+    background: var(--panel);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 12px;
+    position: relative;
+    min-height: 400px;
+}
+
+/* left and right panels independently scrollable */
+.ps-left,
+.ps-right {
+    overflow: auto;
+    min-height: 0;
+    max-height: 100%;
+}
+/* Center column: bands + pack share one scroll container */
+.ps-center {
+    grid-column: 2 / span 2; /* occupy the 75px + 1fr columns */
+    display: grid;
+    grid-template-columns: 75px 1fr;
+    gap: 12px;
+    overflow: auto; /* scroll independently from left/right */
+    min-height: 0;
+}
+/* Collapsible Collection header */
+.deck-type-header.is-clickable {
+    cursor: pointer;
+    user-select: none;
+}
+
+.deck-type-header .arrow {
+    display: inline-block;
+    transition: transform .15s ease;
+    margin-right: 6px;
+}
+
+/* When collapsed, hide the list and rotate the arrow */
+.deck-type-group.is-collapsed .deck-type-cards {
+    display: none;
+}
+
+.deck-type-group.is-collapsed .deck-type-header .arrow {
+    transform: rotate(-90deg);
+}
+/* Hover preview styles moved to /src/styles/hover-preview.css (plugin-scoped). */
+
+/* Inline confirm panel (Yes / No / Cancel) */
+.ps-confirm {
+    margin-top: 8px;
+    padding: 10px;
+    border: 1px solid rgba(251, 191, 36, 0.35); /* amber-ish */
+    background: rgba(251, 191, 36, 0.08);
+    border-radius: 8px;
+}
+
+.ps-confirm-text {
+    font-size: 13px;
+    color: var(--ink);
+}
+
+/* =========================================
+   Mobile layout fixes: make Collection visible
+   ========================================= */
+@media (max-width: 760px) {
+    /* Stack panels */
+    .ps-body {
+        grid-template-columns: 1fr;
+        grid-auto-rows: auto;
+        gap: 10px;
+        padding: 8px;
+    }
+
+    /* Ensure each section can grow to fit its content (critical fix) */
+    .ps-left,
+    .ps-right,
+    .ps-center {
+        overflow: visible; /* override desktop overflow:auto */
+        max-height: none; /* override desktop max-height:100% */
+        min-height: auto; /* allow natural height */
+    }
+
+    /* Center column becomes one column; hide side bands */
+    .ps-center {
+        grid-column: 1;
+        grid-template-columns: 1fr;
+    }
+
+    .ps-bands {
+        display: none;
+    }
+
+    /* Label above input for easier tapping */
+    .ps-row,
+    .ps-row.ps-row--wide {
+        grid-template-columns: 1fr;
+    }
+
+    .ps-label {
+        margin-bottom: 4px;
+    }
+
+    /* Buttons easier to hit */
+    .ps-buttons .tips-btn,
+    .ps-buttons-row .tips-btn {
+        width: 100%;
+    }
+
+    /* Card grid: comfortable on phones */
+    .ps-pack-row {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 8px;
+    }
+
+    /* Optional QoL: keep the header visible while scrolling */
+    .ps-header {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        background: var(--bg);
+    }
+
+    /* If you want to be explicit about vertical order, uncomment:
+  .ps-left  { grid-row: 1; }
+  .ps-center{ grid-row: 2; }
+  .ps-right { grid-row: 3; }
+  */
+}
+/* =========================================
+   Mobile rarity row headers (no JSX changes)
+   ========================================= */
+@media (max-width: 760px) {
+    .ps-pack .ps-pack-row {
+        position: relative;
+        margin-top: 6px;
+    }
+
+        .ps-pack .ps-pack-row::before {
+            content: ""; /* set per-row below */
+            /* make it a full-width row header that spans all grid columns */
+            display: block;
+            grid-column: 1 / -1; /* <-- key: span entire grid */
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 12px;
+            line-height: 1;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 10px 12px;
+            border-radius: 10px;
+            margin: 6px 0 10px;
+            color: #0b111a; /* dark text for contrast */
+            background: var(--muted); /* will be overridden per row */
+        }
+
+        /* Assuming order: Rare/Ultra → Uncommon → Common */
+        .ps-pack .ps-pack-row:nth-of-type(1)::before {
+            content: "Ultra Rare/Rare";
+            background: #f0a629;
+        }
+
+        .ps-pack .ps-pack-row:nth-of-type(2)::before {
+            content: "Uncommon";
+            background: #6aa8ff;
+        }
+
+        .ps-pack .ps-pack-row:nth-of-type(3)::before {
+            content: "Common";
+            background: #70d0d0;
+        }
+}
