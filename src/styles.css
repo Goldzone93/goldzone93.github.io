@@ -1837,3 +1837,48 @@ img.cardart {
     line-height: 1;
     /* leave the existing background/text color from .collection-badge */
 }
+/* === Deck Builder page header (match Pack Simulator) === */
+.db-root {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    min-height: 100vh;
+}
+
+.db-header {
+    /* Used only for layout math below (does NOT change the header’s appearance) */
+    --db-header-offset: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    background: var(--bg);
+    border-bottom: 1px solid #263143;
+    /* sit above sticky side panels */
+    z-index: 5;
+}
+
+.db-title {
+    font-weight: 700;
+    font-size: 18px;
+}
+
+/* Mobile: keep header visible like Pack Simulator */
+@media (max-width: 1100px) {
+    .db-header {
+        position: sticky;
+        top: 0;
+        background: var(--bg);
+    }
+}
+/* Deck Builder: center gallery height under the page header */
+.db-root > .app {
+    /* Let the row shrink to exactly the available space under the header */
+    min-height: 0;
+}
+
+.db-root .grid {
+    /* Original was: max-height: calc(100vh - 16px);
+     Now subtract the header height too */
+    max-height: calc(100vh - var(--db-header-offset, 44px) - 16px);
+}

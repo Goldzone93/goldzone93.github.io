@@ -2531,6 +2531,28 @@ export default function App() {
     };
 
   return (
+   <div className="db-root">
+          <header className="db-header">
+              <div className="db-title">Deck Builder</div>
+              <button
+                  type="button"
+                  className="tips-btn"
+                  aria-label="Return to Title Screen"
+                  title="Return to Title Screen"
+                  onClick={() => {
+                      const deckCount = Object.values(deck || {}).reduce((a, b) => a + (b || 0), 0);
+                      const maybeCount = Object.values(maybe || {}).reduce((a, b) => a + (b || 0), 0);
+
+                      if (deckCount + maybeCount > 0) {
+                          if (!confirmDanger('Do you want to Return to Menu without exporting?')) return;
+                      }
+
+                      window.dispatchEvent(new CustomEvent('tcg:return-to-title'));
+                  }}
+              >
+                  Return to Menu
+              </button>
+          </header>
     <div className="app">
       {/* LEFT FILTERS */}
       <aside className="left">
@@ -2827,39 +2849,6 @@ export default function App() {
                       </div>
                   </div>
               </div>
-              {/* Return to Menu (sticky bottom) */}
-              <div
-                  className="controls"
-                  style={{
-                      position: 'sticky',
-                      bottom: 0,
-                      background: 'var(--panel)',
-                      paddingTop: 8,
-                      marginTop: 12,
-                      borderTop: '1px solid rgba(255,255,255,0.08)'
-                  }}
-              >
-                  <button
-                      type="button"
-                      className="tips-btn"
-                      style={{ width: '100%' }}
-                      aria-label="Return to Title Screen"
-                      title="Return to Title Screen"
-                      onClick={() => {
-                          const deckCount = Object.values(deck || {}).reduce((a, b) => a + (b || 0), 0);
-                          const maybeCount = Object.values(maybe || {}).reduce((a, b) => a + (b || 0), 0);
-
-                          if (deckCount + maybeCount > 0) {
-                              if (!confirmDanger('Do you want to Return to Menu without exporting?')) return;
-                          }
-
-                          window.dispatchEvent(new CustomEvent('tcg:return-to-title'));
-                      }}
-                  >
-                      Return to Menu
-                  </button>
-              </div>
-
       </aside>
 
       {/* GRID */}
@@ -4214,5 +4203,6 @@ export default function App() {
               )}
       </aside>
     </div>
+   </div>
   )
 }
