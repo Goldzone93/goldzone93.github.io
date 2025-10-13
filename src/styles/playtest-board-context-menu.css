@@ -1,0 +1,60 @@
+/* /src/styles/playtest-board-context-menu.css */
+/* Lightweight, scoped context menu styles for the Playtest Board */
+
+.pb-ctx-root {
+  position: fixed;
+  inset: 0;
+  pointer-events: none; /* panel re-enables */
+}
+
+.pb-ctx-panel {
+  position: absolute;
+  min-width: 200px;
+  max-width: 320px;
+  background: #0b1220;
+  border: 1px solid #263143;
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.45);
+  overflow: hidden;
+  pointer-events: auto; /* clickable */
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.pb-ctx-list {
+  display: block;
+  margin: 6px;
+  padding: 0;
+  list-style: none;
+}
+
+.pb-ctx-item {
+  display: block;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+}
+
+.pb-ctx-item:hover,
+.pb-ctx-item:focus {
+  background: rgba(255,255,255,0.10);
+}
+
+.pb-ctx-item.is-disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.pb-ctx-item.is-disabled:hover,
+.pb-ctx-item.is-disabled:focus {
+  background: transparent;
+}
+
+.pb-ctx-sep {
+  height: 1px;
+  margin: 6px 4px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 1px;
+}

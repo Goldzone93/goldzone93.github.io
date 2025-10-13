@@ -1,0 +1,21 @@
+We changed help-section.jsx to respect a global flag: window.__PB_DISABLE_HELP_SHORTCUTS. By default that flag is undefined/false, so all other places keep working exactly as before.
+
+In playtest-board.jsx we set the flag to true only while that view is mounted, and we restore the previous value on unmount. So navigating away re-enables the hotkeys automatically.
+
+You only need to add code in another plugin if you also want to disable the help hotkeys there. If you do, drop this in that plugin’s root component (it’s additive; no other changes needed):
+
+// Add inside YourPluginRoot component
+React.useEffect(() => {
+  const prev = window.__PB_DISABLE_HELP_SHORTCUTS;
+  window.__PB_DISABLE_HELP_SHORTCUTS = true;
+  return () => { window.__PB_DISABLE_HELP_SHORTCUTS = prev; };
+}, []);
+
+Tip: you can also toggle around a modal:
+
+// onOpen
+const prev = window.__PB_DISABLE_HELP_SHORTCUTS;
+window.__PB_DISABLE_HELP_SHORTCUTS = true;
+
+// onClose
+window.__PB_DISABLE_HELP_SHORTCUTS = prev;

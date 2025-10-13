@@ -20,3 +20,12 @@
 @media (hover: none), (pointer: coarse) {
   .hp-hover-preview { display: none !important; }
 }
+
+/* Hide hover preview while the zoom modal is open */
+.zoom-open .hp-hover-preview {
+    display: none !important;
+}
+/* Disabled via app toggle */
+.hp-disabled .hp-hover-preview {
+    display: none !important;
+}

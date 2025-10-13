@@ -3,6 +3,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { AppRoot } from './plugins/app-root.jsx';
 import { TitleScreen } from './plugins/title-screen.jsx';
 import { PackSimulator } from './plugins/pack-simulator.jsx';
+import { PlaytestBoard } from './plugins/playtest-board.jsx';
 
 export default function App() {
     const [view, setView] = useState('menu'); // 'menu' | 'deck' | (future: 'collection', 'settings')
@@ -47,6 +48,7 @@ export default function App() {
                 entries={[
                     { id: 'deck', label: 'Deck Builder', onSelect: () => navigate('deck') },
                     { id: 'pack', label: 'Pack Simulator', onSelect: () => navigate('pack') },
+                    { id: 'play', label: 'Playtest Board', onSelect: () => navigate('play') },
                     // Add more entries as you add features:
                     // { id: 'collection', label: 'Collection', onSelect: () => navigate('collection') },
                     // { id: 'settings',   label: 'Settings',   onSelect: () => navigate('settings') },
@@ -61,6 +63,10 @@ export default function App() {
 
     if (view === 'pack') {
         return <PackSimulator />;
+    }
+
+    if (view === 'play') {
+        return <PlaytestBoard />;
     }
 
     // Safety fallback: unknown view -> render nothing (or navigate back to menu)

@@ -3,6 +3,8 @@
     "KeywordName": "advantage_k",
     "DisplayName": "Advantage",
     "TemplateName": "Advantage",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "Increase the elemental type effectiveness of this card by +1.",
     "ReminderText": "This card has +1 in elemental effectiveness."
   },
@@ -10,6 +12,8 @@
     "KeywordName": "battles_k",
     "DisplayName": "Battle",
     "TemplateName": "Battles (Target)",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "Both this and the target deal damage to each other equal to their ATK Values. This can trigger the Battle Effects.",
     "ReminderText": "This and the target deal damage to each other equal to their ATK."
   },
@@ -17,6 +21,8 @@
     "KeywordName": "breakthrough_k",
     "DisplayName": "Breakthrough",
     "TemplateName": "Breakthrough (X)",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "When this defeats an enemy shield in battle, inflict (X) to your opponent directly.",
     "ReminderText": "When this breaks a shield, deal X damage to your opponent."
   },
@@ -24,6 +30,8 @@
     "KeywordName": "char_k",
     "DisplayName": "Charred Counter",
     "TemplateName": "Charred Counter",
+	"IsStatus": "True",
+	"IsCounter": "True",
     "RulesText": "A status counter that lowers the ATK Value of the card it is on by -2 ATK Value.",
     "ReminderText": "Card gets -2 ATK for each."
   },
@@ -31,6 +39,8 @@
     "KeywordName": "damage_k",
     "DisplayName": "Damage Counter",
     "TemplateName": "Damage Counter",
+	"IsStatus": "False",
+	"IsCounter": "True",
     "RulesText": "A counter that represents a permanent  1 damage point and are applied to the card's HP Value they are on.",
     "ReminderText": "Represents 1 damage."
   },
@@ -38,6 +48,8 @@
     "KeywordName": "elusive_k",
     "DisplayName": "Elusive",
     "TemplateName": "Elusive (X)",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "This can't be blocked by units with an ATK Value greater than (X).",
     "ReminderText": "Can’t be blocked by units with ATK greater than X."
   },
@@ -45,6 +57,8 @@
     "KeywordName": "encounter_k",
     "DisplayName": "Encounter",
     "TemplateName": "Encounter (Quantity) (Quality)",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "Choose (Quantity) (Quality) token card(s) from the available options then draw that card.",
     "ReminderText": "Choose a token from the available options and draw it."
   },
@@ -52,6 +66,8 @@
     "KeywordName": "energize_k",
     "DisplayName": "Energize",
     "TemplateName": "(Target) Energizes (X)",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "Put (X) Power Counters on (Target).",
     "ReminderText": "Place X power counters on target."
   },
@@ -59,6 +75,8 @@
     "KeywordName": "evolve_k",
     "DisplayName": "Evolve",
     "TemplateName": "Evolve",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "Flip this card to its back-side.",
     "ReminderText": "Flip this card."
   },
@@ -66,6 +84,8 @@
     "KeywordName": "excavate_k",
     "DisplayName": "Excavate",
     "TemplateName": "Excavate (X)",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "Put (X) \"Token 96\" into play exhausted if able, all remaining are drawn to your hand.",
     "ReminderText": "Put X exhausted Token 96s in play."
   },
@@ -73,6 +93,8 @@
     "KeywordName": "fetch_k",
     "DisplayName": "Fetch",
     "TemplateName": "Fetch (Quantity)(Quality)",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "Reveal cards from the top of your deck until you reveal (Quantity)(Quality), draw those card(s) into your hand then shuffle all other revealed cards back into your deck.",
     "ReminderText": "Reveal cards from the top of your deck until you reveal that card. Draw that card and shuffle the rest."
   },
@@ -80,6 +102,8 @@
     "KeywordName": "foresee_k",
     "DisplayName": "Foresee",
     "TemplateName": "Foresee (X)",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "Look at the top (X) cards of your deck, put them back on top or bottom of your deck in any order.",
     "ReminderText": "Look at the top X cards of your deck. Put them back on top or bottom in any order."
   },
@@ -87,6 +111,8 @@
     "KeywordName": "fortify_k",
     "DisplayName": "Fortify",
     "TemplateName": "Fortify (X)",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "If your temporary HP is less than 5, gain (X) temporary HP up to a maximum of 5. Otherwise, Foresee (X). You don't Foresee for the remaining amount when you hit 5 Temporary HP.",
     "ReminderText": "If you have less than 5 temporary HP, gain up to X temporary HP. Otherwise, Foresee X."
   },
@@ -94,6 +120,8 @@
     "KeywordName": "frostbite_k",
     "DisplayName": "Frostbite Counter",
     "TemplateName": "Frostbite Counter",
+	"IsStatus": "True",
+	"IsCounter": "True",
     "RulesText": "A status counter that lowers the HP Value of the card it is on by -1 HP Value.",
     "ReminderText": "Card gets -1 HP for each."
   },
@@ -101,6 +129,8 @@
     "KeywordName": "heal_k",
     "DisplayName": "Heal",
     "TemplateName": "(Target) Heal (X)",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "Remove (X) damage counters and up to one status counter from the (Target) in play. If the (Target) is a player, they gain HP equal to (X) up to their maximum HP limit.",
     "ReminderText": "Remove up to X damage and one status from target. If it's a player, they gain X HP."
   },
@@ -108,6 +138,8 @@
     "KeywordName": "health_k",
     "DisplayName": "Health Counter",
     "TemplateName": "Health Counter",
+	"IsStatus": "False",
+	"IsCounter": "True",
     "RulesText": "A counter that represents a permanent +1 HP Value point and are applied to the card's HP Value they are on.",
     "ReminderText": "Card gets +1 HP for each."
   },
@@ -115,6 +147,8 @@
     "KeywordName": "hold_k",
     "DisplayName": "Hold",
     "TemplateName": "Hold Value",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "The number of turns that need to pass before being able to play the card. This just counts your turns.",
     "ReminderText": "Wait this many of your turns before you can play this."
   },
@@ -122,6 +156,8 @@
     "KeywordName": "immunity_k",
     "DisplayName": "Immunity",
     "TemplateName": "Immunity",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "This can't gain or have status counters placed on it. If a card would gain Immunity while having status counters on it, they are immediately removed.",
     "ReminderText": "Can’t have status counters."
   },
@@ -129,6 +165,8 @@
     "KeywordName": "improve_k",
     "DisplayName": "Improve",
     "TemplateName": "Improve (Target) with (Effect)",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "The (Target) gains the (Effect) for as long as it is in play. If the (Target) would leave play to any other zone, the (Effect) is permanently removed.",
     "ReminderText": "Target gains the effect while in play."
   },
@@ -136,6 +174,8 @@
     "KeywordName": "indomitable_k",
     "DisplayName": "Indomitable",
     "TemplateName": "Indomitable",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "This card can't gain damage counters. If a card would gain Indomitable while having damage counters on it, they aren't removed.",
     "ReminderText": "Can’t gain damage counters."
   },
@@ -143,6 +183,8 @@
     "KeywordName": "inflict_k",
     "DisplayName": "Inflict",
     "TemplateName": "Inflict (X)",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "This source deals (X) damage to a target.",
     "ReminderText": "Deal X damage to any target."
   },
@@ -150,6 +192,8 @@
     "KeywordName": "lethal_k",
     "DisplayName": "Lethal",
     "TemplateName": "Lethal",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "When this deals any amount of damage to another unit, that unit is defeated is immediately defeated.",
     "ReminderText": "Any damage this deals to a unit defeats it."
   },
@@ -157,6 +201,8 @@
     "KeywordName": "massive_k",
     "DisplayName": "Massive",
     "TemplateName": "Massive (X)",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "This can't be blocked by units with an ATK Value less than (X).",
     "ReminderText": "Can’t be blocked by units with ATK less than X."
   },
@@ -164,6 +210,8 @@
     "KeywordName": "overwatch_k",
     "DisplayName": "Overwatch",
     "TemplateName": "Overwatch",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "Ready this unit at the end of your turn.",
     "ReminderText": "Ready this unit at the end of your turn."
   },
@@ -171,6 +219,8 @@
     "KeywordName": "overwhelm_k",
     "DisplayName": "Overwhelm",
     "TemplateName": "Overwhelm",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "This deals its damage to the top two enemy shields in their shield zone instead of just the top enemy shield.",
     "ReminderText": "Deals damage to the top two enemy shields instead of one."
   },
@@ -178,6 +228,8 @@
     "KeywordName": "piercing_k",
     "DisplayName": "Piercing",
     "TemplateName": "Piercing",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "All damage dealt by this ignores the defense value of the target and any shield counters on it.",
     "ReminderText": "Ignores DEF and shield counters when dealing damage."
   },
@@ -185,6 +237,8 @@
     "KeywordName": "predator_k",
     "DisplayName": "Predator",
     "TemplateName": "Predator",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "As long as an enemy unit is in play, this can only attack exhausted enemy units.",
     "ReminderText": "Can only attack exhausted enemies while any enemy units are in play."
   },
@@ -192,6 +246,8 @@
     "KeywordName": "produce_k",
     "DisplayName": "Produce",
     "TemplateName": "Produce (X) (Element)",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "Add (X) (Element) resources to your resource pool.",
     "ReminderText": "Add X Element to your resource pool."
   },
@@ -199,6 +255,8 @@
     "KeywordName": "poison_k",
     "DisplayName": "Poison Counter",
     "TemplateName": "Poisoned Counter",
+	"IsStatus": "True",
+	"IsCounter": "True",
     "RulesText": "A status counter that places 1 damage counter on the card it is on at the end card's owner's turn.",
     "ReminderText": "At the end of its controller’s turn, it gains 1 damage."
   },
@@ -206,6 +264,8 @@
     "KeywordName": "power_k",
     "DisplayName": "Power Counter",
     "TemplateName": "Power Counter",
+	"IsStatus": "False",
+	"IsCounter": "True",
     "RulesText": "A counter that represents a permanent +1 ATK Value point and are applied to the card's ATK Value they are on.",
     "ReminderText": "Card gets +1 ATK for each."
   },
@@ -213,6 +273,8 @@
     "KeywordName": "quickstrike_k",
     "DisplayName": "Quickstrike",
     "TemplateName": "Quickstrike",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "This unit deals it's damage first in battle before other unit during the Resolution Step of the Battle Phase.",
     "ReminderText": "Deals damage before other units in battle."
   },
@@ -220,6 +282,8 @@
     "KeywordName": "reaction_k",
     "DisplayName": "Reaction",
     "TemplateName": "Reaction",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "You may play this card during the Reaction Step or a Reaction Window.",
     "ReminderText": "You may play this during the Reaction Step or a Reaction Window."
   },
@@ -227,6 +291,8 @@
     "KeywordName": "reinforce_k",
     "DisplayName": "Reinforce",
     "TemplateName": "Reinforce (X)",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "If you have less than 7 shields, place (X) shield tokens into your shield zone. Otherwise, draw a card.",
     "ReminderText": "If you have fewer than 7 shields, add X shield tokens to your shield zone. Otherwise, draw a card."
   },
@@ -234,6 +300,8 @@
     "KeywordName": "salvage_k",
     "DisplayName": "Salvage",
     "TemplateName": "Salvage a (Target)",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "Return a (Target) card from your grave to your hand.",
     "ReminderText": "Return it from your grave to your hand."
   },
@@ -241,6 +309,8 @@
     "KeywordName": "scour_k",
     "DisplayName": "Scour",
     "TemplateName": "Scour (X)",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "Put the top (X) cards of your deck into their grave.",
     "ReminderText": "Put the top X cards of your deck into their grave."
   },
@@ -248,6 +318,8 @@
     "KeywordName": "shields_k",
     "DisplayName": "Shields",
     "TemplateName": "(Target) Shields (X)",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "Place (X) Shield Counters on (Target).",
     "ReminderText": "Place X shield counters on target."
   },
@@ -255,6 +327,8 @@
     "KeywordName": "shieldcount_k",
     "DisplayName": "Shield Counter",
     "TemplateName": "Shield Counter",
+	"IsStatus": "False",
+	"IsCounter": "True",
     "RulesText": "A temporary counter that when damage would be dealt to the card it is on, each individual one prevents a single damage counter from being placed and is removed at the same time.",
     "ReminderText": "Prevents 1 damage, then remove it."
   },
@@ -262,6 +336,8 @@
     "KeywordName": "shieldlevel_k",
     "DisplayName": "Shield Level",
     "TemplateName": "Shield Level",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "The number of cards in your shield zone.",
     "ReminderText": "Number of cards in your shield zone."
   },
@@ -269,6 +345,8 @@
     "KeywordName": "stun_k",
     "DisplayName": "Stun Counter",
     "TemplateName": "Stunned Counter",
+	"IsStatus": "True",
+	"IsCounter": "True",
     "RulesText": "A status counter that when gained, exhausts the card it is placed on. When that card would ready, one of these counters are removed instead.",
     "ReminderText": "Card becomes exhausted. Remove one instead of readying."
   },
@@ -276,6 +354,8 @@
     "KeywordName": "syphon_k",
     "DisplayName": "Syphon",
     "TemplateName": "Syphon",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "When this deals any amount of damage to a player or unit, you heal equal to that amount.",
     "ReminderText": "When this deals damage, you heal that much."
   },
@@ -283,6 +363,8 @@
     "KeywordName": "terrify_k",
     "DisplayName": "Terrified Counter",
     "TemplateName": "Terrified Counter",
+	"IsStatus": "True",
+	"IsCounter": "True",
     "RulesText": "A status counter that prevents the card it is on from blocking. When that card attacks, this counter is removed.",
     "ReminderText": "Can’t block. Remove it when it attacks."
   },
@@ -290,6 +372,8 @@
     "KeywordName": "vitalize_k",
     "DisplayName": "Vitalize",
     "TemplateName": "(Target) Vitalizes (X)",
+	"IsStatus": "False",
+	"IsCounter": "False",
     "RulesText": "Place (X) Health Counters on (Target).",
     "ReminderText": "Put X health counters on target."
   }

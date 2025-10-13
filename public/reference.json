@@ -1,5 +1,5 @@
 {
-  "SuperType": ["Token"], 
+  "SuperType": ["Basic", "Token"], 
   "CardType": ["Partner", "Unit", "Ability", "Event", "Support", "Shield"],
   "SubType": ["Reaction", "Augment"],
   "Rarity": ["Basic", "Common", "Uncommon", "Rare", "Ultra Rare"],

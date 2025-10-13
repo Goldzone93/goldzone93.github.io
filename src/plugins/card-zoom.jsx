@@ -1,5 +1,5 @@
 // /src/plugins/card-zoom.jsx
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
 const primaryImg  = (id) => `/images/${id}.png`;
@@ -12,6 +12,21 @@ export function CardZoom({ id, name }) {
   const [open, setOpen] = useState(false);
   const [showBack, setShowBack] = useState(false);
 
+    // Toggle a body class so other plugins (hover-preview) can respond.
+    const setZoomOpen = useCallback((v) => {
+        setOpen(v);
+        try {
+            document?.body?.classList?.toggle('zoom-open', !!v);
+        } catch { }
+    }, []);
+
+    // Ensure the body class is removed if this component unmounts while open.
+    useEffect(() => {
+        return () => {
+            try { document?.body?.classList?.remove('zoom-open'); } catch { }
+        };
+    }, []);
+
   const frontId = normalizeToFront(id);
   const backId  = backIdFor(frontId);
 
@@ -19,7 +34,7 @@ export function CardZoom({ id, name }) {
   const alt = name || 'Card art';
 
   const flip  = useCallback(() => setShowBack(v => !v), []);
-  const close = useCallback(() => { setOpen(false); setShowBack(false); }, []);
+  const close = useCallback(() => { setZoomOpen(false); setShowBack(false); }, [setZoomOpen]);
 
   return (
     <>
@@ -57,7 +72,7 @@ export function CardZoom({ id, name }) {
                   }
 
                   setShowBack(faceIsBack);
-                  setOpen(true);
+                  setZoomOpen(true);
               }}
               onPointerDown={(e) => e.stopPropagation()}
           >

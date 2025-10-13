@@ -1,0 +1,129 @@
+Playtest Board — Slot & Image Sizing Guide
+==========================================
+
+Files this guide refers to
+--------------------------
+1) /src/styles/playtest-board.css
+2) /src/plugins/playtest-board.jsx
+
+What you can control
+--------------------
+• Slot size: the physical grid cells where cards/piles/partner sit.
+• Image fit: how card PNGs scale/rotate inside a slot.
+
+Key CSS variables (playtest-board.css)
+-------------------------------------
+Inside .pb-board we define:
+  --card-w  : the base portrait card width (changes overall scale)
+  --card-h  : computed portrait card height (63×88 aspect)
+  --slot-w  : actual grid COLUMN width
+  --slot-h  : actual grid ROW height
+
+By default, slots match the portrait card size:
+  --slot-w: var(--card-w);
+  --slot-h: var(--card-h);
+
+If you want slots sized for 90° rotation without overlap, use the "rotate-safe" preset:
+  .pb-board.rotate-safe {
+    --slot-w: var(--card-h); /* slot is as wide as the portrait card is tall */
+    --slot-h: var(--card-h); /* square cell */
+  }
+
+How to change slot size (width & height)
+----------------------------------------
+1) Global scale for everything (keep aspect): bump --card-w.
+   Example:
+     .pb-board { --card-w: 140px; }            /* larger */
+     .pb-board { --card-w: clamp(88px, 9vw, 170px); }  /* responsive */
+
+2) Change grid cell dimensions independently:
+   Example (taller cells, same width):
+     .pb-board { --slot-w: var(--card-w); --slot-h: calc(var(--card-w) * 1.6); }
+
+3) Make rotate-safe the default:
+   In playtest-board.jsx, add the class "rotate-safe" on the board container:
+     <div className="pb-board rotate-safe" ... />
+   OR set the variables directly:
+     .pb-board { --slot-w: var(--card-h); --slot-h: var(--card-h); }
+
+Mobile sizing
+-------------
+There is a media query that adjusts the base card width on smaller screens:
+  @media (max-width: 520px) {
+    .pb-board {
+      --card-w: clamp(70px, 10vw, 110px);
+      --slot-w: var(--card-w);
+      --slot-h: calc(var(--slot-w) * 88 / 63);
+      gap: 8px;
+    }
+  }
+Adjust --card-w here if you want larger or smaller slots on phones.
+
+Background placeholders
+-----------------------
+• Partner + piles (Shield, Banish, Deck, Grave): /public/images/board_slot.png
+• Units + supports: /public/images/board_slot_rotate.png
+These are set as background images on the slot cells and will scale with --slot-w/--slot-h.
+
+Image sizing (when you place actual card images)
+------------------------------------------------
+When you render card images into a slot, use a wrapper that fills the cell and scales the image safely:
+
+Suggested CSS:
+  .pb-card {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+  }
+  .pb-card img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;   /* never overflow the slot */
+    image-rendering: auto; /* crisp scaling if you use pixel art */
+  }
+  .pb-card.is-rotated img {
+    transform: rotate(90deg);
+  }
+
+Notes:
+• With object-fit: contain, portrait and rotated images will auto-fit inside the slot.
+• If you need 1:1, unscaled rotated images, use the rotate-safe preset so the slot is wide enough.
+
+Quick recipes
+-------------
+A) Make all slots 10% larger (portrait)
+   .pb-board { --card-w: calc(var(--card-w) * 1.1); }
+
+B) Use rotate-safe everywhere
+   In JSX: <div className="pb-board rotate-safe" ... />
+   or in CSS: .pb-board { --slot-w: var(--card-h); --slot-h: var(--card-h); }
+
+C) Make units/supports slightly taller than portrait for breathing room
+   .pb-board { --slot-h: calc(var(--card-h) * 1.1); }
+
+D) Tighten gaps between cells
+   .pb-board { gap: 6px; }
+
+Troubleshooting
+---------------
+• Rotated images overlap neighbors
+  → Increase --slot-w (or enable rotate-safe). Ensure your .pb-card img uses max-width/height:100% and object-fit:contain.
+
+• Background placeholders look “short”
+  → Increase --slot-h. Backgrounds scale with the slot, so taller slots make the placeholders taller.
+
+• Battle Zone height
+  → By design it uses the same row height as other cells. If you ever want a taller battle zone,
+    add a custom rule like:
+      .pb-battle-zone { min-height: calc(var(--slot-h) * 1.2); }
+    (But keeping heights consistent usually looks cleaner.)
+
+Where to edit
+-------------
+• Slot size: edit variables inside .pb-board (and the mobile @media rule) in /src/styles/playtest-board.css.
+• Enabling rotate-safe: add the rotate-safe class in /src/plugins/playtest-board.jsx on the board container,
+  or define the variables in CSS as shown above.
+• Image fit: add the .pb-card and .pb-card img rules to your CSS (or a dedicated CSS file for card components).
+
+That’s it! Adjust --card-w for global scale, --slot-w/--slot-h for exact cell size, and use object-fit to keep images inside cells.

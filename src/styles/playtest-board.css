@@ -1,0 +1,2404 @@
+﻿/* /src/styles/playtest-board.css */
+.pb-root {
+    /* side width also available here for fixed dock math */
+    --side-w: clamp(200px, 18vw, 300px);
+    display: grid;
+    grid-template-rows: auto auto 1fr; /* header, subheader, body */
+    height: 100%;
+    background: var(--bg);
+    color: var(--ink);
+}
+
+/* Header (match ps-header from pack-simulator.css) */
+.pb-header {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr; /* left spacer | centered selector | right actions */
+    align-items: center;
+    gap: 12px;
+    padding: 8px;
+    background: var(--bg);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Lay out header action buttons in a row */
+.pb-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    justify-self: end; /* stick to the right edge of col 3 */
+}
+
+/* Centered container for Format selector */
+.pb-header-center {
+    justify-self: center;
+    display: inline-flex; /* label + select inline */
+    align-items: center;
+    justify-content: center; /* center the pair as a unit */
+    gap: 8px; /* comfortable spacing between label and field */
+    white-space: nowrap; /* keep on one line */
+}
+
+/* Label style to match small headers */
+.fmt-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    text-align: left; /* inline-left label */
+}
+
+/* Select styled like header buttons */
+.format-select {
+    appearance: auto; /* native dropdown arrow */
+    background: #0b1220;
+    border: 1px solid #263143;
+    color: var(--ink);
+    padding: 8px 10px;
+    height: 36px;
+    font-size: 14px;
+    border-radius: 8px;
+    width: 280px; /* fixed bar length (keeps the length you liked) */
+    line-height: 1.2;
+}
+
+    .format-select:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(92,134,255,0.35);
+    }
+
+.pb-title {
+    font-weight: 700;
+    font-size: 18px;
+    justify-self: start; /* stick to the left edge of col 1 */
+}
+
+.pb-actions .tips-btn {
+  white-space: nowrap;
+  background: #0b1220;
+  border: 1px solid #263143;
+  color: var(--ink);
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Body container */
+.pb-body {
+  padding: 12px;
+  min-height: 0;
+}
+
+/* Simple placeholder panel until the board is built */
+.pb-empty {
+  height: 100%;
+  display: grid;
+  place-items: center;
+  background: var(--panel);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* ---------- Board grid ---------- */
+.pb-board {
+    /* Gap token so we can use it in formulas */
+    --gap: 10px;
+    /* Card sizing (portrait) driven by container width (100cqw is .pb-center width) */
+    /* Fit 9 columns + 8 gaps into the center column. Clamp to keep it usable. */
+    /* Fit: 2 portrait cols + 7 wide (card-height) cols + 8 gaps into the center column */
+    --card-w: clamp(36px, calc(((100cqw - (8 * var(--gap))) * 63) / 742), 160px);
+    --card-h: calc(var(--card-w) * 88 / 63); /* 63x88mm ratio */
+    /* Independent slot size (what the grid actually uses) */
+    --slot-w: var(--card-w);
+    --slot-h: var(--card-h);
+    /* NEW: unit/support tracks are as wide as a card is tall (square tracks) */
+    --slot-rot-w: var(--card-h);
+    display: grid;
+    /* col1 (shield/partner) | cols 2–8 (unit/support) | col9 (banish/deck/grave) */
+    grid-template-columns: var(--slot-w) repeat(7, var(--slot-rot-w)) var(--slot-w);
+    grid-auto-rows: var(--slot-h);
+    gap: var(--gap);
+    /* Keep the whole board centered within the middle column */
+    justify-content: center;
+}
+
+/* Leave extra left/right breathing room while cards are rotated (no resizing) */
+.pb-board.rotate-safe {
+  /* Overhang vs the wider unit/support tracks (usually 0 now) */
+  --rot-overhang: max(0px, calc(var(--card-h) - var(--slot-rot-w)));
+  padding-left: calc(var(--rot-overhang) / 2);
+  padding-right: calc(var(--rot-overhang) / 2);
+}
+
+/* ---------- Cells ---------- */
+.pb-slot,
+.pb-battle-zone {
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  position: relative;
+}
+
+/* Partner + piles (Shield, Banish, Deck, Grave) use board_slot.png */
+.pb-slot.pb-std {
+  background-image: url('/images/board_slot.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.25));
+}
+
+/* Units + supports use board_slot_rotate.png */
+.pb-slot.pb-rot {
+  background-image: url('/images/board_slot_rotate.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.25));
+}
+
+/* Battle Zone spans columns 2–8, same row height as a card */
+.pb-battle-zone {
+  background: var(--panel);
+  border: 1px dashed rgba(255,255,255,0.18);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.25);
+}
+
+/* Hand rail (full width under rows) */
+.pb-hand {
+    min-height: var(--card-h);
+    background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    position: relative; /* enable centered label */
+}
+
+/* Small screens keep it readable while preserving proportions */
+@media (max-width: 520px) {
+    .pb-board {
+        --gap: 8px; /* tighter spacing; width still computed from container */
+    }
+}
+
+/* Centered names for all areas (sit *under* any placed content) */
+.pb-slot::after,
+.pb-battle-zone::after,
+.pb-hand::after {
+    content: attr(data-name);
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    pointer-events: none;
+    text-align: center;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    z-index: 0; /* ensure label stays below images/cards */
+}
+
+/* ----- Stage: 3-column layout (Left Panel | Board | Right Panel) ----- */
+.pb-stage {
+  --side-w: clamp(200px, 18vw, 300px);
+
+  display: grid;
+  grid-template-columns: var(--side-w) 1fr var(--side-w);
+  gap: 12px;
+  height: 100%;
+  min-height: 0; /* allow children to size/scroll */
+}
+
+/* Center column to keep the board nicely centered */
+.pb-center {
+    min-width: 0;
+    min-height: 0;
+    display: grid;
+    align-content: start;
+    justify-content: center; /* board stays centered within middle column */
+    container-type: inline-size; /* enables container query units (cqw) */
+    overflow: auto; /* if board hits its min size, scroll rather than overlap */
+    padding-bottom: calc(var(--hand-h, 180px) + 24px); /* keep content clear of dock */
+    box-sizing: content-box; /* padding increases outer width so edges stay visible */
+    overflow: visible; /* rotated corners can extend past cells */
+}
+
+/* Empty side panels (placeholders for future content) */
+.pb-side {
+    background: var(--panel);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    min-height: 100%;
+    display: flex; /* stack sections */
+    flex-direction: column;
+}
+
+/* Optional: on small screens, reduce the side width */
+@media (max-width: 900px) {
+  .pb-stage {
+    --side-w: clamp(96px, 22vw, 160px);
+    gap: 10px;
+  }
+}
+@media (max-width: 600px) {
+  .pb-stage {
+    --side-w: clamp(72px, 20vw, 120px);
+    gap: 8px;
+  }
+}
+
+/* ----- Side-panel sections ----- */
+.pb-section {
+    padding: 4px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.pb-section-title {
+    margin: 8px 0 6px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    padding-bottom: 6px;
+    border-bottom: 1px solid #263143; /* match deck/pack section headers */
+}
+
+/* Player HP controls */
+.hp-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pb-btn {
+    background: #0b1220;
+    border: 1px solid #263143;
+    color: var(--ink);
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    min-width: 36px;
+    line-height: 1;
+}
+
+.hp-display {
+    min-width: 2ch;
+    text-align: center;
+    font-weight: 700;
+    font-size: 18px;
+    padding: 2px 8px;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 6px;
+}
+
+.hp-override {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    user-select: none;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.hp-cap-note {
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--muted);
+}
+
+/* Thin subheader bar under the main header */
+.pb-subheader {
+    min-height: 40px; /* thinner than main header */
+    padding: 4px 8px;
+    background: var(--bg);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: block; /* full-width container; inner grid handles layout */
+}
+
+/* ----- Turn Phase bar (inside .pb-subheader) ----- */
+.turnbar {
+    display: flex;
+    flex-direction: column;
+    gap: 6px; /* space between phases and steps rows */
+    width: fit-content; /* shrink to content width */
+    max-width: 100%; /* never exceed the subheader width */
+    margin: 0 auto; /* center within the subheader */
+}
+
+.turnbar-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;    /* allow horizontal scroll on very small screens */
+  padding-bottom: 2px; /* keeps scrollbars from hugging content */
+}
+
+/* Pills (shared) */
+.tb-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #0b1220;
+  border: 1px solid #263143;
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+}
+
+/* Shared hover (exclude the zoom button so styles.css wins for it) */
+.pb-root button:not(.zoom-btn):hover,
+.pb-root .tips-btn:hover,
+.pb-root .pb-btn:hover,
+.pb-root .tb-pill:hover {
+    background: rgba(255,255,255,0.10);
+}
+
+/* Ensure the zoom button keeps its own hover style */
+.pb-root .zoom-btn:hover {
+    background: rgba(0,0,0,0.7);
+}
+
+/* Optional: make hover feel consistent/smooth across all buttons */
+.pb-root button,
+.pb-root .tips-btn,
+.pb-root .pb-btn,
+.pb-root .tb-pill {
+    transition: border-color 120ms ease, box-shadow 120ms ease, background-color 120ms ease, color 120ms ease;
+}
+
+.tb-pill.active {
+  background: #5c86ff;
+  border-color: #5c86ff;
+  box-shadow: 0 0 0 1px rgba(92,134,255,0.25) inset;
+}
+
+.pb-root .tb-pill.active:hover {
+    background: #5c86ff
+}
+
+/* Phase vs Step sizing */
+.tb-pill.phase .tb-label {
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+
+.tb-pill.step .tb-label {
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+
+/* small a), b), c) index before the step label */
+.tb-step-index {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.pb-subheader-left {
+  grid-column: 1;
+  justify-self: start;
+}
+
+/* Compact inline tracker, matching header button sizing */
+.turns-tracker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.turns-tracker .tt-label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-right: 2px;
+}
+
+/* Numeric display styled like a small pill */
+.turns-tracker .tt-display {
+  min-width: 2ch;
+  text-align: center;
+  background: #0b1220;
+  border: 1px solid #263143;
+  border-radius: 8px;
+  padding: 6px 10px; /* matches .tips-btn / header buttons */
+  line-height: 1;
+}
+
+/* Plus/Minus buttons reuse pb-btn but ensure same height as header buttons */
+.turns-tracker .pb-btn {
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+
+/* Layout wrapper for Turn tracker + Override toggle */
+.turns-left-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Override checkbox + label */
+.tt-override {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.tt-override input {
+  transform: translateY(1px);
+}
+
+/* Make it obvious when +/- are locked */
+.turns-tracker .pb-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  filter: grayscale(0.2);
+}
+
+/* Make subheader happily grow to fit two rows if needed */
+.pb-subheader-inner {
+    display: grid;
+    grid-template-columns: auto 1fr auto; /* left (turns) | center (pills) | right (controls) */
+    align-items: center;
+    gap: 8px;
+}
+/* Inline steps appear immediately to the right of the active phase */
+.phases-inline {
+  flex-wrap: nowrap;
+}
+
+.tb-steps-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;      /* a bit of breathing room after the phase pill */
+  white-space: nowrap;   /* keep steps on one line with their phase */
+}
+
+/* If the whole bar gets wider than the subheader, allow horizontal scroll */
+.turnbar .phases-inline {
+  overflow-x: auto;
+}
+
+/* Phase active color override (green fill, white text) */
+.tb-pill.phase.active {
+  background: #22c55e;                 /* solid green fill */
+  border-color: #22c55e;               /* match border to fill */
+  color: #fff;                          /* force white text */
+  box-shadow: 0 0 0 1px rgba(34,197,94,0.35) inset; /* subtle inner ring */
+}
+
+.pb-root .tb-pill.phase.active:hover {
+    background: #22c55e;
+}
+
+/* ensure inner text stays white even if theme vars differ */
+.tb-pill.phase.active .tb-label,
+.tb-pill.phase.active .tb-step-index {
+  color: #fff;
+}
+
+/* Vertical divider between phases */
+.tb-divider {
+  display: inline-block;
+  width: 1px;
+  height: 22px;                     /* visually aligned with pills */
+  background: rgba(255,255,255,0.16);
+  margin: 0 10px;                   /* space around the line */
+  align-self: center;
+  border-radius: 1px;
+}
+
+/* Slightly dim the divider when a green phase is adjacent, so it doesn't clash */
+.tb-pill.phase.active + .tb-divider {
+  background: rgba(255,255,255,0.22);
+}
+
+.pb-subheader-inner {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr; /* left spacer | centered pills | right controls */
+    align-items: center;
+    width: 100%;
+    gap: 8px;
+}
+
+/* Center stays in the middle column, so it remains perfectly centered */
+.pb-subheader-center {
+    grid-column: 2;
+    justify-self: center;
+}
+
+/* Controls live in the right column and pin to the edge */
+.pb-subheader-right {
+    grid-column: 3;
+    justify-self: end;
+}
+
+/* Turn controls (reuse .pb-btn styling for visual consistency) */
+.turn-controls {
+  display: inline-flex;
+  gap: 8px;
+}
+
+/* Equal-size footer buttons that match header button styling */
+.pb-side.right .pb-right-footer .pb-btn {
+    width: 100%; /* fill grid cell → equal widths */
+    padding: 6px 10px; /* same as .pb-actions .tips-btn */
+    border-radius: 6px; /* same corner radius as tips-btn */
+    font-size: 17px; /* match base font size like tips-btn */
+    text-align: center; /* label centered in the wider button */
+}
+
+/* Make control buttons match pill sizing */
+.turn-controls .pb-btn {
+  padding: 6px 12px;     /* similar to .tb-pill padding */
+  font-size: 13px;       /* same as phase pill text */
+  line-height: 1.2;
+  border-radius: 6px;  /* pill silhouette */
+  min-height: 28px;      /* ensures equal height across platforms */
+}
+
+/* Right-panel footer: full width, two equal columns so the gap is panel-center */
+.pb-side.right .pb-right-footer {
+    margin-top: auto;
+    padding: 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* equal widths */
+    gap: 8px;
+    align-items: center;
+    width: 100%; /* makes the midpoint between buttons land at panel center */
+    border-top: 1px solid rgba(255,255,255,0.08);
+}
+/* ----- Element Resources ----- */
+.er-section .er-list {
+  display: grid;
+  gap: 4px;
+}
+
+/* Name on its own row; controls + override on second row (compact) */
+.er-row {
+    display: grid;
+    grid-template-columns: 1fr auto; /* controls | override */
+    grid-template-rows: auto auto; /* name row | controls row */
+    grid-template-areas:
+        "name name"
+        "controls override";
+    align-items: center;
+    gap: 0px 8px; /* tighter row + col gap */
+    background: var(--card);
+    border: 2px solid; /* color provided inline via style={{borderColor}} */
+    border-radius: 6px;
+    padding: 0px 8px; /* less padding */
+    min-width: 0;
+}
+
+.er-left {
+    grid-area: name;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.er-controls {
+    grid-area: controls;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    justify-self: start;
+}
+
+.er-override {
+    grid-area: override;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+    min-width: 0;
+    justify-self: end;
+}
+
+.er-name {
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    white-space: normal; /* allow wrapping on the dedicated name row */
+    overflow: visible;
+    text-overflow: clip;
+}
+
+.er-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.er-controls .pb-btn {
+  padding: 4px 8px;    /* compact height */
+  border-radius: 6px;
+}
+
+.er-value {
+    min-width: 2ch;
+    text-align: center;
+    background: #0b1220;
+    border: 1px solid #263143;
+    font-weight: 700;
+    border-radius: 6px;
+    padding: 4px 8px; /* compact height */
+    line-height: 1.1; /* slightly denser text box */
+}
+
+.er-override {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap; /* NEW: avoid wrap on small widths */
+}
+
+.er-override input {
+  transform: translateY(1px);
+}
+/* ----- Refund Tracker ----- */
+.refund-section .refund-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.refund-section .pb-btn {
+  padding: 4px 8px;     /* compact, matches ER buttons */
+  border-radius: 6px;
+}
+
+.refund-value {
+  min-width: 2ch;
+  text-align: center;
+  background: #0b1220;
+  border: 1px solid #263143;
+  font-weight: 700;
+  border-radius: 6px;
+  padding: 4px 8px;
+  line-height: 1.1;
+}
+
+/* --- Left panel help-footer (matches deck builder look) --- */
+.pb-side.left {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Dock the Help buttons to the bottom edge of the left panel */
+.pb-help-footer {
+    margin-top: auto;
+    padding: 2px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Base button styling scoped to playtest board (so we don't rely on deckbuilder css) */
+.pb-root .tips-btn {
+    white-space: nowrap;
+    background: #0b1220;
+    border: 1px solid #263143;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--ink);
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+/* Dim disabled placeholder button */
+.pb-help-footer .tips-btn[disabled] {
+    opacity: 0.55;
+    cursor: default;
+    filter: grayscale(0.2);
+}
+
+/* ----- Cost/Placement Module toggles (left panel) ----- */
+.pb-side.left {
+  display: flex;
+  flex-direction: column;
+}
+
+.pb-cost-toggle,
+.pb-place-toggle,
+.pb-hover-toggle,
+.pb-zoom-toggle {
+    display: grid;
+    grid-template-columns: auto 1fr; /* label | controls */
+    align-items: center;
+    gap: 8px 10px;
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.pb-cost-label,
+.pb-place-label,
+.pb-hover-label,
+.pb-zoom-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.pb-cost-controls {
+  justify-self: end;         /* push to the right side */
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+}
+
+.pb-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.pb-check input[type="checkbox"] {
+  transform: translateY(1px);
+}
+
+/* ----- Custom Trackers (left panel) ----- */
+.pb-custom-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.pb-custom-add {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid #2a3550;
+  background: #0b1220;
+  color: var(--ink);
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pb-custom-add:hover {
+  filter: brightness(1.15);
+}
+
+.pb-custom-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.pb-custom-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pb-custom-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #263143;
+  background: #0b1220;
+  color: var(--ink);
+  outline: none;
+}
+
+.pb-custom-input::placeholder {
+  color: var(--muted);
+}
+
+.pb-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pb-custom-remove {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid #513232;          /* subtle distinction from add */
+  background: #1a0f11;                 /* dark red-tinted base */
+  color: var(--ink);
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;                    /* slight space from counter */
+}
+
+.pb-custom-remove:hover {
+  filter: brightness(1.15);
+}
+
+/* Panel titles (match Playtest Board title vibe, but for sidebars) */
+.pb-panel-title {
+    font-weight: 700; /* same weight as .pb-title */
+    font-size: 18px; /* same size as .pb-title for parity */
+    color: var(--ink);
+    margin: 0px 0 0px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.12); /* subtle divider under title */
+}
+
+/* ----- Popup modal for galleries ----- */
+.pb-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: grid;
+  place-items: center;
+  z-index: 5000;
+}
+
+/* Ensure any dialog/modal in the playtest board stacks above the hand dock */
+.pb-modal,
+[role="dialog"],
+.pb-modal-content {
+    z-index: 10000 !important;
+}
+
+.pb-modal-content {
+    /* bigger tiles + roomier modal */
+    --gallery-min: 240px;
+    width: min(1300px, 96vw);
+    height: min(85vh, 900px);
+    background: #0b1220;
+    border: 1px solid #263143;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+}
+
+.pb-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.pb-modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* Search + Element filter controls under the modal title */
+.pb-gallery-controls {
+  display: grid;
+  gap: 8px;
+  padding: 8px 12px 0;
+}
+
+.pb-search-input {
+  background: #0b1220;
+  border: 1px solid #263143;
+  color: var(--ink);
+  padding: 8px 10px;
+  height: 36px;
+  font-size: 14px;
+  border-radius: 8px;
+  width: 100%;
+}
+
+.pb-filter-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 6px 0px;
+    justify-content: center; /* center the chips in the modal */
+    align-content: center; /* keep wrapped rows centered too */
+    width: 100%;
+}
+
+.pb-filter-chip {
+  background: #0b1220;
+  border: 1px solid #263143;
+  color: var(--ink);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.pb-filter-chip.active {
+  background: rgba(92,134,255,0.15);
+  border-color: rgba(92,134,255,0.65);
+}
+
+/* inline buttons like the help section */
+/* Force Card/Token buttons onto one row, side-by-side */
+.pb-gallery-actions {
+  display: flex !important;      /* override any parent layout */
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;             /* keep them on one line */
+}
+
+/* Make each button share the row evenly instead of full-width */
+.pb-gallery-actions .tips-btn {
+  display: inline-flex;          /* match help button look */
+  justify-content: center;
+  width: auto;                   /* override any 100% width */
+  flex: 1 1 0;                   /* 2 equal columns */
+  min-width: 0;                  /* prevent overflow */
+}
+
+/* grid of images */
+.pb-gallery-grid {
+    padding: 10px; /* tighter edge padding */
+    overflow: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(var(--gallery-min, 260px), 1fr));
+    gap: 12px; /* smaller gaps between cards */
+}
+
+.pb-gallery-card {
+    position: relative; /* needed so .zoom-btn pins to the corner */
+    background: rgba(255,255,255,0.03);
+    border: 1px solid #263143;
+    border-radius: 8px;
+    margin: 0; /* kill default <figure> margins */
+    padding: 6px 6px 8px; /* tighter internal padding */
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
+}
+
+.pb-gallery-card img {
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+  display: block;
+}
+
+.pb-gallery-name {
+    font-size: 13px;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.25;
+    max-width: 100%;
+    word-break: break-word;
+}
+/* search row under the modal title bar */
+.pb-modal-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.pb-search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #263143;
+  background: #0b1220;
+  color: var(--ink);
+  outline: none;
+}
+
+.pb-search-input::placeholder {
+  color: var(--muted);
+}
+
+.pb-search-meta {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+/* Full-width Encounter button under the gallery buttons */
+.pb-encounter-wrap {
+  padding: 8px 0 0;
+}
+.pb-encounter-btn {
+  width: 100%;
+  display: inline-flex;
+  justify-content: center;
+  font-size: 15px;
+  padding: 10px 12px; /* a touch taller than regular tips-btn */
+}
+
+/* Encounter modal: tiny helper label rows and actions bar */
+.pb-eg-sectionlabel {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 4px;
+}
+
+.pb-encounter-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.pb-encounter-generate {
+  padding: 8px 14px;
+  border-radius: 6px;
+}
+
+.pb-encounter-count {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* simple empty-state text inside the grid area */
+.pb-empty-state {
+  grid-column: 1 / -1;
+  display: grid;
+  place-items: center;
+  min-height: 120px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Center the generated results inside the modal */
+.pb-center-grid {
+    /* Use fixed column width equal to the tile min, so the grid
+     shrinks to content width and can be centered */
+    grid-template-columns: repeat( auto-fit, minmax(var(--gallery-min, 240px), var(--gallery-min, 240px)) );
+    justify-content: center; /* center the tracks within the container */
+}
+
+/* Imported card images inside slots (sit *above* the area label) */
+.pb-card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    border-radius: 8px;
+    position: relative;
+    z-index: 1;
+}
+
+/* Small badge to show counts on piles (e.g., Deck) */
+.pb-pile-count {
+    position: absolute;
+    right: 6px; /* bottom-left per your UI */
+    bottom: 6px;
+    padding: 2px 6px;
+    font-size: 12px;
+    line-height: 1;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    pointer-events: none;
+    user-select: none;
+    z-index: 2; /* above the card image (z-index:1) and area label (z-index:0) */
+}
+
+/* ----- Hand row cards ----- */
+.pb-hand-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px;
+  position: relative;
+  z-index: 1; /* ensure cards sit above the area label */
+}
+.pb-hand .pb-card-img {
+  width: var(--card-w);
+  height: auto;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+}
+
+/* ----- Mulligan modal ----- */
+.pb-mull-controls {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 8px 12px 0; /* add side padding to avoid hugging edges */
+}
+.pb-form-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+.pb-row-label {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ink);
+}
+.pb-mini-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.pb-mull-tracker {
+  justify-self: end;
+  font-size: 12px;
+  color: var(--muted);
+}
+.pb-mull-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* buttons ⟵ left | toggles ⟶ right */
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 0 12px; /* match header/controls side padding */
+}
+.pb-mull-actions-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pb-keep-toggles {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+}
+.pb-mull-hand {
+  padding: 8px 12px 12px; /* match side padding with header/controls */
+  border-top: 1px solid rgba(255,255,255,0.08);
+  flex: 1 1 auto;   /* fill remaining modal height */
+  min-height: 0;    /* allow inner scroller */
+  overflow: auto;   /* scroll hand area, not the whole modal */
+}
+/* Mulligan modal: card grid that fits the popup */
+.pb-mull-hand .pb-hand-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--mull-card-w, 200px), 1fr));
+  gap: 12px;
+  padding: 8px 0 0; /* side padding handled by .pb-mull-hand */
+}
+.pb-mull-card {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 63 / 88; /* standard card ratio */
+    border-radius: 6px; /* clip inner highlight ring */
+    overflow: hidden;
+}
+
+/* Obvious kept state */
+.pb-mull-card.kept {
+  /* inner green ring + outer edge */
+  box-shadow:
+    0 0 0 3px rgba(34,197,94,0.55) inset,
+    0 0 0 1px rgba(34,197,94,0.95);
+}
+
+/* "KEPT" badge */
+.pb-mull-card.kept::after {
+  content: "KEPT";
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  background: rgba(34,197,94,0.88);
+  color: #fff;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  padding: 3px 6px;
+  border-radius: 4px;
+}
+
+/* Make the small top-left label echo the kept state */
+.pb-mull-card.kept .pb-mull-keep {
+  background: rgba(34,197,94,0.8);
+}
+
+/* Dim the label on non-shields (still clickable elsewhere is disabled) */
+.pb-mull-card.noshield .pb-mull-keep {
+  opacity: 0.6;
+}
+
+/* image fits the card box */
+.pb-mull-card .pb-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 6px;
+}
+.pb-mull-keep {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: rgba(0,0,0,0.55);
+  color: white;
+  font-size: 11px;
+  line-height: 1;
+  padding: 3px 6px;
+  border-radius: 4px;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+.pb-mull-keep input {
+  accent-color: #5c86ff;
+}
+/* ADD: keep the Card Selector's quantity directly next to the select */
+.pb-form-row.pb-cardselect-row {
+    grid-template-columns: auto 1fr; /* label | (select + qty) */
+}
+
+.pb-cardselect {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px; /* small space between select and +/- */
+}
+
+/* Click affordance only for shield cards */
+.pb-mull-card.clickable {
+  cursor: pointer;
+}
+
+.pb-mull-card.noshield {
+  cursor: default;
+}
+
+/* ----- Bottom-docked Hand (fixed, between panels) ----- */
+.pb-hand-dock {
+    /* size */
+    --hand-h: clamp(140px, 24vh, 320px);
+    --gutter: 12px;
+    position: fixed;
+    z-index: 0; /* below modals (5000), above board */
+    /* leave a small gap for the center column’s horizontal scrollbar */
+    bottom: calc(var(--gutter) + var(--scrollbar-h, 16px));
+    left: calc(var(--gutter) + var(--side-w) + var(--gutter));
+    right: calc(var(--gutter) + var(--side-w) + var(--gutter));
+    height: var(--hand-h); /* FIXED height (single row) */
+
+    background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.03));
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    display: flex;
+    align-items: stretch;
+    overflow: hidden; /* content never increases dock height */
+    backdrop-filter: blur(2px);
+}
+
+/* Hand contents: horizontal rail with scroll if overflow */
+.pb-hand-dock .pb-hand-cards {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 22px 12px 22px;      /* top = bottom for equal visual gap */
+  width: 100%;
+  height: 100%;                 /* fill the fixed dock height */
+  overflow-x: auto;             /* horizontal scroll for many cards */
+  overflow-y: hidden;           /* never wrap or grow vertically */
+  flex-wrap: nowrap;            /* single row (no wrapping) */
+  scrollbar-gutter: stable;     /* keep space for scrollbar when needed */
+  z-index: 0; /* ensure the rail doesn't float above modals */
+}
+
+/* A larger, consistent size for hand cards in the dock */
+.pb-hand-dock .pb-card-img {
+  height: calc(var(--hand-h) - 44px); /* 22px top + 22px bottom padding */
+  width: auto;
+  aspect-ratio: 63 / 88;
+  object-fit: contain;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+  flex: 0 0 auto;
+}
+
+/* Mobile-ish safety: if the panels get narrow, still keep small gutters */
+@media (max-width: 700px) {
+  .pb-hand-dock {
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+  }
+}
+
+/* Draggable wrappers in the Hand dock */
+.pb-hand-item {
+    position: relative; /* needed so .zoom-btn pins to the corner */
+    flex: 0 0 auto; /* keep fixed size so overflow can scroll */
+    user-select: none;
+    cursor: grab;
+}
+
+.pb-hand-item.dragging {
+  opacity: 0.6;
+  cursor: grabbing;
+  transform: scale(0.98);
+}
+
+/* Draggable placed card wrapper inside a board slot */
+.pb-slot .pb-slot-card {
+    position: relative; /* needed so .zoom-btn pins to the corner */
+    z-index: 1; /* NEW: sit above the slot's ::after label */
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+    user-select: none;
+}
+
+/* When Card Zoom is off, hide its UI and disable interactions */
+.pb-root.zoom-off .zoom-btn {
+    display: none !important;
+    pointer-events: none !important;
+}
+
+/* Visual cue while placement mode is active — target-specific */
+.pb-placing-unit .pb-slot.unit,
+.pb-placing-support .pb-slot.support {
+  cursor: pointer;
+  outline: 2px dashed rgba(92,134,255,0.85);
+  outline-offset: -2px;
+}
+.pb-placing-unit .pb-slot.unit:hover,
+.pb-placing-support .pb-slot.support:hover {
+  box-shadow: 0 0 0 2px rgba(92,134,255,0.85) inset;
+}
+/* Exhausted (tapped) cards: rotate 90° and slightly dim */
+.pb-slot .pb-slot-card.is-exhausted {
+    transform: rotate(90deg);
+    transform-origin: center center;
+    filter: saturate(0.85) brightness(0.95);
+}
+
+/* Smoothen the flip a bit */
+.pb-slot .pb-slot-card {
+  transition: transform 120ms ease;
+}
+
+/* Keep original slot aspect even when rotated */
+.pb-board.rotate-safe .pb-slot.pb-rot {
+    aspect-ratio: auto;
+}
+
+/* Portrait-aspect frame so overlays pin to the actual card edges */
+.pb-slot .pb-slot-card .pb-card-frame {
+  position: relative;
+  height: 100%;
+  aspect-ratio: 63 / 88;   /* real card ratio */
+  margin-left: auto;       /* center within the wider square slot */
+  margin-right: auto;
+}
+
+/* Make the image fill the frame exactly */
+.pb-slot .pb-slot-card .pb-card-frame .pb-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+/* Put the zoom button at the card's top-right (frame corner) */
+.pb-slot .pb-slot-card .pb-card-frame .zoom-btn {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+}
+
+/* When exhausted, keep the zoom icon upright (counter-rotate) */
+.pb-slot .pb-slot-card.is-exhausted .pb-card-frame .zoom-btn {
+  transform: rotate(-90deg);
+}
+
+/* Temporarily hide a modal without unmounting (preserves state/filters/scroll) */
+.pb-modal.is-hidden {
+    display: none !important;
+}
+/* Center the lightweight peek modal like the others, but shrink-wrap it */
+/* Only fix the height for the Stack Viewer (full-stack peek) */
+.pb-modal.pb-peek.is-stack-view .pb-modal-content {
+    margin: 6vh auto;
+    width: clamp(560px, 70vw, 960px);
+    max-width: none;
+    height: clamp(420px, 80vh, 980px);
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Add a little gap around the card image */
+.pb-modal.pb-peek.is-stack-view .pb-modal-body {
+    display: flex;
+    justify-content: center;
+    padding: 10px;
+    overflow: auto;
+    flex: 1 1 auto;
+}
+
+.pb-modal.pb-peek.is-stack-view .pb-modal-header {
+    flex: 0 0 auto;
+}
+
+/* Image fits the padded body, keeps aspect, and won’t overflow the viewport */
+.pb-modal.pb-peek.is-stack-view .pb-modal-body img {
+    width: 100%;
+    height: auto;
+    max-height: 76vh;
+    border-radius: 8px;
+    display: block;
+}
+
+/* Make the peek modal wider when revealing multiple cards (aim for 3 columns) */
+.pb-modal.pb-peek.is-stack-view.pb-peek-multi .pb-modal-content {
+    width: clamp(560px, 90vw, 1180px);
+    max-width: none;
+}
+
+/* Only flex the title when the size slider is present (stack viewer) */
+.pb-modal.pb-peek.is-stack-view .pb-modal-header .title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Sizebar beside the title */
+.pb-sizebar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Match deckbuilder icon look: stroke-only, inherit color */
+.pb-sizebar-icon {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Keep slider compact; uses your existing input styling variables */
+.pb-sizebar-range {
+  width: 160px;
+}
+
+/* ===== Foresee modal (responsive & scrollable) ===== */
+.pb-modal.pb-foresee .pb-modal-content {
+    width: min(1200px, calc(100vw - 32px));
+    max-height: calc(100dvh - 32px);
+    display: flex; /* header fixed, body scrolls */
+    flex-direction: column;
+}
+
+.pb-modal.pb-foresee .pb-foresee-body {
+  flex: 1 1 auto;                     /* fill remaining height */
+  min-height: 0;                       /* allow overflow to work in flex */
+  overflow: auto;                      /* <-- scrolls here */
+  -webkit-overflow-scrolling: touch;
+  padding: 12px;
+  gap: 16px;
+  display: grid;
+  grid-auto-rows: min-content;         /* revealed | bar | grid */
+}
+
+.pb-foresee-zone {
+  background: var(--panel);
+  border: 1px dashed rgba(255,255,255,0.18);
+  border-radius: 8px;
+  padding: 10px;
+  min-height: 120px;
+  position: relative;
+}
+
+.pb-foresee-reveal {
+  min-height: 140px;
+}
+
+.pb-foresee-placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.pb-modal.pb-foresee .pb-foresee-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--foresee-card-w), var(--foresee-card-w)));
+  justify-content: start; /* or center if you prefer */
+  gap: 12px;
+  align-items: start;
+}
+
+.pb-modal.pb-foresee .pb-foresee-card { width: 100%; }
+.pb-modal.pb-foresee .pb-foresee-card .pb-card-img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* controls row */
+.pb-foresee-bar {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 0 2px;
+}
+
+.pb-foresee-instructions {
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* two-column areas */
+.pb-modal.pb-foresee .pb-foresee-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .pb-modal.pb-foresee .pb-foresee-grid {
+    grid-template-columns: 1fr; /* stack on smaller widths */
+  }
+}
+
+.pb-modal.pb-foresee .pb-modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: inherit;
+}
+
+.pb-modal.pb-foresee .pb-foresee-bar {
+  position: sticky;
+  top: 48px;         /* below the header; adjust if needed */
+  z-index: 1;
+  background: inherit;
+  padding-block: 8px;
+}
+/* Fixed tile width for all Foresee areas */
+.pb-modal.pb-foresee {
+    --foresee-card-w: 170px; /* adjust this to taste */
+}
+
+/* Small order number badge for Foresee Top/Bottom areas */
+.pb-foresee-index {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 2;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 4px;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ===== Produce modal (scoped only to Produce) ===== */
+.pb-modal.pb-produce {
+  place-items: center;                  /* hard-center this modal */
+}
+
+.pb-modal.pb-produce .pb-modal-content {
+  margin: 0;                            /* remove the peek-style vertical offset */
+  width: min(420px, 92vw);              /* compact width */
+  height: auto;                         /* shrink-wrap */
+  max-height: calc(100dvh - 32px);      /* viewport-safe */
+  border-radius: 12px;                  /* slightly softer corners */
+}
+
+.pb-modal.pb-produce .pb-modal-header {
+  padding: 12px 14px;                   /* a touch more breathing room */
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.pb-modal.pb-produce .pb-modal-body {
+  padding: 10px 12px 14px;              /* balanced inner padding */
+}
+
+.pb-produce-list {
+  display: grid;
+  gap: 8px;
+}
+
+.pb-produce-list button {
+  width: 100%;
+  background: #0b1220;
+  border: 1px solid #263143;
+  color: var(--ink);
+  border-radius: 10px;
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.pb-produce-list button[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* === Unit stat chips under cards (ATK/DEF/HP) === */
+.pb-slot .pb-unit-stats {
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  padding: 2px 6px;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border-radius: 6px;
+  font-size: 11px;
+  line-height: 1.1;
+  pointer-events: none; /* don't interfere with drag/drop */
+  z-index: 2; /* above card image, below zoom button */
+}
+
+.pb-slot .pb-unit-stats .stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 4px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.pb-slot .pb-unit-stats .label {
+  opacity: 0.8;
+}
+
+.pb-slot .pb-unit-stats .value {
+  min-width: 10px;
+  text-align: center;
+}
+/* ADD THIS immediately after the block above */
+.pb-slot .pb-unit-stats .value.up {
+  color: #22c55e; /* green when above base */
+}
+
+.pb-slot .pb-unit-stats .value.down {
+  color: #ef4444; /* red when below base */
+}
+
+/* --- Card Counter Badges (always visible on card image) --- */
+.pb-slot .pb-slot-card .pb-card-frame {
+  position: relative; /* ensure badges can absolutely position */
+}
+.pb-counter-badges {
+    position: absolute;
+    left: 6px;
+    bottom: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* don't stretch siblings; each badge sizes to its content */
+    gap: 4px;
+    z-index: 2; /* above image */
+    pointer-events: auto; /* allow hover/focus for expand; position keeps drag/zoom safe */
+}
+/* Keep counter badges clear of the unit stat chips (ATK/DEF/HP) in unit slots only */
+/* Only when the slot currently renders the stat bar */
+.pb-slot.unit:has(.pb-unit-stats) .pb-counter-badges {
+    bottom: 25px;
+}
+.pb-counter-badge {
+  background: rgba(0,0,0,0.65);
+  border: 1px solid #263143;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 11px;
+  line-height: 1.1;
+  color: #fff;
+  pointer-events: auto;
+  user-select: none;
+  display: inline-flex;
+}
+
+/* --- Add Counters modal list --- */
+.pb-counters .pb-modal-body {
+  padding: 8px 12px;
+}
+.pb-counters-list {
+  display: grid;
+  gap: 8px;
+  max-height: 60vh;
+  overflow: auto;
+}
+.pb-counter-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid #263143;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.03);
+}
+.pb-counter-name {
+  font-size: 13px;
+  color: var(--ink);
+}
+/* Collapsed-by-default counter labels that expand on hover/focus */
+.pb-counter-badge {
+  position: relative;
+  cursor: default;
+  outline: none;
+}
+
+.pb-counter-badge .abbr { 
+  display: inline; 
+}
+
+.pb-counter-badge .full { 
+  display: none; 
+  white-space: nowrap; 
+}
+
+/* Expand on hover (mouse) or focus (keyboard/tap) */
+.pb-counter-badge:hover .abbr,
+.pb-counter-badge:focus .abbr {
+  display: none;
+}
+.pb-counter-badge:hover .full,
+.pb-counter-badge:focus .full {
+  display: inline;
+}
+
+/* Small focus ring for accessibility when tapped/clicked */
+.pb-counter-badge:focus {
+  outline: 1px solid rgba(92,134,255,0.55);
+  outline-offset: 2px;
+}
+/* Make the card a positioning context for on-card overlays */
+.pb-slot-card .pb-card-frame {
+  position: relative;
+}
+
+/* Place the unit/partner stat bar on the card itself */
+.pb-slot-card .pb-card-frame .pb-unit-stats {
+  position: absolute;
+  bottom: 4px;              /* stays at the bottom edge of the card */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;               /* above the image, below the zoom icon */
+  pointer-events: none;     /* don't block dragging or menus */
+}
+
+/* Ensure the tiny pills don’t capture pointer events either */
+.pb-slot-card .pb-card-frame .pb-unit-stats .stat {
+  pointer-events: none;
+}
+/* Keep the wide Battle Zone visual, but make the per-column battle slots invisible */
+.pb-slot.battle {
+  background: none !important;
+  filter: none !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+/* Remove the per-slot "BATTLE" labels */
+.pb-slot.battle::after {
+  content: none;
+}
+/* Ensure the big zone background never blocks clicks/drag on the slots/cards */
+.pb-battle-zone {
+  pointer-events: none;
+}
+/* Make battle-slot wrapper fill the slot so the card can size to 100% height like other slots */
+.pb-slot.battle .pb-slot-inner {
+    width: 100%;
+    height: 100%;
+}
+.pb-slot.battle:has(.pb-unit-stats) .pb-counter-badges {
+    bottom: 25px;
+}
+/* NEW — battle badge that sits on the card (rotates with the card) */
+.pb-slot .pb-slot-card .pb-card-frame .pb-battle-badge {
+  position: absolute;
+  top: 35%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-90deg);  /* dead-center over the artwork */
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  padding: 4px 1px 4px 4px;
+  border-radius: 4px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: #fff;
+  background: rgba(220, 38, 38, 0.95);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  z-index: 3;
+}
+
+/* Blue version when a card is a declared blocker */
+.pb-slot .pb-slot-card .pb-card-frame .pb-battle-badge.blocker {
+  background: rgba(37, 99, 235, 0.95); /* blue */
+}
+
+/* --- Compact layout for the Modify Stat modal --- */
+.pb-modal-content.pb-stat-modal {
+  width: min(520px, 92vw);  /* much smaller than the gallery/mulligan modals */
+  height: auto;             /* override any fixed modal heights */
+  max-height: none;
+  padding-bottom: 16px;     /* slight breathing room below the form */
+}
+.pb-stat-form {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px 16px;
+}
+.pb-stat-form .format-select {
+  min-width: 110px;
+}
+.pb-stat-form .pb-search-input[type="number"] {
+  width: 140px;             /* keeps the whole row to a single line comfortably */
+}
+.pb-stat-modal .pb-modal-actions {
+    display: flex;
+    gap: 8px;
+}
+/* Heal X modal – compact layout similar to Stat modal */
+.pb-modal-content.pb-heal-modal {
+    width: min(520px, 92vw); /* narrower */
+    height: auto; /* <-- override global 85vh */
+    max-height: none; /* no tall cap */
+    padding-bottom: 12px; /* small breathing room */
+}
+/* Keep Heal modal header buttons on one row */
+.pb-heal-modal .pb-modal-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+/* Heal modal form — two-column grid keeps labels + fields vertically aligned */
+.pb-heal-form {
+    display: grid;
+    grid-template-columns: auto 360px; /* label | field (wider bar) */
+    align-items: center;
+    gap: 10px 12px; /* row gap | column gap */
+    padding: 16px;
+}
+/* Wider, fixed width for the Damage input */
+.pb-heal-form .pb-search-input.heal-qty {
+  width: 360px;
+}
+
+/* Wider, fixed width for the Status dropdown (override global 280px) */
+.pb-heal-form .format-select {
+  width: 360px;
+}
+.pb-heal-form .format-select,
+.pb-heal-form .pb-search-input { height: 36px; }
+/* Heal note sits below the two input rows, spanning both columns */
+.pb-heal-form .pb-heal-note {
+  grid-column: 1 / span 2;
+  margin-top: 10px;
+  line-height: 1.35;
+  opacity: 0.85;
+  font-style: italic;
+}
+/* Flatten wrapper so label + select participate in the grid columns */
+.pb-heal-pair {
+    display: contents; /* children flow as if wrapper doesn’t exist */
+}
+/* ===== Ad-hoc label badges (Add Label) ===== */
+.pb-label-badges {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    z-index: 2; /* above image */
+    pointer-events: none; /* keep drag/zoom/menu interactions easy */
+}
+
+.pb-label-badge {
+    background: rgba(0,0,0,0.65);
+    border: 1px solid #263143;
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-size: 11px;
+    line-height: 1.1;
+    color: #fff;
+    user-select: none;
+    display: inline-flex;
+    pointer-events: auto; /* allow hover/focus for tooltip/title */
+}
+/* --- Remove Label modal: nudge the right-edge checkbox left a bit --- */
+.pb-modal .pb-counters .pb-counter-row {
+  padding-right: 20px;   /* creates a small gap on the right edge */
+}
+
+.pb-modal .pb-counters .pb-counter-row input[type="checkbox"] {
+  margin-right: 6px;     /* tiny buffer so it doesn't hug the rounded edge */
+}
+/* Single-card peek (Top of Deck/Shield/etc.): keep modal narrow AND short */
+.pb-modal.pb-peek:not(.is-stack-view) .pb-modal-content {
+    /* width: compact */
+    width: auto !important;
+    max-width: min(64vw, 540px);
+    min-width: 320px;
+
+    /* height: shrink-wrap (don’t inherit global 85vh) */
+    height: auto !important;
+    max-height: calc(100dvh - 32px); /* viewport-safe cap */
+}
+
+/* Let the single-card body scroll only if the image is too tall */
+.pb-modal.pb-peek:not(.is-stack-view) .pb-modal-body {
+    display: flex;
+    justify-content: center; /* center the card horizontally */
+    overflow: auto;
+    padding: 12px; /* ← gap around the card */
+    gap: 0;
+    box-sizing: border-box;
+    max-height: calc(100dvh - 96px);
+}
+
+/* Defensively constrain the image so it never forces the modal taller */
+.pb-modal.pb-peek:not(.is-stack-view) .pb-modal-body img {
+    width: 100%;
+    height: auto;
+    max-height: calc(100dvh - 96px - 24px); /* header reserve - body padding */
+    display: block;
+    border-radius: 8px; /* nice rounded edge like other modals */
+}
+/* ======== Fetch modal (scoped) ======== */
+.pb-modal.pb-fetch {
+  --fm-bg: #0b1220;
+  --fm-panel: #0f1729;
+  --fm-border: #263143;
+  --fm-ink: #e6edf7;
+  --fm-muted: #8ea0b8;
+
+  --fm-radius: 10px;
+  --fm-gap: 10px;
+  --fm-field-h: 36px;
+  --fm-card-gap: 12px;
+  --fm-side-pad: 12px;
+}
+
+.pb-modal.pb-fetch .fm-content {
+  width: min(1100px, 96vw);
+  height: min(84vh, 900px);
+  background: var(--fm-bg);
+  border: 1px solid var(--fm-border);
+  border-radius: var(--fm-radius);
+  display: grid;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+}
+
+.pb-modal.pb-fetch .fm-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px var(--fm-side-pad);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  background: var(--fm-bg);
+}
+.pb-modal.pb-fetch .fm-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--fm-ink);
+  margin: 0;
+}
+.pb-modal.pb-fetch .fm-header-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pb-modal.pb-fetch .fm-actions { display: inline-flex; gap: 8px; }
+.pb-modal.pb-fetch .fm-btn {
+  height: var(--fm-field-h);
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid var(--fm-border);
+  background: #0b1220;
+  color: var(--fm-ink);
+  cursor: pointer;
+  transition: background-color .12s ease, border-color .12s ease;
+}
+.pb-modal.pb-fetch .fm-btn:hover { background: rgba(255,255,255,0.08); }
+.pb-modal.pb-fetch .fm-btn.primary { background: #5c86ff; border-color: #5c86ff; color: #fff; }
+.pb-modal.pb-fetch .fm-btn.primary:hover { filter: brightness(1.06); }
+.pb-modal.pb-fetch .fm-btn.ghost { background: transparent; }
+
+.pb-modal.pb-fetch .fm-number { width: 240px; }
+
+.pb-modal.pb-fetch .fm-body {
+  overflow: auto;
+  padding: var(--fm-side-pad);
+  display: grid;
+  gap: var(--fm-card-gap);
+}
+
+.pb-modal.pb-fetch .fm-card {
+  background: var(--fm-panel);
+  border: 1px solid var(--fm-border);
+  border-radius: var(--fm-radius);
+  padding: 10px;
+  display: grid;
+  gap: 10px;
+}
+.pb-modal.pb-fetch .fm-card-title {
+  font-size: 13px;
+  color: var(--fm-muted);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+/* rows */
+.pb-modal.pb-fetch .fm-row { display: grid; gap: var(--fm-gap); }
+
+/* text + cost row */
+.pb-modal.pb-fetch .fm-row-2 { grid-template-columns: 1fr minmax(180px, 260px); }
+
+/* 3 types + 3 elements row */
+.pb-modal.pb-fetch .fm-row-6 { grid-template-columns: repeat(6, minmax(140px, 1fr)); }
+
+@media (max-width: 1100px) {
+  .pb-modal.pb-fetch .fm-row-6 { grid-template-columns: repeat(3, minmax(140px, 1fr)); }
+}
+@media (max-width: 640px) {
+  .pb-modal.pb-fetch .fm-row-2 { grid-template-columns: 1fr; }
+  .pb-modal.pb-fetch .fm-row-6 { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
+}
+
+/* fields */
+.pb-modal.pb-fetch .fm-input,
+.pb-modal.pb-fetch .fm-select {
+  height: var(--fm-field-h);
+  background: #0b1220;
+  border: 1px solid var(--fm-border);
+  color: var(--fm-ink);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+  width: 100%;
+}
+.pb-modal.pb-fetch .fm-input::placeholder { color: var(--fm-muted); }
+
+.pb-modal.pb-fetch .fm-input:focus,
+.pb-modal.pb-fetch .fm-select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(92,134,255,0.35);
+}
+/* === Fetch Modal – compact criteria blocks, same height whether 1–5 === */
+/* Add directly after the existing Fetch modal styles */
+.pb-modal.pb-fetch .fm-body {
+  /* don’t stretch a single card; just stack with normal spacing */
+  align-content: start;
+}
+
+.pb-modal.pb-fetch .fm-card {
+  /* remove any implicit min-height; keep cards compact */
+  min-height: 0;
+  padding: 10px 12px;  /* slightly tighter to match your 5-up look */
+  gap: 10px;
+}
+
+.pb-modal.pb-fetch .fm-card-title { margin-bottom: 8px; }
+
+.pb-modal.pb-fetch .fm-row { margin: 0; } /* reduce internal vertical bloat */
+
+.pb-modal.pb-fetch .fm-row-2 {
+  grid-template-columns: 1fr 260px; /* text | ConvertedCost */
+  gap: 10px;
+}
+
+.pb-modal.pb-fetch .fm-row-6 {
+  grid-template-columns: repeat(6, minmax(0, 1fr)); /* 3 types + 3 elements */
+  gap: 10px;
+}
+
+/* responsive: collapse rows cleanly on narrow screens */
+@media (max-width: 980px) {
+  .pb-modal.pb-fetch .fm-row-2 { grid-template-columns: 1fr; }
+  .pb-modal.pb-fetch .fm-row-6 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+/* Title + number selector inline on the left */
+.pb-modal.pb-fetch .fm-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 10px;            /* space between "Fetch" and the dropdown */
+}
+
+/* optional: a consistent width for the number selector */
+.pb-modal.pb-fetch .fm-titlebar .fm-number {
+  min-width: 140px;
+}
+/* Element-tinted filter chips (Card Gallery) */
+.pb-filter-chip {
+    border-width: 2px; /* echo the strong border vibe of trackers */
+}
+
+/* Slightly stronger tint when active; we already increase alpha inline, this just improves focus/hover feel */
+.pb-filter-chip.active {
+  filter: saturate(1.05);
+}
+/* --- Cost Modal --- */
+.pb-cost-content {
+    width: min(980px, calc(100vw - 32px));
+    /* make the cost modal body scroll when tall */
+    height: min(85vh, 900px); /* same visual cap as other modals */
+    max-height: calc(100dvh - 32px); /* viewport-safe on mobile */
+    overflow-y: auto; /* enable vertical scroll */
+    overflow-x: hidden; /* avoid sideways jiggle */
+    -webkit-overflow-scrolling: touch; /* smooth iOS scrolling */
+}
+.pb-cost-body {
+    display: grid;
+    /* fixed-width right column so chips won’t change layout width */
+    grid-template-columns: minmax(280px, 360px) 260px;
+    gap: 20px;
+    align-items: start;
+    justify-content: center;
+}
+.pb-cost-left { display: flex; justify-content: center; }
+/* Right column stacks with consistent vertical gap */
+.pb-cost-right {
+    display: grid;
+    gap: 14px;
+    align-content: start;
+    width: 360px;
+}
+.pb-cost-right .pb-cost-section { margin: 0; }
+.pb-cost-right .pb-eg-sectionlabel { margin-bottom: 6px; }
+.pb-cost-alloc { margin-top: 10px; }
+.pb-cost-rows { display: grid; gap: 10px; }
+.pb-cost-row {
+  display: grid;
+  grid-template-columns: max-content max-content 1fr max-content;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+}
+.pb-cost-row .pb-counter-name { min-width: 86px; font-weight: 600; }
+.pb-cost-steps { display: flex; flex-wrap: wrap; gap: 6px; }
+.pb-cost-have { opacity: .85; }
+.pb-cost .pb-filter-chip { cursor: default; }
+/* === Cost Modal (mockup-aligned resource rows) === */
+/* Parent owns the 2-column layout so all rows align */
+.cm-rows {
+    display: grid;
+    grid-template-columns: 220px auto; /* element card | number chips */
+    column-gap: 12px;
+    row-gap: 12px;
+    justify-content: center; /* center the whole grid block */
+    align-items: center;
+}
+
+/* Each row just contributes its two children to the parent grid */
+.cm-row {
+    display: contents;
+}
+
+.cm-elcard {
+  border: 2px solid #999;           /* tinted inline per element */
+  border-radius: 10px;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255,255,255,0.03); /* subtle glassy card feel */
+}
+
+.cm-elname { font-weight: 600; }
+.cm-elqty { font-weight: 700; opacity: 0.9; }
+
+.cm-toggles {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-start; /* left-align within the shared chips column */
+}
+
+/* keep the chips compact & uniform */
+.cm-toggles .pb-filter-chip {
+  min-width: 34px;
+  justify-content: center;
+}
+/* Center the Available Resources section and keep it a comfy width */
+.pb-cost-alloc {
+    margin-top: 18px; /* extra space before resources */
+    display: grid;
+    justify-items: center; /* center its inner rows */
+    row-gap: 12px; /* small vertical gap inside the section */
+}
+
+.pb-cost-alloc .cm-rows {
+  width: fit-content;                 /* shrink to widest row */
+  max-width: 100%;
+  margin: 0 auto;                     /* keep the whole group centered */
+}
+/* A touch of breathing room before the Confirm bar (Cost modal only) */
+.pb-cost-content .pb-encounter-actions {
+    margin-top: 12px;
+}
+/* Cost modal: left-align the chips under Required/Currently Paying */
+.pb-cost-right .pb-filter-group {
+    justify-content: flex-start;
+    align-content: flex-start;
+}
+/* Smaller checkbox for the Cost Modal toggle */
+.pb-check--small {
+  font-size: 12px;
+  line-height: 1.15;
+}
+
+.pb-check--small input[type="checkbox"] {
+  transform: translateY(1px) scale(1.5); /* shrink box a bit */
+  transform-origin: center;
+}
+/* Keep the Cost Modal footer toggle label on a single line */
+.pb-encounter-actions .pb-check,
+.pb-encounter-actions .pb-check span {
+    white-space: nowrap;
+}
+/* ===== Inflict Damage modal (mockup layout) ===== */
+.pb-modal.pb-damage .pb-modal-content {
+  width: min(1100px, 96vw);
+  height: auto;
+  max-height: min(85vh, 900px);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Grid for the four group cards */
+.dm-grid {
+  padding: 12px;
+  display: grid;
+  grid-template-columns: 1.2fr 1.2fr 1fr 1fr; /* Source | Target | Advantage | Modifiers */
+  gap: 12px;
+  align-items: start;
+}
+@media (max-width: 1100px) { .dm-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 680px)  { .dm-grid { grid-template-columns: 1fr; } }
+
+.dm-card {
+  background: var(--panel);
+  border: 1px solid #263143;
+  border-radius: 10px;
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+/* Section titles with a thin underline */
+.dm-title {
+  font-size: 13px;
+  color: var(--muted);
+  text-transform: none;
+  letter-spacing: .08em;
+  font-weight: 700;
+}
+.dm-title::after {
+  content: "";
+  display: block;
+  height: 1px;
+  background: rgba(255,255,255,0.18);
+  margin-top: 4px;
+}
+
+/* Small row of labels (e.g., “Amount | Text Input”) */
+.dm-subhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--muted);
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+  padding-bottom: 4px;
+}
+
+/* Field rows */
+.dm-row.one { display: grid; grid-template-columns: 1fr; gap: 8px; }
+.dm-row.two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* Three stacked element selects */
+.dm-el-list { display: grid; gap: 8px; }
+
+/* Make the inputs/selects use our consistent field sizing */
+.pb-damage-modal .format-select,
+.pb-damage-modal .pb-search-input { height: 36px; width: 100%; }
+
+/* Footer with Reset on the right */
+.dm-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+/* optional: ghost style for Reset to keep it subtle */
+.tips-btn.ghost { background: transparent; }
+/* === Fix: modal actions layout — keep Confirm to the left of Cancel === */
+.pb-modal .pb-modal-header {
+  /* Ensure the title stays left and the actions stay on the right */
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+.pb-modal .pb-modal-actions {
+  /* Lay out actions horizontally (no stacking) */
+  display: inline-flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: nowrap;           /* prevent wrapping to a new line */
+}
+
+.pb-modal .pb-modal-actions > .tips-btn {
+  white-space: nowrap;         /* keep text on one line */
+}

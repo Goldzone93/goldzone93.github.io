@@ -5406,7 +5406,7 @@
     "ConvertedCost": 0,
     "Refund": "",
     "Hold": "",
-    "SuperType": "",
+    "SuperType": "Basic",
     "CardType": "Shield",
     "SubType": "",
     "ElementType1": "Water",

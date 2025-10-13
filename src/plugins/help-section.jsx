@@ -245,6 +245,9 @@ function HelpSection() {
   // -----------------------------
   useEffect(() => {
     const onKey = (e) => {
+      // Global opt-out: when true, Help hotkeys are disabled
+      if (window.__PB_DISABLE_HELP_SHORTCUTS) return;
+
       const tag = (e.target?.tagName || '').toLowerCase();
       const isTyping = tag === 'input' || tag === 'textarea' || tag === 'select' || e.target?.isContentEditable;
       if (isTyping) return;
@@ -344,7 +347,7 @@ function HelpSection() {
             onClick={() => { setKeywordsQuery(''); setKeywordsOpen(true); }}
             aria-haspopup="dialog"
             aria-expanded={keywordsOpen}
-            title="Shortcut: K"
+            title="Keywords"
           >
             Keywords
           </button>
@@ -358,7 +361,7 @@ function HelpSection() {
             onClick={() => { setIconsQuery(''); setIconsOpen(true); }}
             aria-haspopup="dialog"
             aria-expanded={iconsOpen}
-            title="Shortcut: I"
+            title="Effect Icons"
           >
             Effect Icons
           </button>
@@ -372,7 +375,7 @@ function HelpSection() {
             onClick={() => { setElementsQuery(''); setElementsOpen(true); }}
             aria-haspopup="dialog"
             aria-expanded={elementsOpen}
-            title="Shortcut: E"
+            title="Element Chart"
           >
             Element Chart
           </button>
@@ -386,7 +389,7 @@ function HelpSection() {
             onClick={() => setTurnOpen(true)}
             aria-haspopup="dialog"
             aria-expanded={turnOpen}
-            title="Shortcut: T"
+            title="Turn Structure"
           >
             Turn Structure
           </button>
@@ -400,7 +403,7 @@ function HelpSection() {
             onClick={() => setLayoutOpen(true)}
             aria-haspopup="dialog"
             aria-expanded={layoutOpen}
-            title="Shortcut: L"
+            title="Card Layout"
           >
             Card Layout
           </button>
@@ -416,7 +419,7 @@ function HelpSection() {
           onClick={() => setFormatsOpen(true)}
           aria-haspopup="dialog"
           aria-expanded={formatsOpen}
-          title="Shortcut: F"
+          title="Formats"
         >
           Formats
         </button>
@@ -428,7 +431,7 @@ function HelpSection() {
           onClick={() => { setCardTypesQuery(''); setCardTypesOpen(true); }}
           aria-haspopup="dialog"
           aria-expanded={cardTypesOpen}
-          title="Shortcut: C"
+          title="Card Types"
         >
           Card Types
         </button>
@@ -442,7 +445,7 @@ function HelpSection() {
           onClick={() => setBoardLayoutOpen(true)}
           aria-haspopup="dialog"
           aria-expanded={boardLayoutOpen}
-          title="Shortcut: B"
+          title="Board Layout"
         >
           Board Layout
         </button>
@@ -454,6 +457,7 @@ function HelpSection() {
           onClick={() => setFaqOpen(true)}
           aria-haspopup="dialog"
           aria-expanded={faqOpen}
+          title="FAQ"
         >
           FAQ
         </button>
