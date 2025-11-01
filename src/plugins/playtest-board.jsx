@@ -1,5 +1,5 @@
 // /src/plugins/playtest-board.jsx
-import React from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import '../styles/playtest-board.css';
 import '../styles/hover-preview.css';
 import { useHoverPreview } from '../plugins/hover-preview.jsx';
@@ -18,6 +18,7 @@ import { RemoveLabelModal } from './playtest-board-modules.jsx';
 import { AddLabelModal } from './playtest-board-modules.jsx';
 import { EncounterModal } from './playtest-board-modules.jsx';
 import { GalleryModal } from './playtest-board-modules.jsx';
+import { OpponentBoard } from './playtest-board-opponent-board.jsx';
 
 // Runtime data (loaded via fetch from /public)
 const DATA_ENDPOINTS = {
@@ -178,7 +179,7 @@ function BattleZone({ row, col, span, name = 'Battle Zone' }) {
 }
 
 // ---------- Right Panel: Player HP tracker ----------
-function HPTracker() {
+function HPTracker({ engineMode = true }) {
     const [hp, setHp] = React.useState(10);
     const [overrideCap, setOverrideCap] = React.useState(false);
     const CAP = 10;
@@ -217,7 +218,7 @@ function HPTracker() {
 }
 
 // ---------- Right Panel: Temporary HP tracker ----------
-function TempHPTracker() {
+function TempHPTracker({ engineMode = true }) {
     const [hp, setHp] = React.useState(0);
     const [overrideCap, setOverrideCap] = React.useState(false);
     const CAP = 5;
@@ -275,12 +276,11 @@ function hexToRGBA(hex, alpha = 0.14) {
     return `rgba(0,0,0,${alpha})`;
 }
 
-function ElementResourceTrackers({ visibleNames = null }) {
+function ElementResourceTrackers({ visibleNames = null, engineMode = true, owner = 'player' }) {
     const [elements, setElements] = React.useState([]); // [{name, color}]
-    const [values, setValues] = React.useState({});     // { [name]: number }
-    const [overrides, setOverrides] = React.useState({}); // { [name]: boolean }
+    const [values, setValues] = React.useState({});     // { name: number }
+    const [overrides, setOverrides] = React.useState({}); // { name: boolean }
 
-    // Load element order from reference.json and colors from elements.json
     React.useEffect(() => {
         let alive = true;
         (async () => {
@@ -297,19 +297,70 @@ function ElementResourceTrackers({ visibleNames = null }) {
                 if (!alive) return;
 
                 setElements(list);
-                // initialize values/overrides if empty
-                setValues(v =>
-                    Object.fromEntries(list.map(({ name }) => [name, Number.isFinite(v[name]) ? v[name] : 0]))
-                );
-                setOverrides(o =>
-                    Object.fromEntries(list.map(({ name }) => [name, !!o[name]]))
-                );
+                setValues(v => Object.fromEntries(list.map(({ name }) => [name, Number.isFinite(v[name]) ? v[name] : 0])));
+                setOverrides(o => Object.fromEntries(list.map(({ name }) => [name, !!o[name]])));
             } catch (e) {
                 console.warn('[ElementResourceTrackers] failed to load data', e);
             }
         })();
         return () => { alive = false; };
     }, []);
+
+    // Publish which element trackers are visible so Cost Modal can read them
+    React.useEffect(() => {
+        if (owner === 'player') {
+            window.__PB_VISIBLE_ELEMENTS_SET = visibleNames ? new Set(visibleNames) : null;
+        } else if (owner === 'opponent') {
+            window.__PB_O_VISIBLE_ELEMENTS_SET = visibleNames ? new Set(visibleNames) : null;
+        }
+    }, [owner, visibleNames]);
+
+    // Opponent: publish a separate global state so Cost Modal can read/spend
+    React.useEffect(() => {
+        if (owner !== 'opponent') return;
+        window.__PB_O_ELEMENTS_STATE = {
+            values,
+            overrides,
+            cap: 10,
+            setValues: (updater) =>
+                setValues(prev => (typeof updater === 'function' ? updater(prev) : (updater || prev))),
+            spend: (spendMap) =>
+                setValues(prev => {
+                    const next = { ...(prev || {}) };
+                    for (const [rawK, rawV] of Object.entries(spendMap || {})) {
+                        const k = String(rawK).trim();
+                        const amt = Math.max(0, Math.floor(Number(rawV) || 0));
+                        if (!amt) continue;
+                        const cur = Number(next[k] || 0);
+                        next[k] = Math.max(0, cur - amt);
+                    }
+                    return next;
+                }),
+        };
+        return () => {
+            if (window.__PB_O_ELEMENTS_STATE?.values === values) {
+                delete window.__PB_O_ELEMENTS_STATE;
+            }
+        };
+    }, [owner, values, overrides]);
+
+    // Opponent: listen for spend events
+    React.useEffect(() => {
+        if (owner !== 'opponent') return;
+        const onSpend = (e) => {
+            const spendMap = (e && e.detail && e.detail.spend) || {};
+            setValues(prev => {
+                const next = { ...(prev || {}) };
+                for (const [k, v] of Object.entries(spendMap)) {
+                    const amt = Number(v) || 0;
+                    next[k] = Math.max(0, (next[k] || 0) - amt);
+                }
+                return next;
+            });
+        };
+        window.addEventListener('pb:o-elements:spend', onSpend);
+        return () => window.removeEventListener('pb:o-elements:spend', onSpend);
+    }, [owner]);
 
     const inc = (name) => {
         setValues(curr => {
@@ -327,9 +378,7 @@ function ElementResourceTrackers({ visibleNames = null }) {
         });
     };
 
-    // --- Expose state & event hooks for outside callers (e.g., Produce Step) ---
-
-    // Strict increment that ALWAYS respects the cap (ignores the override toggle)
+    // Strict increment that ALWAYS respects the cap (ignores override toggle)
     const strictInc = React.useCallback((name) => {
         setValues((curr) => {
             if (!(name in curr)) return curr;
@@ -340,11 +389,12 @@ function ElementResourceTrackers({ visibleNames = null }) {
         });
     }, []);
 
-    // Listen for external increment requests (rebounds when `inc` or `strictInc` changes)
+    // Only the engine instance listens to external increment/spend/refund events
     React.useEffect(() => {
+        if (!engineMode) return;
         const onInc = (e) => {
             const name = e?.detail?.name;
-            if (name) inc(name); // this now sees the current `overrides`
+            if (name) inc(name);
         };
         const onIncStrict = (e) => {
             const name = e?.detail?.name;
@@ -356,30 +406,10 @@ function ElementResourceTrackers({ visibleNames = null }) {
             window.removeEventListener('pb:elements:inc', onInc);
             window.removeEventListener('pb:elements:inc-strict', onIncStrict);
         };
-    }, [inc, strictInc]);
+    }, [engineMode, strictInc]);
 
-    // Expose current values, overrides, and cap for Produce Step
     React.useEffect(() => {
-        window.__PB_ELEMENTS_STATE = {
-            values,
-            overrides,
-            cap: 10,
-            setValues: (updater) =>
-                setValues(prev => (typeof updater === "function" ? updater(prev) : (updater || prev))),
-            spend: (spendMap) =>
-                setValues(prev => {
-                    const next = { ...(prev || {}) };
-                    for (const [k, v] of Object.entries(spendMap || {})) {
-                        const amt = Number(v) || 0;
-                        next[k] = Math.max(0, (next[k] || 0) - amt);
-                    }
-                    return next;
-                }),
-        };
-    }, [values, overrides, setValues]);
-
-    // ADD: allow external modules to spend via a DOM event
-    React.useEffect(() => {
+        if (!engineMode) return;
         const onSpend = (e) => {
             const spendMap = (e && e.detail && e.detail.spend) || {};
             setValues(prev => {
@@ -393,9 +423,8 @@ function ElementResourceTrackers({ visibleNames = null }) {
         };
         window.addEventListener("pb:elements:spend", onSpend);
         return () => window.removeEventListener("pb:elements:spend", onSpend);
-    }, [setValues]);
+    }, [engineMode]);
 
-    // ADD: apply refund amount to Neutral, obeying cap unless override is on
     const applyRefundToNeutral = React.useCallback((amount) => {
         if (!amount || amount <= 0) return;
         setValues((curr) => {
@@ -409,15 +438,95 @@ function ElementResourceTrackers({ visibleNames = null }) {
         });
     }, [overrides]);
 
-    // Listen for refund application signals
     React.useEffect(() => {
+        if (!engineMode) return;
         const onApply = (e) => {
             const amt = Number(e?.detail?.amount) || 0;
             applyRefundToNeutral(amt);
         };
         window.addEventListener('pb:elements:apply-refund', onApply);
         return () => window.removeEventListener('pb:elements:apply-refund', onApply);
-    }, [applyRefundToNeutral]);
+    }, [engineMode, applyRefundToNeutral]);
+
+    // Opponent: listen for opponent refund apply event
+    React.useEffect(() => {
+        if (owner !== 'opponent') return;
+        const onApply = (e) => {
+            const amt = Number(e?.detail?.amount) || 0;
+            applyRefundToNeutral(amt);
+        };
+        window.addEventListener('pb:o-elements:apply-refund', onApply);
+        return () => window.removeEventListener('pb:o-elements:apply-refund', onApply);
+    }, [owner, applyRefundToNeutral]);
+
+    // Only the engine instance should publish to the global (produce step uses this)
+    React.useEffect(() => {
+        if (!engineMode) return;
+        window.__PB_ELEMENTS_STATE = {
+            values,
+            overrides,
+            cap: 10,
+            setValues: (updater) =>
+                setValues(prev => (typeof updater === "function" ? updater(prev) : (updater || prev))),
+            spend: (spendMap) =>
+                setValues(prev => {
+                    const next = { ...(prev || {}) };
+                    for (const [rawK, rawV] of Object.entries(spendMap || {})) {
+                        const k = String(rawK).trim();
+                        const amt = Math.max(0, Math.floor(Number(rawV) || 0));
+                        if (!amt) continue;
+                        const cur = Number(next[k] || 0);
+                        next[k] = Math.max(0, cur - amt);
+                    }
+                    return next;
+                }),
+        };
+        return () => {
+            // don't clear on unmount unless this instance still owns it
+            if (window.__PB_ELEMENTS_STATE?.values === values) {
+                delete window.__PB_ELEMENTS_STATE;
+            }
+        };
+    }, [engineMode, values, overrides]);
+
+    // Publish which element trackers are currently visible (per owner) so Cost Modal can mirror the Right Panel
+    React.useEffect(() => {
+        if (!engineMode) return;
+        if (owner === 'player') {
+            window.__PB_VISIBLE_ELEMENTS_SET = visibleNames || null;
+        } else if (owner === 'opponent') {
+            window.__PB_O_VISIBLE_ELEMENTS_SET = visibleNames || null;
+        }
+    }, [visibleNames, engineMode, owner]);
+
+    // Publish opponent element pools for consumers (Cost Modal, etc.)
+    React.useEffect(() => {
+        if (owner !== 'opponent') return;
+        window.__PB_O_ELEMENTS_STATE = {
+            values,
+            overrides,
+            cap: 10,
+            setValues: (updater) =>
+                setValues(prev => (typeof updater === "function" ? updater(prev) : (updater || prev))),
+            spend: (spendMap) =>
+                setValues(prev => {
+                    const next = { ...(prev || {}) };
+                    for (const [rawK, rawV] of Object.entries(spendMap || {})) {
+                        const k = String(rawK).trim();
+                        const amt = Math.max(0, Math.floor(Number(rawV) || 0));
+                        if (!amt) continue;
+                        const cur = Number(next[k] || 0);
+                        next[k] = Math.max(0, cur - amt);
+                    }
+                    return next;
+                }),
+        };
+        return () => {
+            if (window.__PB_O_ELEMENTS_STATE?.values === values) {
+                delete window.__PB_O_ELEMENTS_STATE;
+            }
+        };
+    }, [owner, values, overrides]);
 
     React.useEffect(() => {
         const onReset = () => {
@@ -460,23 +569,47 @@ function ElementResourceTrackers({ visibleNames = null }) {
 }
 
 // ---------- Refund tracker ----------
-function RefundTracker() {
+function RefundTracker({ engineMode = true, owner = 'player' }) {
     const [value, setValue] = React.useState(0);
 
     const inc = () => setValue((v) => v + 1);
     const dec = () => setValue((v) => Math.max(0, v - 1));
 
-    // When the turn wraps, add Refund to Neutral, then reset to 0
+    // Player engine: apply refund to Player elements on turn wrap
     React.useEffect(() => {
+        if (!engineMode || owner !== 'player') return;
         const onWrapped = () => {
-            if (value > 0) {
-                window.dispatchEvent(new CustomEvent('pb:elements:apply-refund', { detail: { amount: value } }));
-                setValue(0);
-            }
+            setValue((cur) => {
+                const n = Number(cur) || 0;
+                if (n > 0) {
+                    window.dispatchEvent(
+                        new CustomEvent('pb:elements:apply-refund', { detail: { amount: n } })
+                    );
+                }
+                return 0;
+            });
         };
         window.addEventListener('pb:turn:wrapped', onWrapped);
         return () => window.removeEventListener('pb:turn:wrapped', onWrapped);
-    }, [value]);
+    }, [engineMode, owner]);
+
+    // Opponent: apply refund to Opponent elements on turn wrap
+    React.useEffect(() => {
+        if (owner !== 'opponent') return;
+        const onWrapped = () => {
+            setValue((cur) => {
+                const n = Number(cur) || 0;
+                if (n > 0) {
+                    window.dispatchEvent(
+                        new CustomEvent('pb:o-elements:apply-refund', { detail: { amount: n } })
+                    );
+                }
+                return 0;
+            });
+        };
+        window.addEventListener('pb:turn:wrapped', onWrapped);
+        return () => window.removeEventListener('pb:turn:wrapped', onWrapped);
+    }, [owner]);
 
     React.useEffect(() => {
         const onReset = () => setValue(0);
@@ -519,6 +652,55 @@ function GoingFirstToggle({ value, setValue }) {
                         type="checkbox"
                         checked={value === 'no'}
                         onChange={setNo}
+                    />
+                    <span>No</span>
+                </label>
+            </div>
+        </div>
+    );
+}
+
+// NEW: match the exact structure/classes used by Going First?
+function OpponentBoardToggle({ value, setValue, blockDisable }) {
+    const onYes = () => setValue('yes');
+    const onNo = () => {
+        // Don't allow turning off if an opponent deck is imported
+        // or any opponent slots have cards placed.
+        if (blockDisable) {
+            window.alert(
+                'You cannot hide the Opponent Board while an opponent deck is imported or cards are on the opponent board.'
+            );
+            return;
+        }
+
+        // Only warn if the board is currently visible and user is turning it off
+        if (value === 'yes') {
+            const ok = window.confirm(
+                'Hide the opponent board?\n\nThis will remove the mirrored board from the center.'
+            );
+            if (!ok) return;
+        }
+        setValue('no');
+    };
+
+    return (
+        <div className="pb-cost-toggle" role="group" aria-label="Opponent Board">
+            <div className="pb-cost-label">Opponent Board</div>
+            <div className="pb-cost-controls">
+                <label className="pb-check">
+                    <input
+                        type="checkbox"
+                        checked={value === 'yes'}
+                        onChange={onYes}
+                    />
+                    <span>Yes</span>
+                </label>
+
+                <label className="pb-check">
+                    <input
+                        type="checkbox"
+                        checked={value === 'no'}
+                        onChange={onNo}
                     />
                     <span>No</span>
                 </label>
@@ -1042,9 +1224,12 @@ function TurnsTracker({ turn, onInc, onDec, canEdit }) {
  * TurnBar: holds selection state and renders tracker + controls.
  * Kept separate so you can later persist `sel` to localStorage or broadcast via context.
  */
-function TurnBar() {
+function TurnBar({ goingFirst = 'yes', opponentBoard = 'no' }) {
     // Default to Start Phase → Ready Step
     const [sel, setSel] = React.useState({ phase: 0, step: 0 });
+
+    // Turn indicator: "Your Turn" vs "Opponent Turn"
+    const [isYourTurn, setIsYourTurn] = React.useState(goingFirst === 'yes');
 
     // EMIT: announce when a phase/step is entered (used by auto-ready)
     React.useEffect(() => {
@@ -1056,12 +1241,32 @@ function TurnBar() {
                 phaseLabel: phase?.label,
                 stepIndex: sel.step,
                 stepLabel,
+                isYourTurn, // NEW: expose current turn owner for gating auto actions
             }
         }));
-    }, [sel]);
+    }, [sel, isYourTurn]);
 
     const [turnCount, setTurnCount] = React.useState(1);
     const [overrideTurn, setOverrideTurn] = React.useState(false);
+
+    // Reset indicator when "Going First" changes
+    React.useEffect(() => {
+        setIsYourTurn(goingFirst === 'yes');
+    }, [goingFirst]);
+
+    // Flip indicator each time the turn wraps from End → Start (we already dispatch 'pb:turn:wrapped')
+    React.useEffect(() => {
+        const flip = () => setIsYourTurn(prev => !prev);
+        window.addEventListener('pb:turn:wrapped', flip);
+
+        const onReset = () => setIsYourTurn(goingFirst === 'yes');
+        window.addEventListener('pb:new-game', onReset);
+
+        return () => {
+            window.removeEventListener('pb:turn:wrapped', flip);
+            window.removeEventListener('pb:new-game', onReset);
+        };
+    }, [goingFirst]);
 
     const setPhase = (pIdx, stepIdx = null) => {
         const p = TURN_STRUCTURE[pIdx];
@@ -1077,7 +1282,18 @@ function TurnBar() {
     const onNext = () => setSel((cur) => {
         const next = nextSelection(cur);
         if (isStartPhase(next)) {
-            setTurnCount((t) => t + 1);
+            // When Opponent Board is on, only increment on the specified pill change:
+            // - Going First YES: Opponent → Your (isYourTurn was false, becomes true)
+            // - Going First  NO: Your → Opponent (isYourTurn was true, becomes false)
+            if (opponentBoard === 'yes') {
+                const inc =
+                    (goingFirst === 'yes' && !isYourTurn) ||
+                    (goingFirst === 'no' && isYourTurn);
+                if (inc) setTurnCount((t) => t + 1);
+            } else {
+                // Old behavior when Opponent Board is off
+                setTurnCount((t) => t + 1);
+            }
             window.dispatchEvent(new CustomEvent('pb:turn:wrapped'));
         }
         return next;
@@ -1086,7 +1302,14 @@ function TurnBar() {
     const onEndTurn = () => setSel((cur) => {
         const next = endTurnSelection(cur);
         if (isStartPhase(next)) {
-            setTurnCount((t) => t + 1);
+            if (opponentBoard === 'yes') {
+                const inc =
+                    (goingFirst === 'yes' && !isYourTurn) ||
+                    (goingFirst === 'no' && isYourTurn);
+                if (inc) setTurnCount((t) => t + 1);
+            } else {
+                setTurnCount((t) => t + 1);
+            }
             window.dispatchEvent(new CustomEvent('pb:turn:wrapped'));
         }
         return next;
@@ -1102,8 +1325,7 @@ function TurnBar() {
             window.removeEventListener('pb:turn:next', onNextEvt);
             window.removeEventListener('pb:turn:end', onEndEvt);
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [onNext, onEndTurn]);
 
     React.useEffect(() => {
         const onReset = () => {
@@ -1142,6 +1364,14 @@ function TurnBar() {
                         />
                         <span>Override</span>
                     </label>
+                    {opponentBoard === 'yes' && (
+                        <span
+                            className={`tt-turn-indicator ${isYourTurn ? 'is-yours' : 'is-opponent'}`}
+                            aria-live="polite"
+                        >
+                            {isYourTurn ? 'Your Turn' : 'Opponent Turn'}
+                        </span>
+                    )}
                 </div>
             </div>
 
@@ -1174,10 +1404,33 @@ export function PlaytestBoard() {
     // ADD: global Card Zoom toggle (default: on)
     const [zoomEnabled, setZoomEnabled] = React.useState(true);
 
-    const [hoverEnabled, setHoverEnabled] = React.useState(true);
+    const [hoverEnabled, setHoverEnabled] = React.useState(false);
 
     // NEW: Going First? (default Yes)
     const [goingFirst, setGoingFirst] = React.useState('yes');
+    const [opponentBoard, setOpponentBoard] = useState('no');
+
+    // Right panel owner view: 'player' | 'opponent'
+    const [rightOwner, setRightOwner] = React.useState('player');
+
+    // ADD: collapsible hand state (only used when opponentBoard === 'yes')
+    const [handCollapsed, setHandCollapsed] = React.useState(false);
+
+    React.useEffect(() => {
+        // Always start expanded; collapse is user-driven only.
+        setHandCollapsed(false);
+    }, []);
+
+    // If Opponent Board is turned off, auto-expand the hand
+    React.useEffect(() => {
+        // Any time Opponent Board is toggled (on or off), reset to expanded
+        setHandCollapsed(false);
+    }, [opponentBoard]);
+
+    // If Opponent Board is hidden, force the right panel back to Player
+    React.useEffect(() => {
+        if (opponentBoard !== 'yes') setRightOwner('player');
+    }, [opponentBoard]);
 
     React.useEffect(() => {
         document.body.classList.toggle('hp-disabled', !hoverEnabled);
@@ -1191,6 +1444,16 @@ export function PlaytestBoard() {
     const [gravePile, setGravePile] = React.useState([]); // NEW: face-up Grave stack (top at index 0)
     const fileInputRef = React.useRef(null);
 
+    // Opponent piles + hand (separate from player)
+    const [oDeckPile, setODeckPile] = React.useState([]);
+    const [oShieldPile, setOShieldPile] = React.useState([]);
+    const [oBanishPile, setOBanishPile] = React.useState([]);
+    const [oGravePile, setOGravePile] = React.useState([]);
+    const [oHand, setOHand] = React.useState([]);
+
+    // Track opponent's partner id (base id with _a/_b suffix allowed)
+    const [oPartnerId, setOPartnerId] = React.useState(null);
+
     // NEW: Hand + Mulligan state
     const [hand, setHand] = React.useState([]);
     const [showMulligan, setShowMulligan] = React.useState(false);
@@ -1200,6 +1463,12 @@ export function PlaytestBoard() {
         partnersById: new Map(),
         tokensById: new Map(),
     });
+
+    // Opponent: mulligan state + file input for import
+    const [showOMulligan, setShowOMulligan] = React.useState(false);
+    const [pendingOMulligan, setPendingOMulligan] = React.useState(false);
+    const [oDeckCounts, setODeckCounts] = React.useState(new Map());
+    const oFileInputRef = React.useRef(null);
 
     // Build the visible element set for the right panel (Partner's elements + Neutral)
     // When no deck has been imported, return null to show all trackers.
@@ -1219,6 +1488,20 @@ export function PlaytestBoard() {
             .forEach((el) => set.add(el));
         return set;
     }, [hasImportedDeck, partnerId, dataMaps]);
+
+    const oPartnerVisibleElements = React.useMemo(() => {
+        if (!oPartnerId) return null;
+        const partner =
+            dataMaps?.partnersById?.get?.(oPartnerId) ||
+            (dataMaps?.partnersById && dataMaps.partnersById[oPartnerId]) ||
+            null;
+        if (!partner) return null;
+        const set = new Set(['Neutral']);
+        [partner.ElementType1, partner.ElementType2, partner.ElementType3]
+            .filter(Boolean)
+            .forEach((el) => set.add(el));
+        return set;
+    }, [oPartnerId, dataMaps]);
 
     // Click -> open file chooser
     const onImportClick = () => fileInputRef.current?.click();
@@ -1386,6 +1669,131 @@ export function PlaytestBoard() {
         e.target.value = '';
     };
 
+    // Opponent: file input change -> parse + map schema (mirrors onFileChosen)
+    const onOFileChosen = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        let json;
+        try {
+            const text = await file.text();
+            json = JSON.parse(text);
+        } catch (err) {
+            alert(`Invalid or corrupt JSON: ${err?.message || err}`);
+            e.target.value = '';
+            return;
+        }
+
+        // Expecting Map schema { name, formatId, list: { id:count, ... } }
+        const list = json?.list && typeof json.list === 'object' ? json.list : null;
+        if (!list) {
+            alert('Import error: expected a "list" object (Map schema).');
+            e.target.value = '';
+            return;
+        }
+
+        // Opponent import: hard-block on format mismatch (warn & abort; do NOT auto-switch board format)
+        const deckFormat = (json?.formatId ?? json?.FormatId ?? 'Freeform');
+        if (deckFormat !== formatId) {
+            alert(
+                `Opponent deck format "${deckFormat}" does not match the selected board format "${formatId}".\n\n` +
+                `Import canceled. Change the board format first or choose a deck with a matching format.`
+            );
+            e.target.value = ''; // reset file input so user can pick another file
+            return;              // stop import
+        }
+
+        // Load maps (cards/partners/tokens)
+        let maps;
+        try {
+            maps = await loadMaps();
+        } catch (err) {
+            alert(`Failed to load card data: ${err?.message || err}`);
+            e.target.value = '';
+            return;
+        }
+
+        const { cardsById, partnersById, tokensById } = maps;
+
+        // Detect partner
+        const keys = Object.keys(list);
+        const partnerCandidates = keys.filter((k) => partnersById.has(k));
+        if (partnerCandidates.length === 0) {
+            alert('Deck requires a partner.');
+            e.target.value = '';
+            return;
+        }
+        if (partnerCandidates.length > 1) {
+            alert(`Multiple partners found; using ${partnerCandidates[0]}`);
+        }
+        const chosenPartner = partnerCandidates[0];
+
+        // Build expanded deck for opponent (skip partner/tokens/unknown like user import)
+        let skippedUnknown = 0;
+        let skippedPartnerCount = 0;
+
+        const expanded = [];
+        for (const id of keys) {
+            const count = Number(list[id]) || 0;
+            if (count <= 0) continue;
+
+            if (id === chosenPartner) {
+                skippedPartnerCount += count;
+                continue;
+            }
+            if (tokensById.has(id)) continue;
+
+            if (!cardsById.has(id) && !tokensById.has(id) && !partnersById.has(id)) {
+                skippedUnknown += count;
+                continue;
+            }
+
+            for (let i = 0; i < count; i++) expanded.push(id);
+        }
+
+        if (skippedPartnerCount > 1) {
+            alert(`Skipped partner from main: ${chosenPartner} (count ${skippedPartnerCount})`);
+        } else if (skippedPartnerCount === 1) {
+            console.info(`[playtest-board] Removed opponent partner from main (as designed): ${chosenPartner}`);
+        }
+        if (skippedUnknown > 0) {
+            alert(`(skipped ${skippedUnknown} unknown IDs)`);
+        }
+
+        // Shuffle (Fisher–Yates)
+        for (let i = expanded.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [expanded[i], expanded[j]] = [expanded[j], expanded[i]];
+        }
+
+        // Counts for Mulligan selector
+        const counts = new Map();
+        for (const id of expanded) counts.set(id, (counts.get(id) || 0) + 1);
+
+        // Write opponent state: piles/hand/partner slot
+        setODeckPile(expanded);
+        setODeckCounts(counts);
+        setOHand([]);
+
+        setOBanishPile([]);  // clear stacks
+        setOShieldPile([]);
+        setOGravePile([]);
+
+        // Place opponent partner in its zone and reset its side to 'a'
+        setBoardSlots((prev) => ({ ...prev, opartner: chosenPartner }));
+        setSlotSides((prev) => ({ ...prev, opartner: 'a' }));
+        setOPartnerId(chosenPartner);
+
+        // Use already-loaded maps for lookups in UI
+        setDataMaps({ cardsById, partnersById, tokensById });
+
+        // Open opponent mulligan
+        setShowOMulligan(true);
+
+        // reset input so re-selecting the same file works later
+        e.target.value = '';
+    };
+
     // Start a new game with the same imported deck (reshuffle + full reset)
     const onNewGame = () => {
         if (!hasImportedDeck) return;
@@ -1394,7 +1802,7 @@ export function PlaytestBoard() {
         );
         if (!ok) return;
 
-        // Rebuild a fresh, shuffled deck from the original counts
+        // --- Player: rebuild fresh shuffled deck from original counts
         const expanded = [];
         deckCounts.forEach((n, id) => { for (let i = 0; i < n; i++) expanded.push(id); });
         for (let i = expanded.length - 1; i > 0; i--) {
@@ -1402,19 +1810,54 @@ export function PlaytestBoard() {
             [expanded[i], expanded[j]] = [expanded[j], expanded[i]];
         }
 
-        // Reset all board state
+        // --- Opponent: rebuild fresh shuffled deck if they imported one
+        let oExpanded = [];
+        if (oDeckCounts && typeof oDeckCounts.forEach === 'function' && oDeckCounts.size > 0) {
+            oExpanded = [];
+            oDeckCounts.forEach((n, id) => { for (let i = 0; i < n; i++) oExpanded.push(id); });
+            for (let i = oExpanded.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [oExpanded[i], oExpanded[j]] = [oExpanded[j], oExpanded[i]];
+            }
+        }
+
+        // Reset all board state (player + opponent)
         setDeckPile(expanded);
         setShieldPile([]);
         setBanishPile([]);
         setGravePile([]);
-        setBoardSlots({});
         setHand([]);
-        setShowMulligan(true);   // open mulligan like a fresh import
+
+        // Opponent piles
+        if (oExpanded.length > 0) {
+            setODeckPile(oExpanded);
+            setOHand([]);
+            setOShieldPile([]);
+            setOBanishPile([]);
+            setOGravePile([]);
+        } else {
+            // Even if no opponent deck was imported, clear visible opponent piles
+            setODeckPile([]);
+            setOHand([]);
+            setOShieldPile([]);
+            setOBanishPile([]);
+            setOGravePile([]);
+        }
+
+        // Clear all slots, then re-seat opponent partner in its slot (front side)
+        setBoardSlots(() => (oPartnerId ? { opartner: oPartnerId } : {}));
+        setSlotSides(prev => ({ ...prev, opartner: 'a' }));
+
+        // Open user Mulligan now; defer opponent Mulligan until user closes theirs
+        setPendingOMulligan(oExpanded.length > 0);
+        setShowMulligan(true);
+
+        // UI cleanup
         setHoverSlot(null);
         setDragIdx(null);
         setExhaustedSlots(new Set());
 
-        // Ask other UI (turns/HP/resources/refund, etc.) to reset themselves
+        // Notify other modules to reset
         window.dispatchEvent(new Event('pb:new-game'));
     };
 
@@ -1425,7 +1868,7 @@ export function PlaytestBoard() {
         );
         if (!ok) return;
 
-        // Clear all piles/board/hand (no deck)
+        // Clear all piles/board/hand (no deck) — PLAYER
         setPartnerId(null);
         setDeckPile([]);
         setShieldPile([]);
@@ -1434,13 +1877,24 @@ export function PlaytestBoard() {
         setBoardSlots({});
         setHand([]);
 
-        // Close mulligan, clear counts/maps, and mark as no deck
+        // Clear all piles/hand — OPPONENT
+        setOPartnerId(null);
+        setODeckPile([]);
+        setOShieldPile([]);
+        setOBanishPile([]);
+        setOGravePile([]);
+        setOHand([]);
+
+        // Close mulligans, clear counts/maps/flags
         setShowMulligan(false);
+        setShowOMulligan(false);
+        setPendingOMulligan(false);
         setDeckCounts(new Map());
+        setODeckCounts(new Map());
         // Keep runtime data maps loaded (do not clear) so Unit stat labels still show without a deck.
         setHasImportedDeck(false);
 
-        // ⬅️ ADD THIS: reset Format selector to default (Freeform → else first in list)
+        // Reset Format selector to default (Freeform → else first in list)
         setFormatId((formats && formats.includes && formats.includes('Freeform')) ? 'Freeform' : (formats?.[0] || 'Freeform'));
 
         // Clear any transient UI state
@@ -1832,6 +2286,19 @@ export function PlaytestBoard() {
     const graveRef = React.useRef(gravePile);
     React.useEffect(() => { graveRef.current = gravePile; }, [gravePile]);
 
+    // Opponent live refs
+    const oDeckRef = React.useRef(oDeckPile);
+    React.useEffect(() => { oDeckRef.current = oDeckPile; }, [oDeckPile]);
+
+    const oShieldRef = React.useRef(oShieldPile);
+    React.useEffect(() => { oShieldRef.current = oShieldPile; }, [oShieldPile]);
+
+    const oBanishRef = React.useRef(oBanishPile);
+    React.useEffect(() => { oBanishRef.current = oBanishPile; }, [oBanishPile]);
+
+    const oGraveRef = React.useRef(oGravePile);
+    React.useEffect(() => { oGraveRef.current = oGravePile; }, [oGravePile]);
+
     // --- Drag & drop reordering inside the Open Stack View (full-stack only) ---
     const [peekDrag, setPeekDrag] = React.useState(null); // { stack, index }
 
@@ -1840,6 +2307,14 @@ export function PlaytestBoard() {
     // NEW: Foresee modal (Deck-only)
     const [foresee, setForesee] = React.useState(null); // { ids: string[], mid: string[], top: string[], bottom: string[] }
     const [foreseeDrag, setForeseeDrag] = React.useState(null); // { zone: 'mid'|'top'|'bottom', index: number }
+
+    // ADD THIS near other useState declarations (top-level in PlaytestBoard)
+    const [partnerInArea, setPartnerInArea] = React.useState(!!partnerId);
+
+    // keep in sync if partnerId changes (e.g., swap decks)
+    React.useEffect(() => {
+        setPartnerInArea(!!partnerId);
+    }, [partnerId]);
 
     // symmetric mapping so 50 => 1.0x, <50 shrinks toward PEEK_MIN, >50 grows toward PEEK_MAX
     const PEEK_MIN = 0.40;  // smallest ~65%
@@ -1995,10 +2470,17 @@ export function PlaytestBoard() {
     const onForeseeConfirm = () => {
         if (!foresee) return;
         if (foresee.mid.length) return; // safety: require all assigned
-        setDeckPile(prev => {
+
+        const apply = (prev) => {
             const rest = prev.slice(foresee.ids.length); // remove only the revealed top N
             return [...foresee.top, ...rest, ...foresee.bottom];
-        });
+        };
+
+        if (String(foresee.owner || 'player') === 'opponent') {
+            setODeckPile(apply);
+        } else {
+            setDeckPile(apply);
+        }
         setForesee(null);
     };
 
@@ -2029,6 +2511,10 @@ export function PlaytestBoard() {
         onHandDragStart, onHandDragEnd, onHandContainerDragOver, onHandContainerDrop,
         onHandItemDragOver, onHandItemDrop,
 
+        // opponent hand
+        onOHandDragStart, onOHandDragEnd, onOHandContainerDragOver, onOHandContainerDrop,
+        onOHandItemDragOver, onOHandItemDrop,
+
         // board slots
         onSlotDragOver, onSlotDragLeave, onSlotDrop, onSlotCardDragStart, onSlotCardDragEnd,
 
@@ -2046,6 +2532,13 @@ export function PlaytestBoard() {
 
         // deck
         onDeckDragOver, onDeckDrop, onDeckDragStart,
+
+        // opponent stacks
+        onOShieldDragOver, onOShieldDrop, onOShieldDragStart,
+        onOBanishDragOver, onOBanishDrop, onOBanishDragStart,
+        onOGraveDragOver, onOGraveDrop, onOGraveDragStart,
+        onODeckDragOver, onODeckDrop, onODeckDragStart,
+
     } = usePlaytestBoardDragNDown({
         partnerId, partnerSide,
         boardSlots, setBoardSlots,
@@ -2053,6 +2546,7 @@ export function PlaytestBoard() {
         slotCounters, setSlotCounters,
         slotLabels, setSlotLabels,
         hand, setHand,
+        oHand, setOHand,
         deckPile, setDeckPile,
         shieldPile, setShieldPile,
         banishPile, setBanishPile,
@@ -2062,17 +2556,29 @@ export function PlaytestBoard() {
         setExhaustedSlots,
         setBattleRole, battleRoleRef,
         setBattleOrigin, battleOriginRef,
+        oPartnerId,
+        // opponent piles for DnD into opponent stacks
+        oDeckPile, setODeckPile,
+        oShieldPile, setOShieldPile,
+        oBanishPile, setOBanishPile,
+        oGravePile, setOGravePile,
+
+        // NEW
+        setPartnerInArea,
     });
 
     // Auto-ready Unit/Support at Start → Ready Step
     // Auto-draw 1 at Start → Draw Step
     React.useEffect(() => {
         const onEntered = (e) => {
-            const { phaseKey, stepLabel } = e.detail || {};
+            const { phaseKey, stepLabel, isYourTurn: yturn } = e.detail || {};
 
             // Ready Step: clear exhaustion on unit/support slots, BUT if a slot has >=1 stun_k,
             // remove one stun_k and keep that slot exhausted instead of readying.
+            // When Opponent Board is enabled, only auto-ready on Your Turn.
             if (phaseKey === 'start' && stepLabel === 'Ready Step') {
+                if (opponentBoard === 'yes' && !yturn) return;
+
                 const stunnedToDecrement = [];
                 setExhaustedSlots((prev) => {
                     if (!prev || prev.size === 0) return prev;
@@ -2081,19 +2587,15 @@ export function PlaytestBoard() {
                         const s = String(key);
                         const isUnitOrSupport = s.startsWith('u') || s.startsWith('s');
                         if (!isUnitOrSupport) {
-                            // Non-unit/support exhaustion flags remain as-is (e.g., battle slots)
                             next.add(s);
                             continue;
                         }
-                        // Check current counters for stun
                         const counts = (slotCountersRef.current && slotCountersRef.current[s]) || {};
                         const hasStun = (counts['stun_k'] || 0) > 0;
                         if (hasStun) {
-                            // It would ready → instead consume 1 stun_k and keep exhausted
                             next.add(s);
                             stunnedToDecrement.push(s);
                         }
-                        // else: omit from Set → it becomes ready
                     }
                     return next;
                 });
@@ -2107,7 +2609,6 @@ export function PlaytestBoard() {
                             const n = (cur['stun_k'] || 0);
                             if (n > 0) {
                                 cur['stun_k'] = n - 1;
-                                // tidy
                                 const cleaned = Object.fromEntries(Object.entries(cur).filter(([, v]) => (v || 0) > 0));
                                 if (Object.keys(cleaned).length) {
                                     up[slotKey] = cleaned;
@@ -2123,7 +2624,10 @@ export function PlaytestBoard() {
             }
 
             // Draw Step: draw 1 card from top of Deck to Hand (gated by Going First? + Turn 1)
+            // When Opponent Board is enabled, only auto-draw on Your Turn.
             if (phaseKey === 'start' && stepLabel === 'Draw Step') {
+                if (opponentBoard === 'yes' && !yturn) return;
+
                 const isFirstTurn = (window.__PB_TURN_COUNT || 1) === 1;
                 if (goingFirst === 'yes' && isFirstTurn) {
                     // Skip the automatic draw on Turn 1 if we're going first
@@ -2134,7 +2638,6 @@ export function PlaytestBoard() {
                     if (!prev || prev.length === 0) return prev;
                     const [top, ...rest] = prev;
 
-                    // Keep Deck Stack View (if open) in sync by removing the drawn top card
                     setPeekCard((peek) => {
                         if (peek && peek.all && peek.from === 'deck' && Array.isArray(peek.ids)) {
                             const ids = [...peek.ids];
@@ -2148,7 +2651,6 @@ export function PlaytestBoard() {
                         return peek;
                     });
 
-                    // Add to hand (avoid duplicate partner copy in hand)
                     setHand((h) => {
                         if (top === partnerId && h.includes(partnerId)) return h;
                         return [...h, top];
@@ -2224,7 +2726,7 @@ export function PlaytestBoard() {
 
         window.addEventListener('pb:turn:entered', onEntered);
         return () => window.removeEventListener('pb:turn:entered', onEntered);
-    }, [partnerId, dataMaps, hasImportedDeck, goingFirst]);
+    }, [partnerId, dataMaps, hasImportedDeck, goingFirst, opponentBoard]);
 
     // Slot/Partner/Stack DnD handlers now provided by usePlaytestBoardDragNDown(...)
 
@@ -2255,14 +2757,32 @@ export function PlaytestBoard() {
     React.useEffect(() => {
         const b = document.body;
         if (!b) return;
-        b.classList.remove('pb-placing', 'pb-placing-unit', 'pb-placing-support');
+
+        b.classList.remove(
+            'pb-placing',
+            'pb-placing-unit',
+            'pb-placing-support',
+            'pb-placing-owner-player',
+            'pb-placing-owner-opponent'
+        );
+
         if (pendingPlace) {
             b.classList.add('pb-placing');
             if (pendingPlace.target === 'unit') b.classList.add('pb-placing-unit');
             if (pendingPlace.target === 'support') b.classList.add('pb-placing-support');
+
+            const owner = String(pendingPlace.owner || 'player').toLowerCase();
+            b.classList.add(owner === 'opponent' ? 'pb-placing-owner-opponent' : 'pb-placing-owner-player');
         }
+
         return () => {
-            b.classList.remove('pb-placing', 'pb-placing-unit', 'pb-placing-support');
+            b.classList.remove(
+                'pb-placing',
+                'pb-placing-unit',
+                'pb-placing-support',
+                'pb-placing-owner-player',
+                'pb-placing-owner-opponent'
+            );
         };
     }, [pendingPlace]);
 
@@ -2270,26 +2790,56 @@ export function PlaytestBoard() {
         if (!pendingPlace || !key) return;
 
         // One-shot: grab data and immediately end placement
-        const { cardId, source, index } = pendingPlace;
+        const { cardId, source, index, owner } = pendingPlace;
         setPendingPlace(null);
 
-        // Place onto the target slot (bumping any occupant to Hand)
+        // Determine target side (player vs opponent) and hard-block cross-side placement
+        const keyIsOpp = /^o/.test(String(key));
+        const ownerIsOpp = String(owner || 'player').toLowerCase() === 'opponent';
+
+        // If the clicked side doesn't match the pending owner, ignore the click
+        if (keyIsOpp !== ownerIsOpp) {
+            return;
+        }
+
+        const isOppTarget = keyIsOpp;
+
+        // Place onto the target slot (bumping any occupant to the correct Hand)
         setBoardSlots(prev => {
             const up = { ...prev };
-            if (cardId === partnerId) {
-                for (const k in up) if (up[k] === partnerId) delete up[k];
+
+            // If placing a partner card anywhere, ensure no duplicate board refs
+            if (cardId === partnerId || cardId === oPartnerId) {
+                for (const k in up) if (up[k] === cardId) delete up[k];
             }
+
             const prevInTarget = up[key] || null;
             up[key] = cardId;
+
             if (prevInTarget) {
-                setHand(h => [...h, prevInTarget]);
+                if (isOppTarget) {
+                    setOHand(h => [...h, prevInTarget]);
+                } else {
+                    setHand(h => [...h, prevInTarget]);
+                }
             }
             return up;
         });
 
-        // If the card came from Hand, remove it from Hand
+        // Remove from the correct Hand based on the source
         if (source === 'hand') {
             setHand(prev => {
+                const next = [...prev];
+                if (Number.isFinite(index) && next[index] === cardId) {
+                    next.splice(index, 1);
+                } else {
+                    const j = next.indexOf(cardId);
+                    if (j >= 0) next.splice(j, 1);
+                }
+                return next;
+            });
+        } else if (source === 'oHand') {
+            setOHand(prev => {
                 const next = [...prev];
                 if (Number.isFinite(index) && next[index] === cardId) {
                     next.splice(index, 1);
@@ -2309,19 +2859,41 @@ export function PlaytestBoard() {
                 window.__PB_SUSPENDED_MODAL = null;
             }
         }
-    }, [pendingPlace, partnerId]);
+    }, [pendingPlace, partnerId, oPartnerId]);
 
     // Click handler attached to Unit/Support slots: only acts when placement is pending
     const onSlotClick = (key) => (e) => {
         if (!pendingPlace) return;
         const t = pendingPlace.target;
-        const valid = (t === 'unit' && /^u\d+$/.test(key)) || (t === 'support' && /^s\d+$/.test(key));
+        const owner = String(pendingPlace.owner || 'player').toLowerCase();
+
+        // Only allow clicks on PLAYER slots when the pending placement owner is the player
+        const valid = owner !== 'opponent' && (
+            (t === 'unit' && /^u\d+$/.test(key)) ||
+            (t === 'support' && /^s\d+$/.test(key))
+        );
         if (!valid) return;
 
-        // one-shot: keep this click from triggering anything else
         e.preventDefault();
         e.stopPropagation();
+        commitPlaceToSlot(key);
+    };
 
+    // Opponent board variant (ou*/os*)
+    const onOpponentSlotClick = (key) => (e) => {
+        if (!pendingPlace) return;
+        const t = pendingPlace.target;
+        const owner = String(pendingPlace.owner || 'player').toLowerCase();
+
+        // Only allow clicks on OPPONENT slots when the pending placement owner is the opponent
+        const valid = owner === 'opponent' && (
+            (t === 'unit' && /^ou\d+$/.test(key)) ||
+            (t === 'support' && /^os\d+$/.test(key))
+        );
+        if (!valid) return;
+
+        e.preventDefault();
+        e.stopPropagation();
         commitPlaceToSlot(key);
     };
 
@@ -2350,6 +2922,10 @@ export function PlaytestBoard() {
             shieldRef,
             banishRef,
             graveRef,
+            oDeckRef,
+            oShieldRef,
+            oBanishRef,
+            oGraveRef,
 
             // setters (state mutation entry points)
             setHand,
@@ -2366,6 +2942,11 @@ export function PlaytestBoard() {
             setForesee,
             setPendingPlace,
             setCounterPrompt, // <-- needed to open the modal
+            setODeckPile,
+            setOShieldPile,
+            setOBanishPile,
+            setOGravePile,
+            setOHand,
 
             // other helpers we already have in-scope
             fileInputRef,
@@ -2392,7 +2973,7 @@ export function PlaytestBoard() {
         const toggleExhaust = (el) => {
             if (!el || pendingPlace) return; // ignore while placing
             const slotKey = el.dataset?.slotKey;
-            if (!slotKey || !/^u\d+$|^s\d+$/.test(slotKey)) return; // only unit/support
+            if (!slotKey || !/^(?:o?u\d+|o?s\d+)$/.test(slotKey)) return; // allow player + opponent unit/support (u*/s*, ou*/os*)
             window.dispatchEvent(new CustomEvent('pb:ctx:action', {
                 detail: {
                     area: 'slot-card',
@@ -2419,7 +3000,7 @@ export function PlaytestBoard() {
             const slotEl = e.target?.closest?.('[data-menu-area="slot-card"]');
             if (slotEl) { toggleExhaust(slotEl); return; }
 
-            const deckEl = e.target?.closest?.('[data-menu-area="stack-slot"][data-stack="deck"]');
+            const deckEl = e.target?.closest?.('[data-menu-area="stack-slot"][data-stack="deck"]:not([data-owner="opponent"])');
             if (deckEl) { drawFromDeck(deckEl); }
         };
 
@@ -2428,7 +3009,7 @@ export function PlaytestBoard() {
         let lastEl = null;
         const onTouchEnd = (e) => {
             const slotEl = e.target?.closest?.('[data-menu-area="slot-card"]');
-            const deckEl = e.target?.closest?.('[data-menu-area="stack-slot"][data-stack="deck"]');
+            const deckEl = e.target?.closest?.('[data-menu-area="stack-slot"][data-stack="deck"]:not([data-owner="opponent"])');
             const el = slotEl || deckEl;
             if (!el) { lastEl = null; lastTapAt = 0; return; }
 
@@ -2497,6 +3078,16 @@ export function PlaytestBoard() {
                       </>
                   )}
 
+                  {/* Placeholder — only when a deck is imported AND Opponent Board is on */}
+                  {hasImportedDeck && opponentBoard === 'yes' && (
+                      <button
+                          className="tips-btn"
+                          onClick={() => oFileInputRef.current?.click()}
+                      >
+                          Import Opponent Deck
+                      </button>
+                  )}
+
                   <button
                       className="tips-btn"
                       onClick={onImportClick}
@@ -2527,11 +3118,18 @@ export function PlaytestBoard() {
                       style={{ display: 'none' }}
                       onChange={onFileChosen}
                   />
+                  <input
+                      ref={oFileInputRef}
+                      type="file"
+                      accept=".json,application/json"
+                      style={{ display: 'none' }}
+                      onChange={onOFileChosen}
+                  />
               </div>
           </header>
 
       <div className="pb-subheader" aria-label="Sub Header">
-         <TurnBar />
+         <TurnBar goingFirst={goingFirst} opponentBoard={opponentBoard} />
       </div>
 
       {/* Body placeholder (we'll build this in later steps) */}
@@ -2540,10 +3138,20 @@ export function PlaytestBoard() {
                   {/* Left panel (empty for now) */}
                   <aside className="pb-side left" aria-label="Left Panel">
                       <div className="pb-panel-title">Settings &amp; Help</div>
+                      <OpponentBoardToggle
+                          value={opponentBoard}
+                          setValue={setOpponentBoard}
+                          blockDisable={
+                              // Opponent deck imported?
+                              (oDeckCounts?.size > 0) ||
+                              // Any opponent slots currently hold a card?
+                              Object.entries(boardSlots || {}).some(([k, v]) => /^o/.test(k) && !!v)
+                          }
+                      />
                       <GoingFirstToggle value={goingFirst} setValue={setGoingFirst} />
                       <CostModuleToggle />
                       {/* <PlacementModuleToggle /> */}
-                      <HoverPreviewToggle enabled={hoverEnabled} setEnabled={setHoverEnabled} />
+                      {/*<HoverPreviewToggle enabled={hoverEnabled} setEnabled={setHoverEnabled} /> Commented Out for Bug Testing*/}
                       <CardZoomToggle enabled={zoomEnabled} setEnabled={setZoomEnabled} />
                       <LeftPanelGalleries />
                       <CustomTrackers />
@@ -2552,6 +3160,53 @@ export function PlaytestBoard() {
 
                   {/* Center column holds the board */}
                   <div className="pb-center">
+                      {/* Opponent Board (visual only — Step 1) */}
+                      {opponentBoard === 'yes' && (
+                          <OpponentBoard
+                              boardSlots={boardSlots}
+                              slotSides={slotSides}
+                              exhaustedSlots={exhaustedSlots}
+                              hoverSlot={hoverSlot}
+                              onSlotDragOver={onSlotDragOver}
+                              onSlotDragLeave={onSlotDragLeave}
+                              onSlotDrop={onSlotDrop}
+                              onSlotCardDragStart={onSlotCardDragStart}
+                              onSlotCardDragEnd={onSlotCardDragEnd}
+                              oDeckPile={oDeckPile}
+                              oShieldPile={oShieldPile}
+                              oBanishPile={oBanishPile}
+                              oGravePile={oGravePile}
+                              battleRole={battleRole}
+                              // NEW: show counters on opponent slots
+                              slotCounters={slotCounters}
+                              slotLabels={slotLabels}
+                              renderCounterBadges={renderCounterBadges}
+                              renderLabelBadges={renderLabelBadges}
+                              renderUnitStats={renderUnitStats}
+                              /* NEW: opponent stack drop + drag handlers */
+                              onOShieldDragOver={onOShieldDragOver}
+                              onOShieldDrop={onOShieldDrop}
+                              onOBanishDragOver={onOBanishDragOver}
+                              onOBanishDrop={onOBanishDrop}
+                              onOGraveDragOver={onOGraveDragOver}
+                              onOGraveDrop={onOGraveDrop}
+                              onODeckDragOver={onODeckDragOver}
+                              onODeckDrop={onODeckDrop}
+                              onOShieldDragStart={onOShieldDragStart}
+                              onOBanishDragStart={onOBanishDragStart}
+                              onOGraveDragStart={onOGraveDragStart}
+                              onODeckDragStart={onODeckDragStart}
+                              // opponent hand
+                              oHand={oHand}
+                              onOHandDragStart={onOHandDragStart}
+                              onOHandDragEnd={onOHandDragEnd}
+                              onOHandContainerDragOver={onOHandContainerDragOver}
+                              onOHandContainerDrop={onOHandContainerDrop}
+                              onOHandItemDragOver={onOHandItemDragOver}
+                              onOHandItemDrop={onOHandItemDrop}
+                              onOpponentSlotClick={onOpponentSlotClick}
+                          />
+                      )}
                       <div className={`pb-board ${exhaustedSlots.size ? 'rotate-safe' : ''}`} role="grid" aria-label="Playtest Board">
                           {/* Row A (top) */}
                           <Slot
@@ -2675,13 +3330,22 @@ export function PlaytestBoard() {
                                   // Normalize IDs so checks work even if a zone holds "<id>_a" or "<id>_b"
                                   const baseId = (id) => String(id || '').replace(/_(a|b)$/i, '');
 
-                                  const partnerOnBoard = !!partnerId && Object.values(boardSlots || {}).some((id) => baseId(id) === baseId(partnerId));
+                                  // Only consider *player* slots for "on board" (preserve earlier fix)
+                                  const partnerOnBoard = !!partnerId && Object.entries(boardSlots || {}).some(
+                                      ([k, id]) => !/^o/.test(k) && baseId(id) === baseId(partnerId)
+                                  );
+
+                                  // Player zones
                                   const partnerInHand = !!partnerId && (hand || []).some((id) => baseId(id) === baseId(partnerId));
                                   const partnerInShield = !!partnerId && (shieldPile || []).some((id) => baseId(id) === baseId(partnerId));
                                   const partnerInBanish = !!partnerId && (banishPile || []).some((id) => baseId(id) === baseId(partnerId));
                                   const partnerInGrave = !!partnerId && (gravePile || []).some((id) => baseId(id) === baseId(partnerId));
                                   const partnerInDeck = !!partnerId && (deckPile || []).some((id) => baseId(id) === baseId(partnerId));
-                                  return partnerId && !partnerOnBoard && !partnerInHand && !partnerInShield && !partnerInBanish && !partnerInGrave && !partnerInDeck ? (
+
+                                  // NEW: render Partner here only if *our* Partner is currently in the Partner area
+                                  const shouldShow = !!partnerId && partnerInArea;
+
+                                  return shouldShow ? (
                                       <div
                                           className="pb-slot-card"
                                           onMouseEnter={handleEnter}
@@ -2706,7 +3370,7 @@ export function PlaytestBoard() {
                                                   onError={onImgError('partner', partnerId, partnerSide)}
                                                   draggable="false"
                                               />
-                                              {renderLabelBadges(slotLabels['partner'])}   {/* NEW */}
+                                              {renderLabelBadges(slotLabels['partner'])}
                                               {renderCounterBadges(slotCounters['partner'])}
                                               {renderUnitStats('partner', partnerId)}
                                           </div>
@@ -2874,15 +3538,107 @@ export function PlaytestBoard() {
 
                           {/* Hand moved to fixed dock (see .pb-hand-dock at bottom of screen) */}
                       </div>
+                      {/* Fixed Hand Dock (pinned between left/right panels at bottom) */}
+                      <div
+                          className={`pb-hand-dock${opponentBoard === 'yes' ? ' has-opponent' : ''}${handCollapsed ? ' is-collapsed' : ''}`}
+                          role="region"
+                          aria-label="Hand"
+                          /* When collapsed, allow dropping anywhere on the dock */
+                          onDragOver={handCollapsed ? onHandContainerDragOver : undefined}
+                          onDrop={handCollapsed ? onHandContainerDrop : undefined}
+                      >
+                          {/* Collapse/Expand control only when Opponent Board is ON */}
+                          {opponentBoard === 'yes' && (
+                              <div className="pb-hand-toggle">
+                                  <button
+                                      type="button"
+                                      className="pb-fold-btn"
+                                      aria-expanded={!handCollapsed}
+                                      onClick={() => setHandCollapsed(v => !v)}
+                                      title={handCollapsed ? 'Expand Hand' : 'Collapse Hand'}
+                                  >
+                                      {handCollapsed ? 'Expand ▲' : 'Collapse ▼'}
+                                  </button>
+                              </div>
+                          )}
+
+                          <div
+                              className="pb-hand-cards"
+                              onDragOver={onHandContainerDragOver}
+                              onDrop={onHandContainerDrop}
+                          >
+                              {hand.map((id, i) => (
+                                  <div
+                                      key={`${id}-${i}`}
+                                      className={`pb-hand-item${dragIdx === i ? ' dragging' : ''}`}
+                                      draggable
+                                      onDragStart={onHandDragStart(i)}
+                                      onDragOver={onHandItemDragOver}
+                                      onDrop={onHandItemDrop(i)}
+                                      onDragEnd={onHandDragEnd}
+                                      aria-grabbed={dragIdx === i ? 'true' : 'false'}
+                                      data-menu-area="hand-card"
+                                      data-card-id={id}
+                                      data-index={i}
+                                  >
+                                      <CardZoom id={ensureFrontId(id)} name={id} />
+                                      <img
+                                          className="pb-card-img"
+                                          src={imgSrc(id, /_b$/i.test(String(id)) ? 'b' : 'a')}
+                                          alt={imgAlt('card', id, /_b$/i.test(String(id)) ? 'b' : 'a')}
+                                          onError={onImgError('card', id, /_b$/i.test(String(id)) ? 'b' : 'a')}
+                                          draggable="false"
+                                      />
+                                  </div>
+                              ))}
+                          </div>
+                      </div>
                   </div>
 
                   {/* Right panel (empty for now) */}
-                  <aside className="pb-side right" aria-label="Right Panel">
-                      <div className="pb-panel-title">Player Info</div>
-                      <HPTracker />
-                      <TempHPTracker />
-                      <ElementResourceTrackers visibleNames={partnerVisibleElements} />
-                      <RefundTracker />
+                  <aside className="pb-side right" aria-label="Right Panel" data-active-owner={rightOwner}>
+                      <div className="pb-panel-title">
+                          <div className="pb-owner-switch" role="tablist" aria-label="Owner View">
+                              <button
+                                  className={`pb-owner-btn ${rightOwner === 'player' ? 'active' : ''}`}
+                                  role="tab"
+                                  aria-selected={rightOwner === 'player'}
+                                  onClick={() => setRightOwner('player')}
+                                  title="Show Player trackers"
+                              >
+                                  Player
+                              </button>
+
+                              {opponentBoard === 'yes' && (
+                                  <button
+                                      className={`pb-owner-btn ${rightOwner === 'opponent' ? 'active' : ''}`}
+                                      role="tab"
+                                      aria-selected={rightOwner === 'opponent'}
+                                      onClick={() => setRightOwner('opponent')}
+                                      title="Show Opponent trackers"
+                                  >
+                                      Opponent
+                                  </button>
+                              )}
+                          </div>
+                      </div>
+
+                      {/* PLAYER — this instance is the "engine" (listens to auto events) */}
+                      <div className="owner-section" data-owner="player">
+                          <HPTracker engineMode />
+                          <TempHPTracker engineMode />
+                          <ElementResourceTrackers visibleNames={partnerVisibleElements} engineMode />
+                          <RefundTracker engineMode />
+                      </div>
+
+                      {/* OPPONENT — separate state; does NOT listen to engine auto events */}
+                      <div className="owner-section" data-owner="opponent">
+                          <HPTracker engineMode={false} />
+                          <TempHPTracker engineMode={false} />
+                          <ElementResourceTrackers visibleNames={oPartnerVisibleElements} engineMode={false} owner="opponent" />
+                          <RefundTracker engineMode={false} owner="opponent" />
+                      </div>
+
                       <div className="pb-right-footer" role="group" aria-label="Turn Controls (Footer)">
                           <button
                               className="pb-btn"
@@ -2902,39 +3658,7 @@ export function PlaytestBoard() {
                   </aside>
               </div>
 
-              {/* Fixed Hand Dock (pinned between left/right panels at bottom) */}
-              <div className="pb-hand-dock" role="region" aria-label="Hand">
-                  <div
-                      className="pb-hand-cards"
-                      onDragOver={onHandContainerDragOver}
-                      onDrop={onHandContainerDrop}
-                  >
-                      {hand.map((id, i) => (
-                          <div
-                              key={`${id}-${i}`}
-                              className={`pb-hand-item${dragIdx === i ? ' dragging' : ''}`}
-                              draggable
-                              onDragStart={onHandDragStart(i)}
-                              onDragOver={onHandItemDragOver}
-                              onDrop={onHandItemDrop(i)}
-                              onDragEnd={onHandDragEnd}
-                              aria-grabbed={dragIdx === i ? 'true' : 'false'}
-                              data-menu-area="hand-card"
-                              data-card-id={id}
-                              data-index={i}
-                          >
-                              <CardZoom id={ensureFrontId(id)} name={id} />
-                              <img
-                                  className="pb-card-img"
-                                  src={imgSrc(id, /_b$/i.test(String(id)) ? 'b' : 'a')}
-                                  alt={imgAlt('card', id, /_b$/i.test(String(id)) ? 'b' : 'a')}
-                                  onError={onImgError('card', id, /_b$/i.test(String(id)) ? 'b' : 'a')}
-                                  draggable="false"
-                              />
-                          </div>
-                      ))}
-                  </div>
-              </div>
+              
 
           </div>
 
@@ -2945,8 +3669,33 @@ export function PlaytestBoard() {
                   counts={deckCounts}
                   cardsById={dataMaps.cardsById}
                   imgSrc={imgSrc}
-                  onClose={() => setShowMulligan(false)}
-                  onKeep={(finalHand) => { setHand(finalHand); setShowMulligan(false); }}
+                  onClose={() => {
+                      setShowMulligan(false);
+                      if (pendingOMulligan && opponentBoard === 'yes') {
+                          setShowOMulligan(true);
+                      }
+                      setPendingOMulligan(false);
+                  }}
+                  onKeep={(finalHand) => {
+                      setHand(finalHand);
+                      setShowMulligan(false);
+                      if (pendingOMulligan && opponentBoard === 'yes') {
+                          setShowOMulligan(true);
+                      }
+                      setPendingOMulligan(false);
+                  }}
+              />
+          )}
+
+          {showOMulligan && opponentBoard === 'yes' && (
+              <MulliganModal
+                  deckPile={oDeckPile}
+                  setDeckPile={setODeckPile}
+                  counts={oDeckCounts}
+                  cardsById={dataMaps.cardsById}
+                  imgSrc={imgSrc}
+                  onClose={() => setShowOMulligan(false)}
+                  onKeep={(finalHand) => { setOHand(finalHand); setShowOMulligan(false); }}
               />
           )}
 
@@ -3514,10 +4263,12 @@ export function PlaytestBoard() {
           {fetchPrompt && (
               <FetchCardsModal
                   onClose={() => setFetchPrompt(null)}
-                  deckRef={deckRef}
-                  setDeckPile={setDeckPile}
-                  setHand={setHand}
+                  deckRef={(typeof fetchPrompt === 'object' && fetchPrompt?.owner === 'opponent') ? oDeckRef : deckRef}
+                  setDeckPile={(typeof fetchPrompt === 'object' && fetchPrompt?.owner === 'opponent') ? setODeckPile : setDeckPile}
+                  setHand={(typeof fetchPrompt === 'object' && fetchPrompt?.owner === 'opponent') ? setOHand : setHand}
                   setPeekCard={setPeekCard}
+                  // NOTE: let the modal know which stack’s peek to close (only close when it matches)
+                  peekFrom={(typeof fetchPrompt === 'object' && fetchPrompt?.owner === 'opponent') ? 'odeck' : 'deck'}
               />
           )}
 

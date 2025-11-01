@@ -4,7 +4,7 @@
 // Usage: this file is side-effect imported by playtest-board.jsx.
 
 import '../styles/playtest-board-context-menu.css';
-import { openPlayCostModal, getAvailableElements } from './playtest-board-costmodal.jsx';
+import { openPlayCostModal, getAvailableElements, spendElements } from './playtest-board-costmodal.jsx';
 
 (function initPBContextMenu() {
   if (window.__PB_CTX_MENU__) return; // singleton
@@ -61,11 +61,15 @@ import { openPlayCostModal, getAvailableElements } from './playtest-board-costmo
           const isPartner = slotKey === 'partner';
           const currentSide = (ctx?.data?.side || 'a').toLowerCase();
           const flipLabel = currentSide === 'b' ? 'Flip to Front' : 'Flip to Back';
-          const exhausted = !!ctx?.target?.classList?.contains?.('is-exhausted');
+          // fix: read the host .pb-slot-card, not the img itself
+          const hostCard = ctx?.target?.closest?.('.pb-slot-card');
+          const exhausted = !!hostCard?.classList?.contains('is-exhausted');
           const label = exhausted ? 'Ready' : 'Exhaust';
+          // NEW: detect the stats bar on the host card (works on opponent too)
+          const hasUnitStats = !!hostCard?.querySelector?.('.pb-unit-stats');
           // Always show, but disable when not applicable
-          const canDeclare = /^u\d+$/.test(slotKey || '');
-          const canRemoveBattle = /^b\d+$/.test(slotKey || '');
+          const canDeclare = /^(?:ou|u)\d+$/.test(slotKey || '');
+          const canRemoveBattle = /^(?:ob|b)\d+$/.test(slotKey || '');
           const isFirstTurn = (window.__PB_TURN_COUNT || 1) === 1;
 
           const items = [
@@ -76,8 +80,8 @@ import { openPlayCostModal, getAvailableElements } from './playtest-board-costmo
               { id: 'add_counters', label: 'Add Counters…' },
               { id: 'heal_x', label: 'Heal X…' },
               { id: 'inflict_damage', label: 'Inflict/Damage X…' }, // NEW
-              { id: 'modify_stat', label: 'Modify Stat…', disabled: !ctx?.target?.querySelector?.('.pb-unit-stats') },
-              { id: 'clear_stat_mods', label: 'Remove Stat Changes', disabled: !ctx?.target?.querySelector?.('.pb-unit-stats') },
+              { id: 'modify_stat', label: 'Modify Stat…', disabled: !hasUnitStats },
+              { id: 'clear_stat_mods', label: 'Remove Stat Changes', disabled: !hasUnitStats },
               { separator: true },
               { id: 'add_label', label: 'Add Label/Improve' },
               { id: 'remove_label', label: 'Remove Label…' },
@@ -139,18 +143,40 @@ import { openPlayCostModal, getAvailableElements } from './playtest-board-costmo
         { id: `${t}_to_deck_bottom`, label: 'Put Top on Bottom of Deck' }, // NEW
       ];
     },
-    'viewer-card': (ctx) => [
-      { id: 'inspect', label: 'Inspect (Zoom)' },
-      { separator: true },
-      { id: 'add_to_unit', label: 'Add to Unit Slot…' },
-      { id: 'add_to_support', label: 'Add to Support Slot…' },
-      { separator: true },                                        // NEW
-      { id: 'add_to_hand', label: 'Add to Hand' },
-      { id: 'to_grave',       label: 'Send to Grave' },           // NEW
-      { id: 'to_shield',      label: 'Put into Shield (shuffle)' },// NEW
-      { id: 'to_deck_top',    label: 'Put on Top of Deck' },      // NEW
-      { id: 'to_deck_bottom', label: 'Put on Bottom of Deck' },   // NEW
-    ],
+      'viewer-card': (ctx) => {
+          const base = [
+              { id: 'inspect', label: 'Inspect (Zoom)' },
+              { separator: true },
+              { id: 'add_to_unit', label: 'Add to Unit Slot…' },
+              { id: 'add_to_support', label: 'Add to Support Slot…' },
+              { separator: true },
+              { id: 'add_to_hand', label: 'Add to Hand' },
+              { id: 'to_grave', label: 'Send to Grave' },
+              { id: 'to_shield', label: 'Put into Shield (shuffle)' },
+              { id: 'to_deck_top', label: 'Put on Top of Deck' },
+              { id: 'to_deck_bottom', label: 'Put on Bottom of Deck' },
+          ];
+
+          // Show Opponent section only if opponent board is currently rendered/toggled on
+          const opponentOn = !!document.querySelector('.pb-opponent-wrap');
+          if (!opponentOn) return base;
+
+          return [
+              ...base,
+              { separator: true },
+              // non-clickable section label (disabled menu item)
+              { id: 'opponent_section', label: 'Opponent Side', disabled: true },
+              { separator: true },
+              { id: 'o_add_to_unit', label: 'Add to Unit Slot…' },
+              { id: 'o_add_to_support', label: 'Add to Support Slot…' },
+              { separator: true },
+              { id: 'o_add_to_hand', label: 'Add to Hand' },
+              { id: 'o_to_grave', label: 'Send to Grave' },
+              { id: 'o_to_shield', label: 'Put into Shield (shuffle)' },
+              { id: 'o_to_deck_top', label: 'Put on Top of Deck' },
+              { id: 'o_to_deck_bottom', label: 'Put on Bottom of Deck' },
+          ];
+      },
     'global': (ctx) => [
       { id: 'new_game', label: 'New Game' },
       { id: 'reset', label: 'Reset (Clear All)' },
@@ -188,23 +214,41 @@ import { openPlayCostModal, getAvailableElements } from './playtest-board-costmo
     return state.builders[area] || defaults[area] || defaults.global;
   }
 
-  function buildItems(area, ctx) {
-    const builder = getBuilder(area);
-    let items = [];
-    try {
-      items = builder(ctx) || [];
-    } catch (e) {
-      items = [];
-      console.warn('[PB CTX] builder error for', area, e);
+    function buildItems(area, ctx) {
+        const builder = getBuilder(area);
+        let items = [];
+        try {
+            items = builder(ctx) || [];
+        } catch (e) {
+            items = [];
+            console.warn('[PB CTX] builder error for', area, e);
+        }
+
+        // NEW: If we’re on a stack-slot, disable any “Open Stack View” item when the pile is empty.
+        if (ctx?.area === 'stack-slot') {
+            const countEl = ctx?.target?.querySelector?.('.pb-pile-count');
+            const pileCount = Number.parseInt(countEl?.textContent || '0', 10) || 0;
+            const isEmpty = pileCount <= 0;
+
+            if (isEmpty) {
+                items = items.map((it) => {
+                    if (!it || it.separator) return it;
+                    const id = String(it.id || '');
+                    // matches: deck_open_view, shield_open_view, grave_open_view, banish_open_view, etc.
+                    const isOpenView = /(^|_)open_view$/.test(id);
+                    return isOpenView ? { ...it, disabled: true } : it;
+                });
+            }
+        }
+
+        // validate & normalize
+        return items
+            .filter(Boolean)
+            .map((it, i) =>
+                it.separator ? { separator: true } :
+                    { id: String(it.id || `item_${i}`), label: String(it.label || '(item)'), disabled: !!it.disabled }
+            );
     }
-    // validate & normalize
-    return items
-      .filter(Boolean)
-      .map((it, i) =>
-        it.separator ? { separator: true } :
-        { id: String(it.id || `item_${i}`), label: String(it.label || '(item)'), disabled: !!it.disabled }
-      );
-  }
 
   function renderMenu(area, ctx) {
     const root = ensureRoot();
@@ -351,7 +395,8 @@ import { openPlayCostModal, getAvailableElements } from './playtest-board-costmo
       const name = (slot.getAttribute('data-name') || '').toLowerCase();
       const map = { deck: 'deck', shield: 'shield', grave: 'grave', banish: 'banish' };
       if (map[name]) {
-        return { area: 'stack-slot', data: { stack: map[name] }, target: slot };
+          const owner = slot.closest('.pb-opponent-wrap') ? 'opponent' : 'player';
+          return { area: 'stack-slot', data: { stack: map[name], owner }, target: slot };
       }
     }
 
@@ -449,7 +494,7 @@ export function installPBActionHandlers(host) {
     const shieldShuffleIn = (cardId) => {
         if (!cardId) return;
         host.setShieldPile((prev) => {
-            const next = [...prev, cardId];
+            const next = [...(prev || []), cardId];
             for (let i = next.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [next[i], next[j]] = [next[j], next[i]];
@@ -458,9 +503,77 @@ export function installPBActionHandlers(host) {
         });
     };
 
+    // Opponent variant of "shuffle into shield"
+    const oShieldShuffleIn = (cardId) => {
+        if (!cardId) return;
+        host.setOShieldPile?.((prev) => {
+            const next = [...(prev || []), cardId];
+            for (let i = next.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [next[i], next[j]] = [next[j], next[i]];
+            }
+            return next;
+        });
+    };
+
+    // Opponent-side helpers
+    const toHandOpp = (cardId) => {
+        if (!cardId) return;
+        host.setOHand?.((prev) => [...(prev || []), cardId]);
+    };
+    const toOGraveTop = (cardId) => { if (cardId) host.setOGravePile?.((p) => [cardId, ...(p || [])]); };
+    const toOBanishTop = (cardId) => { if (cardId) host.setOBanishPile?.((p) => [cardId, ...(p || [])]); };
+    const toODeckTop = (cardId) => { if (cardId) host.setODeckPile?.((p) => [cardId, ...(p || [])]); };
+    const toODeckBottom = (cardId) => { if (cardId) host.setODeckPile?.((p) => ([...(p || []), cardId])); };
+
+    // Opponent pop-top helpers
+    const oDeckPopTop = (routeFn) => {
+        host.setODeckPile?.((prev) => {
+            if (!prev?.length) return prev;
+            const [top, ...rest] = prev;
+            routeFn?.(top);
+            return rest;
+        });
+    };
+    const oShieldPopTop = (routeFn) => {
+        host.setOShieldPile?.((prev) => {
+            if (!prev?.length) return prev;
+            const [top, ...rest] = prev;
+            routeFn?.(top);
+            return rest;
+        });
+    };
+    const oBanishPopTop = (routeFn) => {
+        host.setOBanishPile?.((prev) => {
+            if (!prev?.length) return prev;
+            const [top, ...rest] = prev;
+            routeFn?.(top);
+            return rest;
+        });
+    };
+    const oGravePopTop = (routeFn) => {
+        host.setOGravePile?.((prev) => {
+            if (!prev?.length) return prev;
+            const [top, ...rest] = prev;
+            routeFn?.(top);
+            return rest;
+        });
+    };
+
     const removeHandAt = (idx, routeFn) => {
         if (!Number.isFinite(idx)) return;
         host.setHand((prev) => {
+            const next = [...prev];
+            if (idx < 0 || idx >= next.length) return prev;
+            const [moved] = next.splice(idx, 1);
+            if (moved) routeFn?.(moved);
+            return next;
+        });
+    };
+
+    const removeOHandAt = (idx, routeFn) => {
+        if (!Number.isFinite(idx)) return;
+        host.setOHand?.((prev = []) => {
             const next = [...prev];
             if (idx < 0 || idx >= next.length) return prev;
             const [moved] = next.splice(idx, 1);
@@ -511,7 +624,7 @@ export function installPBActionHandlers(host) {
             return next;
         });
         // NEW — if removing from a battle slot, clear battle role & origin
-        if (/^b\d+$/.test(String(slotKey)) && host.setBattleRole) {
+        if (/^(?:ob|b)\d+$/.test(String(slotKey)) && host.setBattleRole) {
             host.setBattleRole(prev => {
                 const up = { ...(prev || {}) };
                 delete up[slotKey];
@@ -553,7 +666,7 @@ export function installPBActionHandlers(host) {
     };
     const shieldPopTop = (routeFn) => {
         host.setShieldPile((prev) => {
-            if (!prev.length) return prev;
+            if (!prev?.length) return prev;
             const [top, ...rest] = prev;
             routeFn?.(top);
             return rest;
@@ -561,7 +674,7 @@ export function installPBActionHandlers(host) {
     };
 
     // Keep Stack View (peek) in sync when removing by index or id
-    const removeFromStackInPeek = (stack, indexMaybe, idMaybe, routeFn) => {
+    const removeFromStackInPeek = (stack, indexMaybe, idMaybe, routeFn, owner = 'player') => {
         const spliceBy = (arr) => {
             // For DECK/GRAVE peeks the index can be stale; prefer removal by id
             if (!['deck', 'grave'].includes(stack) && Number.isFinite(indexMaybe) && indexMaybe >= 0 && indexMaybe < arr.length) {
@@ -594,10 +707,11 @@ export function installPBActionHandlers(host) {
             });
         };
 
-        if (stack === 'deck') host.setDeckPile(spliceBy);
-        if (stack === 'shield') host.setShieldPile(spliceBy);
-        if (stack === 'grave') host.setGravePile(spliceBy);
-        if (stack === 'banish') host.setBanishPile(spliceBy);
+        const isOpp = String(owner).toLowerCase() === 'opponent';
+        if (stack === 'deck') (isOpp ? host.setODeckPile : host.setDeckPile)(spliceBy);
+        if (stack === 'shield') (isOpp ? host.setOShieldPile : host.setShieldPile)(spliceBy);
+        if (stack === 'grave') (isOpp ? host.setOGravePile : host.setGravePile)(spliceBy);
+        if (stack === 'banish') (isOpp ? host.setOBanishPile : host.setBanishPile)(spliceBy);
     };
 
     // --- main handler moved from playtest-board.jsx ---
@@ -623,11 +737,14 @@ export function installPBActionHandlers(host) {
                 : Number.parseInt(domPeekIndexRaw, 10);
 
             const fromPeek = (pStack === 'deck' || pStack === 'shield' || pStack === 'grave' || pStack === 'banish');
+            const domOwner = hostEl?.getAttribute?.('data-owner');
+            const pOwner = String(data.owner || domOwner || 'player').toLowerCase();
+            const isOppPeek = pOwner === 'opponent';
 
             if (action === 'inspect') { tryZoom(target); return; }
 
             if (fromPeek && cardId) {
-                const route = (fn) => removeFromStackInPeek(pStack, pIdx, cardId, fn);
+                const route = (fn) => removeFromStackInPeek(pStack, pIdx, cardId, fn, pOwner);
 
                 if (action === 'add_to_hand') route(toHand);
                 else if (action === 'to_grave') route(toGraveTop);
@@ -635,12 +752,13 @@ export function installPBActionHandlers(host) {
                 else if (action === 'to_shield') route(shieldShuffleIn);
                 else if (action === 'to_deck_top') {
                     if (pStack === 'deck') {
-                        host.setDeckPile((prev) => {
+                        (isOppPeek ? host.setODeckPile : host.setDeckPile)((prev) => {
                             const next = [...prev];
                             const k = next.indexOf(cardId);
                             if (k === -1) return prev;
                             const [m] = next.splice(k, 1);
-                            next.unshift(m);
+                            // unshift for top / push for bottom (keep each block’s original op)
+                            next.unshift ? next.unshift(m) : next.push(m);
                             return next;
                         });
                         host.setPeekCard((prev) => {
@@ -650,7 +768,7 @@ export function installPBActionHandlers(host) {
                                 const k = ids.indexOf(cardId);
                                 if (k === -1) return prev;
                                 ids.splice(k, 1);
-                                if (prev.all) { ids.unshift(cardId); return { ...prev, ids }; }
+                                if (prev.all) { ids.unshift(cardId); return { ...prev, ids, owner: pOwner }; }
                                 return ids.length ? { ...prev, ids } : null;
                             }
                             return null;
@@ -661,12 +779,13 @@ export function installPBActionHandlers(host) {
                 }
                 else if (action === 'to_deck_bottom') {
                     if (pStack === 'deck') {
-                        host.setDeckPile((prev) => {
+                        (isOppPeek ? host.setODeckPile : host.setDeckPile)((prev) => {
                             const next = [...prev];
                             const k = next.indexOf(cardId);
                             if (k === -1) return prev;
                             const [m] = next.splice(k, 1);
-                            next.push(m);
+                            // unshift for top / push for bottom (keep each block’s original op)
+                            next.unshift ? next.unshift(m) : next.push(m);
                             return next;
                         });
                         host.setPeekCard((prev) => {
@@ -676,7 +795,7 @@ export function installPBActionHandlers(host) {
                                 const k = ids.indexOf(cardId);
                                 if (k === -1) return prev;
                                 ids.splice(k, 1);
-                                if (prev.all) { ids.push(cardId); return { ...prev, ids }; }
+                                if (prev.all) { ids.push(cardId); return { ...prev, ids, owner: pOwner }; }
                                 return ids.length ? { ...prev, ids } : null;
                             }
                             return null;
@@ -697,38 +816,53 @@ export function installPBActionHandlers(host) {
                 return;
             }
 
-            // Non-peek hand actions
-            if (action === 'to_grave') removeHandAt(idx, toGraveTop);
-            else if (action === 'to_banish') removeHandAt(idx, toBanishTop);
-            else if (action === 'to_shield') removeHandAt(idx, shieldShuffleIn);
-            else if (action === 'to_deck_top') removeHandAt(idx, toDeckTop);
-            else if (action === 'to_deck_bottom') removeHandAt(idx, toDeckBottom);
-            else if (action === 'flip' || action === 'flip_to_front' || action === 'flip_to_back') {
-                // Hand card flips — ONLY mutate the hand array; never touch Partner slot/side.
-                // Also defensively clear any stray boardSlots.partner entry.
-                host.setHand((prev) => {
-                    const idx = Number(ctx?.data?.index ?? -1);
-                    if (idx < 0 || idx >= prev.length) return prev;
+            // Determine owner (player vs opponent) for non-peek hand actions
+            const domOwner2 = hostEl?.getAttribute?.('data-owner');
+            const owner2 = String(data.owner || domOwner2 || 'player').toLowerCase();
+            const isOppHand = owner2 === 'opponent';
 
-                    const current = String(prev[idx] || '');
+            // Non-peek hand actions
+            if (action === 'to_grave') {
+                (isOppHand ? removeOHandAt : removeHandAt)(idx, isOppHand ? toOGraveTop : toGraveTop);
+            }
+            else if (action === 'to_banish') {
+                (isOppHand ? removeOHandAt : removeHandAt)(idx, isOppHand ? toOBanishTop : toBanishTop);
+            }
+            else if (action === 'to_shield') {
+                (isOppHand ? removeOHandAt : removeHandAt)(idx, isOppHand ? oShieldShuffleIn : shieldShuffleIn);
+            }
+            else if (action === 'to_deck_top') {
+                (isOppHand ? removeOHandAt : removeHandAt)(idx, isOppHand ? toODeckTop : toDeckTop);
+            }
+            else if (action === 'to_deck_bottom') {
+                (isOppHand ? removeOHandAt : removeHandAt)(idx, isOppHand ? toODeckBottom : toDeckBottom);
+            }
+            else if (action === 'flip' || action === 'flip_to_front' || action === 'flip_to_back') {
+                const flipIn = (arr) => {
+                    const i = Number(ctx?.data?.index ?? -1);
+                    if (i < 0 || i >= arr.length) return arr;
+
+                    const current = String(arr[i] || '');
                     const base = current.replace(/_(a|b)$/i, '');
                     const isBack = /_b$/i.test(current);
 
                     let nextId = current;
-                    if (action === 'flip') {
-                        nextId = `${base}_${isBack ? 'a' : 'b'}`;
-                    } else if (action === 'flip_to_front') {
-                        nextId = `${base}_a`;
-                    } else if (action === 'flip_to_back') {
-                        nextId = `${base}_b`;
-                    }
+                    if (action === 'flip') nextId = `${base}_${isBack ? 'a' : 'b'}`;
+                    else if (action === 'flip_to_front') nextId = `${base}_a`;
+                    else if (action === 'flip_to_back') nextId = `${base}_b`;
 
-                    const next = prev.slice();
-                    next[idx] = nextId;
+                    const next = arr.slice();
+                    next[i] = nextId;
                     return next;
-                });
+                };
 
-                // EXTRA GUARD: ensure no phantom 'partner' card was ever inserted into boardSlots.
+                if (isOppHand) {
+                    host.setOHand?.((prev = []) => flipIn(prev));
+                } else {
+                    host.setHand((prev = []) => flipIn(prev));
+                }
+
+                // EXTRA GUARD: ensure no phantom 'partner' card was ever inserted
                 host.setBoardSlots?.((prev) => {
                     if (!prev || !prev.partner) return prev;
                     const up = { ...prev };
@@ -741,28 +875,55 @@ export function installPBActionHandlers(host) {
             else if (action === 'move_to_unit') {
                 const mode = (typeof window !== 'undefined' && window.__PB_COST_MODULE_MODE) || 'on';
                 if (mode === 'on') {
-                    const available = getAvailableElements();
+                    const available = getAvailableElements(isOppHand ? 'opponent' : 'player');
                     const sideFromId = /_(b)$/i.test(String(cardId)) ? 'b' : 'a';
-                    const paid = await openPlayCostModal({ cardId, side: sideFromId, available });
+                    const paid = await openPlayCostModal({
+                        cardId,
+                        side: sideFromId,
+                        available,
+                        owner: isOppHand ? 'opponent' : 'player',
+                    });
                     if (!paid) return; // cancelled
+                    // Deduct the resources now (context-menu path)
+                    spendElements(paid, isOppHand ? 'opponent' : 'player');
                 }
-                host.setPendingPlace({ source: 'hand', index: idx, cardId, target: 'unit' });
+                host.setPendingPlace({
+                    source: isOppHand ? 'oHand' : 'hand',
+                    owner: isOppHand ? 'opponent' : 'player',
+                    index: idx,
+                    cardId,
+                    target: 'unit',
+                });
             }
             else if (action === 'move_to_support') {
                 const mode = (typeof window !== 'undefined' && window.__PB_COST_MODULE_MODE) || 'on';
                 if (mode === 'on') {
-                    const available = getAvailableElements();
+                    const available = getAvailableElements(isOppHand ? 'opponent' : 'player');
                     const sideFromId = /_(b)$/i.test(String(cardId)) ? 'b' : 'a';
-                    const paid = await openPlayCostModal({ cardId, side: sideFromId, available });
+                    const paid = await openPlayCostModal({
+                        cardId,
+                        side: sideFromId,
+                        available,
+                        owner: isOppHand ? 'opponent' : 'player',
+                    });
                     if (!paid) return; // cancelled
+                    // Deduct the resources now (context-menu path)
+                    spendElements(paid, isOppHand ? 'opponent' : 'player');
                 }
-                host.setPendingPlace({ source: 'hand', index: idx, cardId, target: 'support' });
+                host.setPendingPlace({
+                    source: isOppHand ? 'oHand' : 'hand',
+                    owner: isOppHand ? 'opponent' : 'player',
+                    index: idx,
+                    cardId,
+                    target: 'support',
+                });
             }
             return;
         }
 
         if (area === 'slot-card') {
             const slotKey = data.slotKey;
+            const isOppSlot = /^o/.test(String(slotKey || ''));
 
             if (slotKey === 'partner') {
                 if (action === 'inspect') tryZoom(target);
@@ -849,11 +1010,11 @@ export function installPBActionHandlers(host) {
             }
 
             if (action === 'inspect') tryZoom(target);
-            else if (action === 'return_to_hand') removeSlotCard(slotKey, toHand);
-            else if (action === 'to_grave') removeSlotCard(slotKey, toGraveTop);
-            else if (action === 'to_banish') removeSlotCard(slotKey, toBanishTop);
-            else if (action === 'to_deck_top') removeSlotCard(slotKey, toDeckTop);
-            else if (action === 'to_deck_bottom') removeSlotCard(slotKey, toDeckBottom);
+            else if (action === 'return_to_hand') removeSlotCard(slotKey, isOppSlot ? toHandOpp : toHand);
+            else if (action === 'to_grave') removeSlotCard(slotKey, isOppSlot ? toOGraveTop : toGraveTop);
+            else if (action === 'to_banish') removeSlotCard(slotKey, isOppSlot ? toOBanishTop : toBanishTop);
+            else if (action === 'to_deck_top') removeSlotCard(slotKey, isOppSlot ? toODeckTop : toDeckTop);
+            else if (action === 'to_deck_bottom') removeSlotCard(slotKey, isOppSlot ? toODeckBottom : toDeckBottom);
             else if (action === 'flip') {
                 host.setSlotSides((prev) => ({ ...prev, [slotKey]: (prev?.[slotKey] === 'b' ? 'a' : 'b') }));
             } else if (action === 'exhaust_toggle') {
@@ -920,12 +1081,12 @@ export function installPBActionHandlers(host) {
                 }
                 host.setRemoveLabelPrompt?.({ slotKey, labels });
             } else if (action === 'declare_attacker') {
-                const fromKey = data?.slotKey;          // e.g., "u3"
-                const m = /^u(\d+)$/.exec(fromKey || '');
-                if (!m) return;                         // only allowed from unit slots
+                const fromKey = data?.slotKey;          // e.g., "u3" or "ou3"
+                const m = /^(?:ou|u)(\d+)$/.exec(fromKey || '');
+                if (!m) return;
 
                 const colIndex = Number(m[1]);          // 1..7
-                const toKey = `b${colIndex}`;           // battle slot in same column
+                const toKey = fromKey.startsWith('ou') ? `ob${colIndex}` : `b${colIndex}`;
 
                 // Remember the origin for "Remove from Battle"
                 host.setBattleOrigin(prev => ({ ...prev, [toKey]: fromKey }));
@@ -1012,12 +1173,12 @@ export function installPBActionHandlers(host) {
                     host.setBattleRole(prev => ({ ...(prev || {}), [toKey]: 'attacker' }));
                 }
             } else if (action === 'declare_blocker') {
-                const fromKey = data?.slotKey;          // e.g. "u3"
-                const m = /^u(\d+)$/.exec(fromKey || '');
-                if (!m) return;                         // only allowed from unit slots
+                const fromKey = data?.slotKey;          // e.g. "u3" or "ou3"
+                const m = /^(?:ou|u)(\d+)$/.exec(fromKey || '');
+                if (!m) return;
 
                 const colIndex = Number(m[1]);          // 1..7
-                const toKey = `b${colIndex}`;           // battle slot in same column
+                const toKey = fromKey.startsWith('ou') ? `ob${colIndex}` : `b${colIndex}`;
 
                 // Move unit -> battle, keep side + counters, enter exhausted
                 host.setBoardSlots((prev) => {
@@ -1079,8 +1240,9 @@ export function installPBActionHandlers(host) {
                 const toKey =
                     originMap[fromKey] ||
                     (() => {
-                        const m = /^b(\d+)$/.exec(fromKey);
-                        return m ? `u${m[1]}` : null;
+                        const m = /^(?:ob|b)(\d+)$/.exec(fromKey || '');
+                        if (!m) return null;
+                        return fromKey.startsWith('ob') ? `ou${m[1]}` : `u${m[1]}`;
                     })();
 
                 if (!toKey) return;
@@ -1096,7 +1258,11 @@ export function installPBActionHandlers(host) {
                     delete next[fromKey];
 
                     // If something was sitting in the original slot, bump it to hand
-                    if (bumped) host.setHand(h => [...h, bumped]);
+                    if (bumped) {
+                        // If returning to an opponent unit slot (ouX), bump to opponent hand; otherwise to player hand.
+                        const toOppHand = String(toKey).startsWith('ou');
+                        (toOppHand ? toHandOpp : toHand)(bumped);
+                    }
                     return next;
                 });
 
@@ -1177,55 +1343,85 @@ export function installPBActionHandlers(host) {
 
         if (area === 'stack-slot') {
             const t = (data.stack || '').toLowerCase();
+            const owner = String(data.owner || '').toLowerCase();
+            const isOpp = owner === 'opponent';
+
+            const deckRef = isOpp ? host.oDeckRef : host.deckRef;
+            const shieldRef = isOpp ? host.oShieldRef : host.shieldRef;
+            const banishRef = isOpp ? host.oBanishRef : host.banishRef;
+            const graveRef = isOpp ? host.oGraveRef : host.graveRef;
+
+            const setDeckPile = isOpp ? host.setODeckPile : host.setDeckPile;
+            const setShieldPile = isOpp ? host.setOShieldPile : host.setShieldPile;
+            const setBanishPile = isOpp ? host.setOBanishPile : host.setBanishPile;
+            const setGravePile = isOpp ? host.setOGravePile : host.setGravePile;
+
+            const toHandX = isOpp ? toHandOpp : toHand;
+            const toGraveTopX = isOpp ? toOGraveTop : toGraveTop;
+            const toBanishTopX = isOpp ? toOBanishTop : toBanishTop;
+            const toDeckTopX = isOpp ? toODeckTop : toDeckTop;
+            const toDeckBottomX = isOpp ? toODeckBottom : toDeckBottom;
+
+            const deckPopTopX = (routeFn) => (isOpp ? oDeckPopTop(routeFn) : deckPopTop(routeFn));
+            const shieldPopTopX = (routeFn) => (isOpp ? oShieldPopTop(routeFn) : shieldPopTop(routeFn));
+            const banishPopTopX = (routeFn) => (isOpp ? oBanishPopTop(routeFn) : banishPopTop(routeFn));
+            const gravePopTopX = (routeFn) => (isOpp ? oGravePopTop(routeFn) : gravePopTop(routeFn));
             if (t === 'deck') {
                 if (action === 'deck_open_view') {
-                    const ids = (host.deckRef.current || []).slice(0);
-                    host.setPeekCard({ ids, from: 'deck', all: true });
+                    const ids = (deckRef.current || []).slice(0);
+                    host.setPeekCard({ ids, from: 'deck', all: true, owner: isOpp ? 'opponent' : 'player' });
                 } else if (action === 'deck_draw1') {
-                    deckPopTop(toHand);
+                    deckPopTopX(toHandX);
                 } else if (action === 'deck_draw_x') {
-                    const max = host.deckRef.current?.length || 0;
+                    const max = deckRef.current?.length || 0;
                     if (!max) return;
                     const raw = window.prompt('Draw how many cards to hand?', Math.min(3, max));
                     if (raw == null) return;
                     const n = Math.max(1, Math.min(max, Number.parseInt(raw, 10) || 0));
-                    const ids = host.deckRef.current.slice(0, n);
-                    host.setDeckPile((prev) => prev.slice(ids.length));
-                    ids.forEach(toHand);
+                    const ids = deckRef.current.slice(0, n);
+                    setDeckPile((prev) => prev.slice(ids.length));
+                    ids.forEach(toHandX);
                 } else if (action === 'deck_reveal_top') {
-                    const top = host.deckRef.current?.[0] || null;
-                    if (top) host.setPeekCard({ id: top, from: 'deck' });
+                    const top = deckRef.current?.[0] || null;
+                    if (top) host.setPeekCard({ id: top, from: 'deck', owner: isOpp ? 'opponent' : 'player' });
                 } else if (action === 'deck_reveal_x') {
-                    const max = host.deckRef.current?.length || 0;
+                    const max = deckRef.current?.length || 0;
                     if (!max) return;
                     const raw = window.prompt('Reveal how many cards from the top of the Deck?', Math.min(3, max));
                     if (raw == null) return;
                     const n = Math.max(1, Math.min(max, Number.parseInt(raw, 10) || 0));
-                    const ids = host.deckRef.current.slice(0, n);
-                    if (ids.length) host.setPeekCard({ ids, from: 'deck' });
+                    const ids = deckRef.current.slice(0, n);
+                    if (ids.length) host.setPeekCard({ ids, from: 'deck', owner: isOpp ? 'opponent' : 'player' });
                 } else if (action === 'deck_foresee_x') {
-                    const max = host.deckRef.current?.length || 0;
+                    const max = deckRef.current?.length || 0;
                     if (!max) return;
                     const raw = window.prompt('Foresee how many cards from the top of the Deck?', Math.min(3, max));
                     if (raw == null) return;
                     const n = Math.max(1, Math.min(max, Number.parseInt(raw, 10) || 0));
-                    const ids = host.deckRef.current.slice(0, n);
-                    if (ids.length) host.setForesee({ ids, mid: ids.slice(), top: [], bottom: [] });
+                    const ids = deckRef.current.slice(0, n);
+                    if (!ids.length) return;
+
+                    // Prefer opponent-specific setter if your other files defined it; otherwise use a unified setter with owner.
+                    const payload = { ids, mid: ids.slice(), top: [], bottom: [], owner: isOpp ? 'opponent' : 'player' };
+                    if (isOpp && typeof host.setOForesee === 'function') {
+                        host.setOForesee(payload);
+                    } else {
+                        host.setForesee(payload);
+                    }
                 } else if (action === 'deck_send_x_to_grave') {
-                    const max = host.deckRef.current?.length || 0;
+                    const max = deckRef.current?.length || 0;
                     if (!max) return;
                     const raw = window.prompt('Send how many cards from the top of the Deck to Grave?', Math.min(2, max));
                     if (raw == null) return;
                     const n = Math.max(1, Math.min(max, Number.parseInt(raw, 10) || 0));
-                    const ids = host.deckRef.current.slice(0, n);
-                    host.setDeckPile((prev) => prev.slice(ids.length));
-                    ids.forEach(toGraveTop);
-                    if (n >= 2) host.setPeekCard({ ids: ids.slice().reverse(), from: 'grave' });
+                    const ids = deckRef.current.slice(0, n);
+                    setDeckPile((prev) => prev.slice(ids.length));
+                    ids.forEach(toGraveTopX);
+                    if (n >= 2) host.setPeekCard({ ids: ids.slice().reverse(), from: 'grave', owner: isOpp ? 'opponent' : 'player' });
                 } else if (action === 'deck_fetch_cards') {
-                    // Ask the board to open the Fetch Cards modal
-                    host.setFetchPrompt?.({ from: 'deck' });
+                    host.setFetchPrompt?.({ from: 'deck', owner: isOpp ? 'opponent' : 'player' });
                 } else if (action === 'deck_shuffle') {
-                    host.setDeckPile((prev) => {
+                    setDeckPile((prev) => {
                         if (prev.length < 2) return prev;
                         const next = [...prev];
                         for (let i = next.length - 1; i > 0; i--) {
@@ -1239,47 +1435,47 @@ export function installPBActionHandlers(host) {
             }
             if (t === 'shield') {
                 if (action === 'shield_open_view') {
-                    const ids = (host.shieldRef.current || []).slice(0);
-                    host.setPeekCard({ ids, from: 'shield', all: true });
+                    const ids = (shieldRef.current || []).slice(0);
+                    host.setPeekCard({ ids, from: 'shield', all: true, owner: isOpp ? 'opponent' : 'player' });
                 } else if (action === 'shield_reveal_top') {
-                    const top = host.shieldRef.current?.[0] || null;
-                    if (top) host.setPeekCard({ id: top, from: 'shield' });
+                    const top = shieldRef.current?.[0] || null;
+                    if (top) host.setPeekCard({ id: top, from: 'shield', owner: isOpp ? 'opponent' : 'player' });
                 } else if (action === 'shield_reveal_x') {
-                    const max = host.shieldRef.current?.length || 0;
+                    const max = shieldRef.current?.length || 0;
                     if (!max) return;
                     const raw = window.prompt('Reveal how many cards from the top of the Shield?', Math.min(2, max));
                     if (raw == null) return;
                     const n = Math.max(1, Math.min(max, Number.parseInt(raw, 10) || 0));
-                    const ids = host.shieldRef.current.slice(0, n);
-                    if (ids.length) host.setPeekCard({ ids, from: 'shield' });
+                    const ids = shieldRef.current.slice(0, n);
+                    if (ids.length) host.setPeekCard({ ids, from: 'shield', owner: isOpp ? 'opponent' : 'player' });
                 } else if (action === 'shield_break') {
-                    shieldPopTop((top) => { if (top) toGraveTop(top); });
+                    shieldPopTopX((top) => { if (top) toGraveTopX(top); });
                 } else if (action === 'shield_break_x') {
-                    const max = host.shieldRef.current?.length || 0;
+                    const max = shieldRef.current?.length || 0;
                     if (!max) return;
                     const raw = window.prompt('Break how many shields from the top?', Math.min(2, max));
                     if (raw == null) return;
                     const n = Math.max(1, Math.min(max, Number.parseInt(raw, 10) || 0));
-                    const ids = host.shieldRef.current.slice(0, n);
-                    host.setShieldPile((prev) => prev.slice(ids.length));
-                    ids.forEach(toGraveTop);
+                    const ids = shieldRef.current.slice(0, n);
+                    setShieldPile((prev) => prev.slice(ids.length));
+                    ids.forEach(toGraveTopX);
                 } else if (action === 'shield_reinforce_x') {
                     // Prompt for X
                     const raw = window.prompt('Reinforce — how many tokens to add?', '1');
                     if (raw == null) return;
                     const x = Math.max(1, Math.floor(Number(raw) || 0));
 
-                    const shieldCount = host.shieldRef.current?.length || 0;
+                    const shieldCount = shieldRef.current?.length || 0;
 
                     // If shield has 7+, draw top of deck to hand
                     if (shieldCount >= 7) {
-                        deckPopTop(toHand);
+                        deckPopTopX(toHandX);
                         return;
                     }
 
                     // Otherwise add X copies of token0030_a and shuffle the shield
                     const tokenId = 'token0030_a';
-                    const current = host.shieldRef.current || [];
+                    const current = shieldRef.current || [];
                     const next = [...current];
                     for (let i = 0; i < x; i++) next.push(tokenId);
 
@@ -1289,7 +1485,7 @@ export function installPBActionHandlers(host) {
                         [next[i], next[j]] = [next[j], next[i]];
                     }
 
-                    host.setShieldPile(next);
+                    setShieldPile(next);
 
                     // Keep an open Shield peek (view-all) in sync
                     host.setPeekCard((prev) =>
@@ -1298,56 +1494,91 @@ export function installPBActionHandlers(host) {
                             : prev
                     );
                 } else if (action === 'shield_shuffle') {
-                    const current = host.shieldRef.current || [];
+                    const current = shieldRef.current || [];
                     if (current.length < 2) return;
                     const next = [...current];
                     for (let i = next.length - 1; i > 0; i--) {
                         const j = Math.floor(Math.random() * (i + 1));
                         [next[i], next[j]] = [next[j], next[i]];
                     }
-                    host.setShieldPile(next);
+                    setShieldPile(next);
                     host.setPeekCard((prev) => (prev && prev.all && prev.from === 'shield') ? { ...prev, ids: next.slice(0) } : prev);
                 }
                 return;
             }
             if (t === 'grave') {
                 if (action === 'grave_open_view') {
-                    const ids = (host.graveRef.current || []).slice(0);
-                    host.setPeekCard({ ids, from: 'grave', all: true });
-                } else if (action === 'grave_take_top_to_hand') gravePopTop(toHand);
-                else if (action === 'grave_to_deck_top') gravePopTop(toDeckTop);
-                else if (action === 'grave_to_deck_bottom') gravePopTop(toDeckBottom);
+                    const ids = (graveRef.current || []).slice(0);
+                    host.setPeekCard({ ids, from: 'grave', all: true, owner: isOpp ? 'opponent' : 'player' });
+                } else if (action === 'grave_take_top_to_hand') gravePopTopX(toHandX);
+                else if (action === 'grave_to_deck_top') gravePopTopX(toDeckTopX);
+                else if (action === 'grave_to_deck_bottom') gravePopTopX(toDeckBottomX);
                 return;
             }
             if (t === 'banish') {
                 if (action === 'banish_open_view') {
-                    const ids = (host.banishRef.current || []).slice(0);
-                    host.setPeekCard({ ids, from: 'banish', all: true });
-                } else if (action === 'banish_take_top_to_hand') banishPopTop(toHand);
-                else if (action === 'banish_to_deck_top') banishPopTop(toDeckTop);
-                else if (action === 'banish_to_deck_bottom') banishPopTop(toDeckBottom);
+                    const ids = (banishRef.current || []).slice(0);
+                    host.setPeekCard({ ids, from: 'banish', all: true, owner: isOpp ? 'opponent' : 'player' });
+                } else if (action === 'banish_take_top_to_hand') banishPopTopX(toHandX);
+                else if (action === 'banish_to_deck_top') banishPopTopX(toDeckTopX);
+                else if (action === 'banish_to_deck_bottom') banishPopTopX(toDeckBottomX);
                 return;
             }
             return;
         }
 
         if (area === 'viewer-card') {
+            const owner = String(ctx?.data?.owner || target?.closest?.('.pb-modal')?.getAttribute('data-owner') || 'player').toLowerCase();
+            const isOpp = owner === 'opponent';
+
+            const toHandX = isOpp ? toHandOpp : toHand;
+            const toGraveTopX = isOpp ? toOGraveTop : toGraveTop;
+            const toDeckTopX = isOpp ? toODeckTop : toDeckTop;
+            const toDeckBottomX = isOpp ? toODeckBottom : toDeckBottom;
+
             if (action === 'inspect') {
                 tryZoom(target);
-            } else if (action === 'add_to_hand') {
-                toHand(data.cardId);
-            } else if (action === 'add_to_unit') {
-                host.setPendingPlace({ source: 'viewer', cardId: data.cardId, target: 'unit' });
+                return;
+            }
+
+            // Existing (owner-aware) viewer actions
+            if (action === 'add_to_hand') { toHandX(data.cardId); return; }
+            if (action === 'add_to_unit') {
+                host.setPendingPlace({ source: 'viewer', cardId: data.cardId, target: 'unit', owner });
                 const modal = target?.closest?.('.pb-modal');
                 if (modal) { modal.classList.add('is-hidden'); window.__PB_SUSPENDED_MODAL = modal; }
-            } else if (action === 'add_to_support') {
-                host.setPendingPlace({ source: 'viewer', cardId: data.cardId, target: 'support' });
+                return;
+            }
+            if (action === 'add_to_support') {
+                host.setPendingPlace({ source: 'viewer', cardId: data.cardId, target: 'support', owner });
                 const modal = target?.closest?.('.pb-modal');
                 if (modal) { modal.classList.add('is-hidden'); window.__PB_SUSPENDED_MODAL = modal; }
-            } else if (action === 'to_grave') { toGraveTop(data.cardId); }
-            else if (action === 'to_shield') { shieldShuffleIn(data.cardId); }
-            else if (action === 'to_deck_top') { toDeckTop(data.cardId); }
-            else if (action === 'to_deck_bottom') { toDeckBottom(data.cardId); }
+                return;
+            }
+            if (action === 'to_grave') { toGraveTopX(data.cardId); return; }
+            if (action === 'to_shield') { (isOpp ? oShieldShuffleIn : shieldShuffleIn)(data.cardId); return; }
+            if (action === 'to_deck_top') { toDeckTopX(data.cardId); return; }
+            if (action === 'to_deck_bottom') { toDeckBottomX(data.cardId); return; }
+
+            // NEW — explicit Opponent section actions (force opponent side regardless of current viewer owner)
+            if (action === 'o_add_to_hand') { toHandOpp(data.cardId); return; }
+            if (action === 'o_to_grave') { toOGraveTop(data.cardId); return; }
+            if (action === 'o_to_shield') { oShieldShuffleIn(data.cardId); return; }
+            if (action === 'o_to_deck_top') { toODeckTop(data.cardId); return; }
+            if (action === 'o_to_deck_bottom') { toODeckBottom(data.cardId); return; }
+            if (action === 'o_add_to_unit') {
+                host.setPendingPlace({ source: 'viewer', cardId: data.cardId, target: 'unit', owner: 'opponent' });
+                const modal = target?.closest?.('.pb-modal');
+                if (modal) { modal.classList.add('is-hidden'); window.__PB_SUSPENDED_MODAL = modal; }
+                return;
+            }
+            if (action === 'o_add_to_support') {
+                host.setPendingPlace({ source: 'viewer', cardId: data.cardId, target: 'support', owner: 'opponent' });
+                const modal = target?.closest?.('.pb-modal');
+                if (modal) { modal.classList.add('is-hidden'); window.__PB_SUSPENDED_MODAL = modal; }
+                return;
+            }
+
             return;
         }
 

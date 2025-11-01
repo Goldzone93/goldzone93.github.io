@@ -57,44 +57,62 @@ export function useHoverPreview({ getMeta, renderImage }) {
     cardText: '',
   });
 
-  const onRowEnter = useCallback((card, e) => {
-    if (!isHoverCapable || !card) return;
-    const meta = (getMeta?.(card)) || {};
-    const pos = computeHoverPos(e.clientX, e.clientY);
-    setHover({ show: true, x: pos.left, y: pos.top, ...meta });
-  }, [isHoverCapable, getMeta, computeHoverPos]);
+    // Hide any active hover preview whenever the Card Zoom modal is open.
+    useEffect(() => {
+        const body = document?.body;
+        if (!body || typeof MutationObserver === 'undefined') return;
 
-  const onRowMove = useCallback((e) => {
-    const pos = computeHoverPos(e.clientX, e.clientY);
-    setHover(prev => prev.show ? { ...prev, x: pos.left, y: pos.top } : prev);
-  }, [computeHoverPos]);
+        const obs = new MutationObserver(() => {
+            if (body.classList.contains('zoom-open')) {
+                setHover(prev => (prev.show ? { ...prev, show: false } : prev));
+            }
+        });
+
+        obs.observe(body, { attributes: true, attributeFilter: ['class'] });
+        return () => obs.disconnect();
+    }, []);
+
+    const onRowEnter = useCallback((card, e) => {
+        const zooming = !!document?.body?.classList?.contains('zoom-open');
+        if (!isHoverCapable || !card || zooming) return;
+        const meta = (getMeta?.(card)) || {};
+        const pos = computeHoverPos(e.clientX, e.clientY);
+        setHover({ show: true, x: pos.left, y: pos.top, ...meta });
+    }, [isHoverCapable, getMeta, computeHoverPos]);
+
+    const onRowMove = useCallback((e) => {
+        if (document?.body?.classList?.contains('zoom-open')) return;
+        const pos = computeHoverPos(e.clientX, e.clientY);
+        setHover(prev => prev.show ? { ...prev, x: pos.left, y: pos.top } : prev);
+    }, [computeHoverPos]);
 
   const onRowLeave = useCallback(() => {
     setHover(prev => prev.show ? { ...prev, show: false } : prev);
   }, []);
 
-  const overlay = useMemo(() => {
-    if (!isHoverCapable || !hover.show) return null;
-    return (
-      <div
-        ref={hoverRef}
-        className="hp-hover-preview deck-preview-float is-visible"
-        style={{ left: hover.x, top: hover.y }}
-      >
-        {renderImage?.(hover.id, hover.name)}
-        <div className="deck-preview-meta">
-          <div className="name">{hover.name}</div>
-          <div className="line">
-            {hover.rarity && <span className="badge">{hover.rarity}</span>}
-            {hover.typeTag && <span className="badge">{hover.typeTag}</span>}
-            {Number.isFinite(hover.cc) && <span className="badge">CC {hover.cc}</span>}
-            {hover.elements && <span className="badge">{hover.elements}</span>}
-          </div>
-          {hover.cardText && <div className="text">{hover.cardText}</div>}
-        </div>
-      </div>
-    );
-  }, [isHoverCapable, hover, renderImage]);
+    const overlay = useMemo(() => {
+        const zooming = typeof document !== 'undefined' && document.body?.classList?.contains('zoom-open');
+        if (!isHoverCapable || !hover.show || zooming) return null;
+        return (
+            <div
+                ref={hoverRef}
+                className="hp-hover-preview deck-preview-float is-visible"
+                style={{ left: hover.x, top: hover.y }}
+            >
+                {renderImage?.(hover.id, hover.name)}
+                <div className="deck-preview-meta">
+                    <div className="name">{hover.name}</div>
+                    <div className="line">
+                        {hover.rarity && <span className="badge">{hover.rarity}</span>}
+                        {hover.typeTag && <span className="badge">{hover.typeTag}</span>}
+                        {Number.isFinite(hover.cc) && <span className="badge">CC {hover.cc}</span>}
+                        {hover.elements && <span className="badge">{hover.elements}</span>}
+                    </div>
+                    {hover.cardText && <div className="text">{hover.cardText}</div>}
+                </div>
+            </div>
+        );
+    }, [isHoverCapable, hover, renderImage]);
 
   return { isHoverCapable, onRowEnter, onRowMove, onRowLeave, overlay };
 }

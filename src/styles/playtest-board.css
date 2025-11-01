@@ -2,11 +2,20 @@
 .pb-root {
     /* side width also available here for fixed dock math */
     --side-w: clamp(200px, 18vw, 300px);
+    /* shared hand dock height so center can reserve space correctly */
+    --hand-h: clamp(140px, 24vh, 320px);
     display: grid;
     grid-template-rows: auto auto 1fr; /* header, subheader, body */
     height: 100%;
     background: var(--bg);
     color: var(--ink);
+}
+
+/* === Hand dock sizing === */
+:root {
+    --pb-hand-dock-h: 180px; /* current hand dock height */
+    --pb-hand-dock-gap: 12px; /* small visual gap above the hand */
+    --hand-collapsed-h: 36px; /* collapsed height for hand dock (adjust as you like) */
 }
 
 /* Header (match ps-header from pack-simulator.css) */
@@ -121,6 +130,20 @@
     gap: var(--gap);
     /* Keep the whole board centered within the middle column */
     justify-content: center;
+    overflow: visible; /* allow card corners to extend without clipping */
+}
+
+/* Ensure a visible gap when scrolled to bottom so content isn't under the hand */
+.pb-center .pb-board {
+    padding-bottom: calc(var(--pb-hand-dock-h, 180px) + var(--pb-hand-dock-gap, 12px));
+}
+/* Do NOT reserve hand gap under the opponent half */
+.pb-opponent-wrap .pb-board {
+    padding-bottom: 0 !important;
+}
+/* When the opponent grid is rotated 180°, rotate images back so they are upright */
+.pb-opponent .pb-card-img {
+    transform: rotate(180deg);
 }
 
 /* Leave extra left/right breathing room while cards are rotated (no resizing) */
@@ -216,15 +239,16 @@
     min-width: 0;
     min-height: 0;
     display: grid;
-    align-content: start;
-    justify-content: center; /* board stays centered within middle column */
+    grid-template-rows: 1fr auto; /* board fills; hand dock is last row */
+    align-content: stretch; /* let the 1fr row fill the height */
+    justify-content: center; /* keep board centered */
     container-type: inline-size; /* enables container query units (cqw) */
-    overflow: auto; /* if board hits its min size, scroll rather than overlap */
-    padding-bottom: calc(var(--hand-h, 180px) + 24px); /* keep content clear of dock */
-    box-sizing: content-box; /* padding increases outer width so edges stay visible */
-    overflow: visible; /* rotated corners can extend past cells */
+    overflow: auto; /* scroll here when needed */
+    scrollbar-gutter: stable both-edges; /* keeps width stable with/without scrollbar */
+    padding: 0 12px 12px; /* small side/bottom gutter; no big reserve needed */
+    box-sizing: border-box;
+    height: 100%; /* ensure the grid fills the available body height */
 }
-
 /* Empty side panels (placeholders for future content) */
 .pb-side {
     background: var(--panel);
@@ -352,7 +376,7 @@
 }
 
 /* Shared hover (exclude the zoom button so styles.css wins for it) */
-.pb-root button:not(.zoom-btn):hover,
+.pb-root button:not(.zoom-btn):not(.pb-fold-btn):hover,
 .pb-root .tips-btn:hover,
 .pb-root .pb-btn:hover,
 .pb-root .tb-pill:hover {
@@ -458,6 +482,34 @@
 
 .tt-override input {
   transform: translateY(1px);
+}
+
+/* Highlighted "Your Turn / Opponent Turn" pill shown when Opponent Board is ON */
+.tt-turn-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  line-height: 1;
+  font-weight: 600;
+  font-size: 12px;
+  background: #0b1220;
+  border: 1px solid #263143;
+}
+
+.tt-turn-indicator.is-yours {
+  background: #22c55e;
+  border-color: #22c55e;
+  color: #fff;
+  box-shadow: 0 0 0 1px rgba(34,197,94,0.35) inset;
+}
+
+.tt-turn-indicator.is-opponent {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: #fff;
+  box-shadow: 0 0 0 1px rgba(239,68,68,0.35) inset;
 }
 
 /* Make it obvious when +/- are locked */
@@ -1128,6 +1180,16 @@
     user-select: none;
     z-index: 2; /* above the card image (z-index:1) and area label (z-index:0) */
 }
+/* Keep pile counts upright and visually bottom-right on the rotated opponent grid */
+.pb-board.pb-opponent .pb-pile-count {
+    transform: rotate(180deg);
+    transform-origin: center;
+    /* Pre-rotate anchor so after 180° it lands at bottom-right */
+    left: 6px;
+    top: 6px;
+    right: auto;
+    bottom: auto;
+}
 
 /* ----- Hand row cards ----- */
 .pb-hand-cards {
@@ -1293,25 +1355,33 @@
 }
 
 /* ----- Bottom-docked Hand (fixed, between panels) ----- */
-.pb-hand-dock {
-    /* size */
-    --hand-h: clamp(140px, 24vh, 320px);
+/* ----- Bottom-docked Hand (sticky inside center column) ----- */
+.pb-center .pb-hand-dock {
+    /* size (uses global --hand-h from .pb-root) */
     --gutter: 12px;
-    position: fixed;
-    z-index: 0; /* below modals (5000), above board */
-    /* leave a small gap for the center column’s horizontal scrollbar */
-    bottom: calc(var(--gutter) + var(--scrollbar-h, 16px));
-    left: calc(var(--gutter) + var(--side-w) + var(--gutter));
-    right: calc(var(--gutter) + var(--side-w) + var(--gutter));
-    height: var(--hand-h); /* FIXED height (single row) */
-
+    position: sticky;
+    bottom: 0; /* stick to the bottom of the .pb-center scroller */
+    height: var(--hand-collapsed-h, 36px);
+    z-index: 0; /* above board content inside the center */
+    /* same visuals as before */
     background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.03));
     border: 1px solid rgba(255,255,255,0.08);
     border-radius: 10px;
     display: flex;
     align-items: stretch;
-    overflow: hidden; /* content never increases dock height */
+    overflow: hidden;
     backdrop-filter: blur(2px);
+}
+
+/* optional: if any global .pb-hand-dock positioning remains elsewhere, neutralize it */
+.pb-hand-dock {
+    left: auto;
+    right: auto;
+}
+
+/* Keep the hand dock height in sync with the variable */
+.pb-hand-dock {
+    height: var(--pb-hand-dock-h, 180px);
 }
 
 /* Hand contents: horizontal rail with scroll if overflow */
@@ -1349,6 +1419,100 @@
   }
 }
 
+/* Hand dock: enable a small toggle + collapsed mode */
+.pb-hand-dock {
+  position: relative;           /* for toggle positioning */
+  transition: height 160ms ease;
+}
+
+/* Toggle only appears when opponent board is ON */
+.pb-hand-dock.has-opponent .pb-hand-toggle {
+  display: block;
+}
+
+/* Toggle anchor (top-right inside the dock) */
+.pb-hand-toggle {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  z-index: 1;
+}
+
+.pb-fold-btn {
+    font-size: 12px;
+    line-height: 1;
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid #263143; /* match other buttons */
+    background: #0b1220; /* opaque, no transparency */
+    color: var(--ink);
+    cursor: pointer;
+}
+
+/* Keep the hand toggle opaque on hover (override global translucent hover) */
+.pb-root .pb-fold-btn:hover,
+.pb-hand-dock .pb-fold-btn:hover {
+    background: #121a2c; /* opaque, slightly brighter */
+    border-color: #2f3b56;
+}
+
+/* Collapsed state: keep a slim bar with the toggle visible */
+.pb-hand-dock.is-collapsed {
+    height: var(--hand-collapsed-h, 36px);
+}
+
+/* Ensure the toggle state always wins over earlier/later height rules */
+.pb-center .pb-hand-dock.is-collapsed {
+    height: var(--hand-collapsed-h, 36px) !important;
+}
+
+.pb-center .pb-hand-dock:not(.is-collapsed) {
+    height: var(--hand-h) !important;
+}
+
+/* Hide the cards rail when collapsed */
+.pb-hand-dock.is-collapsed .pb-hand-cards {
+  display: none;
+}
+
+/* Opponent Hand: fixed rail under the Opponent label (styled like the user's hand) */
+.pb-opponent-hand {
+    /* pb-hand supplies: gradient background, border, radius, ::after label */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 6px 0 36px 0;
+    height: var(--hand-h); /* FIX: lock to same height as user dock */
+    overflow: hidden; /* keep contents neatly clipped to rounded corners */
+    pointer-events: auto;
+}
+
+.pb-opponent-hand .pb-hand-cards {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 22px 12px 22px;
+  width: 100%;
+  height: 100%;
+  overflow-x: auto;              /* horizontal scroll */
+  overflow-y: hidden;            /* no vertical growth */
+  flex-wrap: nowrap;             /* single row */
+  scrollbar-gutter: stable;      /* keep width stable with/without scrollbar */
+  position: relative;
+  z-index: 1;                    /* above ::after area label */
+}
+
+/* Match user's hand card size */
+.pb-opponent-hand .pb-card-img {
+  height: calc(var(--hand-h) - 44px); /* identical formula as the user dock */
+  width: auto;
+  aspect-ratio: 63 / 88;
+  object-fit: contain;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+  background: var(--card-bg, #111);
+}
+
 /* Draggable wrappers in the Hand dock */
 .pb-hand-item {
     position: relative; /* needed so .zoom-btn pins to the corner */
@@ -1379,15 +1543,28 @@
     pointer-events: none !important;
 }
 
-/* Visual cue while placement mode is active — target-specific */
-.pb-placing-unit .pb-slot.unit,
-.pb-placing-support .pb-slot.support {
+/* Visual cue while placement mode is active — OWNER SCOPED */
+/* Player board only */
+.pb-placing-owner-player.pb-placing-unit .pb-board:not(.pb-opponent) .pb-slot.unit,
+.pb-placing-owner-player.pb-placing-support .pb-board:not(.pb-opponent) .pb-slot.support {
   cursor: pointer;
   outline: 2px dashed rgba(92,134,255,0.85);
   outline-offset: -2px;
 }
-.pb-placing-unit .pb-slot.unit:hover,
-.pb-placing-support .pb-slot.support:hover {
+.pb-placing-owner-player.pb-placing-unit .pb-board:not(.pb-opponent) .pb-slot.unit:hover,
+.pb-placing-owner-player.pb-placing-support .pb-board:not(.pb-opponent) .pb-slot.support:hover {
+  box-shadow: 0 0 0 2px rgba(92,134,255,0.85) inset;
+}
+
+/* Opponent board only */
+.pb-placing-owner-opponent.pb-placing-unit .pb-opponent-wrap .pb-slot.unit,
+.pb-placing-owner-opponent.pb-placing-support .pb-opponent-wrap .pb-slot.support {
+  cursor: pointer;
+  outline: 2px dashed rgba(92,134,255,0.85);
+  outline-offset: -2px;
+}
+.pb-placing-owner-opponent.pb-placing-unit .pb-opponent-wrap .pb-slot.unit:hover,
+.pb-placing-owner-opponent.pb-placing-support .pb-opponent-wrap .pb-slot.support:hover {
   box-shadow: 0 0 0 2px rgba(92,134,255,0.85) inset;
 }
 /* Exhausted (tapped) cards: rotate 90° and slightly dim */
@@ -1403,8 +1580,8 @@
 }
 
 /* Keep original slot aspect even when rotated */
-.pb-board.rotate-safe .pb-slot.pb-rot {
-    aspect-ratio: auto;
+.pb-slot .pb-slot-card {
+    transition: transform 120ms ease, filter 120ms ease;
 }
 
 /* Portrait-aspect frame so overlays pin to the actual card edges */
@@ -1429,6 +1606,19 @@
   position: absolute;
   top: -3px;
   right: -3px;
+}
+/* Opponent grid is rotated 180° — anchor so it lands in the visual top-right and keep it upright */
+.pb-board.pb-opponent .pb-slot .pb-slot-card .pb-card-frame .zoom-btn {
+    left: -3px; /* bottom-left (pre-rotation) → visual top-right after 180° */
+    bottom: -3px;
+    right: auto;
+    top: auto;
+    transform: rotate(180deg); /* keep icon upright */
+}
+
+/* When the opponent card is exhausted (parent rotates +90°), counter-rotate accordingly */
+.pb-board.pb-opponent .pb-slot .pb-slot-card.is-exhausted .pb-card-frame .zoom-btn {
+    transform: rotate(90deg);
 }
 
 /* When exhausted, keep the zoom icon upright (counter-rotate) */
@@ -1677,21 +1867,28 @@
 
 /* === Unit stat chips under cards (ATK/DEF/HP) === */
 .pb-slot .pb-unit-stats {
-  position: absolute;
-  left: 50%;
-  bottom: 4px;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 6px;
-  padding: 2px 6px;
-  background: rgba(0,0,0,0.45);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  border-radius: 6px;
-  font-size: 11px;
-  line-height: 1.1;
-  pointer-events: none; /* don't interfere with drag/drop */
-  z-index: 2; /* above card image, below zoom button */
+    position: absolute;
+    left: 50%;
+    bottom: 4px;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+    padding: 2px 6px;
+    /* More opaque chip so we don't need backdrop blur (prevents softening) */
+    background: rgba(0,0,0,0.70);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 2px;
+    font-size: 11px;
+    line-height: 1.1;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.pb-board.pb-opponent .pb-slot .pb-slot-card .pb-card-frame .pb-unit-stats {
+    top: 4px; /* pre-rotation top → visual bottom after 180° */
+    bottom: auto; /* cancel the base bottom anchor */
+    left: 50%;
+    transform: translateX(-50%) rotate(180deg); /* keep text upright */
 }
 
 .pb-slot .pb-unit-stats .stat {
@@ -1740,6 +1937,29 @@
 /* Only when the slot currently renders the stat bar */
 .pb-slot.unit:has(.pb-unit-stats) .pb-counter-badges {
     bottom: 25px;
+}
+/* Opponent board: keep counter badges upright and position them to visual bottom-left */
+.pb-board.pb-opponent .pb-slot .pb-slot-card .pb-card-frame .pb-counter-badges {
+    transform: rotate(180deg); /* cancel the board's 180° so text is upright */
+    left: auto; /* pre-anchor so after rotation it lands bottom-left */
+    bottom: auto;
+    right: 6px;
+    top: 6px;
+}
+
+/* When unit stat bar is showing, keep the same clearance on opponent side */
+.pb-board.pb-opponent .pb-slot.unit:has(.pb-unit-stats) .pb-counter-badges,
+.pb-board.pb-opponent .pb-slot.battle:has(.pb-unit-stats) .pb-counter-badges {
+    top: 25px; /* mirrors `bottom: 25px` on the user board */
+    bottom: auto;
+}
+/* Opponent board: keep label badges upright and position them to visual top-left (match user board) */
+.pb-board.pb-opponent .pb-slot .pb-slot-card .pb-card-frame .pb-label-badges {
+    transform: rotate(180deg); /* cancel the board's 180° so text is upright */
+    right: 6px; /* pre-rotation bottom-right → visual top-left after 180° */
+    bottom: 6px;
+    left: auto;
+    top: auto;
 }
 .pb-counter-badge {
   background: rgba(0,0,0,0.65);
@@ -2402,3 +2622,125 @@
 .pb-modal .pb-modal-actions > .tips-btn {
   white-space: nowrap;         /* keep text on one line */
 }
+/* Opponent board (visual-only, Step 1) */
+.pb-opponent-wrap {
+    display: grid;
+    justify-content: center;
+    margin-bottom: 16px; /* gap above the player's board */
+}
+
+.pb-opponent-title {
+    justify-self: center;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    user-select: none;
+    pointer-events: none;
+}
+
+.pb-board.pb-opponent {
+    margin-bottom: 12px; /* breathing room before the player's board */
+}/* Opponent board — visual mirror (Step 1) */
+.pb-opponent-wrap { margin-bottom: 12px; }
+
+.pb-opponent-title {
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  opacity: 0.8;
+  margin: 6px 0 8px;
+}
+
+/* Ensure opponent board uses identical grid sizing as the main board */
+.pb-board.pb-opponent {
+  /* no new sizing; inherits .pb-board card dimensions & gaps */
+}
+/* --- Opponent board: rotate the grid 180° to mirror the player side --- */
+.pb-board.pb-opponent {
+  transform: rotate(180deg);
+  transform-origin: center;
+}
+
+/* Keep area labels readable (counter-rotate the pseudo labels only) */
+.pb-board.pb-opponent .pb-slot::after,
+.pb-board.pb-opponent .pb-battle-zone::after,
+.pb-board.pb-opponent .pb-hand::after {
+  transform: rotate(180deg);
+}
+
+/* Tiny header above the opponent grid stays upright */
+.pb-opponent-title {
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+/* --- Opponent Battle badges: match user-side orientation & position --- */
+/* The opponent grid is rotated 180°. To produce the same visual as player:
+   - Use top: 65% (player uses 35%; 180° flip swaps it)
+   - Flip the badge rotation from -90deg → +90deg so (180 + 90) = 270deg ≡ -90deg */
+.pb-board.pb-opponent .pb-slot .pb-slot-card .pb-card-frame .pb-battle-badge {
+    top: 65%;
+    transform: translate(-50%, -50%) rotate(90deg);
+}
+/* Right panel owner switch */
+.pb-owner-switch {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.pb-owner-btn {
+    background: transparent;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-weight: 700;
+    cursor: pointer;
+    color: var(--pb-text, #e8e8e8);
+    font-size: 18px;
+}
+
+.pb-owner-btn.active {
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.16) inset;
+  background: rgba(255,255,255,0.06);
+}
+
+/* Show only the active owner's section */
+.pb-side.right .owner-section { display: none; }
+.pb-side.right[data-active-owner="player"] .owner-section[data-owner="player"] { display: block; }
+.pb-side.right[data-active-owner="opponent"] .owner-section[data-owner="opponent"] { display: block; }
+/* === Right Panel: Owner tabs placement only === */
+.pb-side.right .pb-owner-switch{
+  display: grid;
+  grid-template-columns: 1fr 1fr;  /* push to opposite sides */
+  align-items: center;
+  margin-bottom: 0px;
+}
+
+/* Fix: when only the Player button is present, keep it left-aligned */
+.pb-side.right .pb-owner-switch:has(> .pb-owner-btn:only-child) {
+  grid-template-columns: 1fr;      /* single column when only one tab */
+}
+
+.pb-side.right .pb-owner-switch:has(> .pb-owner-btn:only-child) > .pb-owner-btn {
+  justify-self: start;             /* align the lone tab to the left */
+}
+
+/* keep your existing .pb-owner-btn styles; just align */
+.pb-side.right .pb-owner-switch > .pb-owner-btn:first-child{ justify-self: start; }
+.pb-side.right .pb-owner-switch > .pb-owner-btn:last-child{  justify-self: end;   }
+
+/* Drag performance: reduce effects during active drags */
+/* Limit the grabbing cursor to the board UI while dragging */
+.pb-dragging .pb-board-wrap,
+.pb-dragging .pb-board-wrap * {
+    cursor: grabbing !important;
+}
+.pb-dragging .pb-slot { transition: none !important; }
+.pb-dragging .pb-card,
+.pb-dragging .pb-slot .pb-card { filter: none !important; }

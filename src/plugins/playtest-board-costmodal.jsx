@@ -9,25 +9,30 @@ import { createRoot } from "react-dom/client";
    Public API
    ========================= */
 
-// Snapshot the current element pools from the right panel
-export function getAvailableElements() {
-    const st = (typeof window !== "undefined" && window.__PB_ELEMENTS_STATE) || {};
-    return { ...(st.values || {}) };
+// Snapshot the current element pools from the right panel (owner-aware)
+export function getAvailableElements(owner = 'player') {
+    const st = (typeof window !== 'undefined')
+        ? (owner === 'opponent' ? window.__PB_O_ELEMENTS_STATE : window.__PB_ELEMENTS_STATE)
+        : null;
+    return { ...((st && st.values) || {}) };
 }
+// Resolve which element trackers are visible in the Right Panel (owner-aware)
+export function getVisibleElementNames(owner = 'player') {
+    if (typeof window === 'undefined') return null;
 
-// Resolve which element trackers are visible in the Right Panel
-export function getVisibleElementNames() {
-    if (typeof window === "undefined") return null;
-
-    const fromWindow = window.__PB_VISIBLE_ELEMENTS_SET;
-    if (fromWindow && typeof fromWindow.has === "function") {
+    const key = owner === 'opponent' ? '__PB_O_VISIBLE_ELEMENTS_SET' : '__PB_VISIBLE_ELEMENTS_SET';
+    const fromWindow = window[key];
+    if (fromWindow && typeof fromWindow.has === 'function') {
         return new Set(Array.from(fromWindow));
     }
 
+    // Fallback: read from the panel that matches the owner
     try {
-        const nodes = document.querySelectorAll(".er-section .er-row .er-name");
+        const root = document.querySelector(`.owner-section[data-owner="${owner}"]`);
+        if (!root) return null;
+        const nodes = root.querySelectorAll('.er-section .er-row .er-name');
         const names = Array.from(nodes)
-            .map(n => (n.textContent || "").trim())
+            .map(n => (n.textContent || '').trim())
             .filter(Boolean);
         return names.length ? new Set(names) : null;
     } catch {
@@ -35,20 +40,64 @@ export function getVisibleElementNames() {
     }
 }
 
-// Best-effort “spend”
-export function spendElements(spendMap) {
-    const st = (typeof window !== "undefined" && window.__PB_ELEMENTS_STATE) || null;
+// Best-effort “spend” (owner-aware)
+export function spendElements(spendMap, owner = 'player') {
+    const st = (typeof window !== 'undefined')
+        ? (owner === 'opponent' ? window.__PB_O_ELEMENTS_STATE : window.__PB_ELEMENTS_STATE)
+        : null;
+
+    // Normalize once so downstream never double-applies weird values
+    const normalized = Object.entries(spendMap || {}).reduce((acc, [rawK, rawV]) => {
+        const k = String(rawK).trim();
+        const amt = Math.max(0, Math.floor(Number(rawV) || 0));
+        if (amt > 0) acc[k] = amt;
+        return acc;
+    }, {});
+
+    if (st?.setValues || st?.spend) {
+        const apply = st.spend || ((map) => st.setValues(prev => {
+            const next = { ...(prev || {}) };
+            for (const [k, amt] of Object.entries(map)) {
+                const cur = Number(next[k] || 0);
+                next[k] = Math.max(0, cur - amt);
+            }
+            return next;
+        }));
+        apply(normalized);
+    } else if (typeof window !== 'undefined') {
+        const ev = owner === 'opponent' ? 'pb:o-elements:spend' : 'pb:elements:spend';
+        window.dispatchEvent(new CustomEvent(ev, { detail: { spend: normalized } }));
+    }
+}
+
+// Snapshot the opponent element pools (Right Panel → opponent section)
+export function getAvailableElementsOpponent() {
+    const st = (typeof window !== "undefined" && window.__PB_O_ELEMENTS_STATE) || {};
+    return { ...(st.values || {}) };
+}
+
+// Best-effort “spend” from opponent pools
+export function spendOpponentElements(spendMap) {
+    const st = (typeof window !== "undefined" && window.__PB_O_ELEMENTS_STATE) || null;
+
+    const normalized = Object.entries(spendMap || {}).reduce((acc, [rawK, rawV]) => {
+        const k = String(rawK).trim();
+        const amt = Math.max(0, Math.floor(Number(rawV) || 0));
+        if (amt > 0) acc[k] = amt;
+        return acc;
+    }, {});
+
     if (st?.setValues) {
         st.setValues(prev => {
             const next = { ...(prev || {}) };
-            for (const [k, v] of Object.entries(spendMap || {})) {
+            for (const [k, amt] of Object.entries(normalized)) {
                 const cur = Number(next[k] || 0);
-                next[k] = Math.max(0, cur - (Number(v) || 0));
+                next[k] = Math.max(0, cur - amt);
             }
             return next;
         });
     } else if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("pb:elements:spend", { detail: { spend: spendMap } }));
+        window.dispatchEvent(new CustomEvent("pb:o-elements:spend", { detail: { spend: normalized } }));
     }
 }
 
@@ -104,10 +153,7 @@ function CostModalController({ controller }) {
         <CostModal
             options={state.options}
             onCancel={() => controller.close(null)}
-            onConfirm={(spend) => {
-                try { spendElements(spend); } catch (_) { }
-                controller.close(spend);
-            }}
+            onConfirm={(spend) => controller.close(spend)}
         />
     );
 }
@@ -296,12 +342,12 @@ function parseCostString(str, byLetter) {
    ========================= */
 
 function CostModal({ options, onCancel, onConfirm }) {
-    const { cardId, side = "a", available = null } = options || {};
+    const { cardId, side = "a", available = null, owner = "player" } = options || {};
     const [meta, setMeta] = useState({ order: [], colors: {}, byLetter: {} });
     const [required, setRequired] = useState({ fixed: {}, wild: 0 });
     const [spend, setSpend] = useState({});
-    const [avail, setAvail] = useState(available || getAvailableElements());
-    const visibleSet = useMemo(() => getVisibleElementNames(), []);
+    const [avail, setAvail] = useState(available || getAvailableElements(owner));
+    const visibleSet = useMemo(() => getVisibleElementNames(owner), [owner]);
     const [title, setTitle] = useState("Cost Window");
     const [imgSrc, setImgSrc] = useState(null);
     const [anyType, setAnyType] = useState(false);
@@ -524,7 +570,18 @@ function CostModal({ options, onCancel, onConfirm }) {
 
                     <div className="pb-encounter-count">{totalSpent} / {totalRequired}</div>
 
-                    <button className="tips-btn pb-encounter-generate" disabled={!canConfirm} onClick={() => onConfirm(spend)}>
+                    <button
+                        className="tips-btn pb-encounter-generate"
+                        disabled={!canConfirm}
+                        onClick={() => {
+                            const finalSpend = Object.fromEntries(
+                                Object.entries(spend || {})
+                                    .map(([k, v]) => [String(k).trim(), Math.max(0, Math.floor(Number(v) || 0))])
+                                    .filter(([, v]) => v > 0)
+                            );
+                            onConfirm(finalSpend);
+                        }}
+                    >
                         Confirm
                     </button>
                 </div>

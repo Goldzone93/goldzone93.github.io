@@ -336,7 +336,7 @@ export function InflictDamageModal({
 }
 
 // ADD below InflictDamageModal in /src/plugins/playtest-board-modules.jsx
-export function FetchCardsModal({ onClose, deckRef, setDeckPile, setHand, setPeekCard }) {
+export function FetchCardsModal({ onClose, deckRef, setDeckPile, setHand, setPeekCard, peekFrom }) {
     const [loading, setLoading] = React.useState(true);
     const [error, setError] = React.useState(null);
 
@@ -537,8 +537,11 @@ export function FetchCardsModal({ onClose, deckRef, setDeckPile, setHand, setPee
             }
             setDeckPile(deck);
 
-            // If a Deck peek/stack-view is open, close it (deck order changed)
-            setPeekCard(prev => (prev && prev.from === 'deck' ? null : prev));
+            // If a matching Deck peek/stack-view is open for this SAME deck, close it.
+            setPeekCard(prev => {
+                const closeFrom = (typeof peekFrom === 'string') ? peekFrom : 'deck';
+                return (prev && prev.from === closeFrom) ? null : prev;
+            });
 
             onClose?.();
         } catch (e) {

@@ -1,32 +1,118 @@
 // /src/plugins/playtest-board-dragndown.jsx
-import { openPlayCostModal, getAvailableElements, spendElements } from "./playtest-board-costmodal";
+// /src/plugins/playtest-board-dragndown.jsx
+import React from 'react';
+import {
+    openPlayCostModal,
+    getAvailableElements,
+    spendElements,
+    getAvailableElementsOpponent,
+    spendOpponentElements
+} from "./playtest-board-costmodal";
 /* Drag & Drop + stack move handlers for the Playtest Board.
    This file exports a single function that wires up all handler functions
    without owning state. You pass in the current state values and setters.
 */
 export function usePlaytestBoardDragNDown(ctx) {
   // ------------ Shortcuts ------------
-  const {
-    partnerId, partnerSide,
-    boardSlots, setBoardSlots,
-    slotSides, setSlotSides,
-    slotCounters, setSlotCounters,
-    slotLabels, setSlotLabels,
-    hand, setHand,
-    deckPile, setDeckPile,
-    shieldPile, setShieldPile,
-    banishPile, setBanishPile,
-    gravePile, setGravePile,
-    dragIdx, setDragIdx,
-    setHoverSlot,
-    setExhaustedSlots,
-    setBattleRole, battleRoleRef,
-    setBattleOrigin, battleOriginRef,
-  } = ctx || {};
+    const {
+        partnerId, partnerSide, setPartnerSide,
+        boardSlots, setBoardSlots,
+        slotSides, setSlotSides,
+        slotCounters, setSlotCounters,
+        slotLabels, setSlotLabels,
+        hand, setHand,
+        oHand, setOHand,
+        deckPile, setDeckPile,
+        shieldPile, setShieldPile,
+        banishPile, setBanishPile,
+        gravePile, setGravePile,
+
+        // NEW
+        setPartnerInArea,
+
+        // NEW: opponent partner id
+        oPartnerId,
+
+        // NEW: opponent piles
+        oDeckPile, setODeckPile,
+        oShieldPile, setOShieldPile,
+        oBanishPile, setOBanishPile,
+        oGravePile, setOGravePile,
+
+        dragIdx, setDragIdx,
+        setHoverSlot,
+        setExhaustedSlots,
+        setBattleRole, battleRoleRef,
+        setBattleOrigin, battleOriginRef,
+    } = ctx || {};
 
     // --- Global drag fallback (fix sporadic missing dataTransfer on first drag) ---
     const setGlobalDrag = (payload) => { try { window.__PB_LAST_DRAG = payload; } catch { } };
     const clearGlobalDrag = () => { try { delete window.__PB_LAST_DRAG; } catch { } };
+
+    // Helper: normalize id without _a/_b suffix
+    const baseId = (s) => String(s || '').replace(/_(a|b)$/i, '');
+
+    // ---- Drag performance helpers (prevent GPU spikes & reflow storms) ----
+    const getDragGhost = () => {
+        if (window.__PB_DRAG_GHOST) return window.__PB_DRAG_GHOST;
+        const c = document.createElement('canvas');
+        c.width = 1; c.height = 1;
+        window.__PB_DRAG_GHOST = c;
+        return c;
+    };
+
+    const addBodyClass = (cls) => { try { document.body && document.body.classList.add(cls); } catch { } };
+    const removeBodyClass = (cls) => { try { document.body && document.body.classList.remove(cls); } catch { } };
+
+    // Throttle hover highlight to 1/frame
+    const hoverKeyRef = React.useRef(null);
+    const rafRef = React.useRef(null);
+    const requestHover = (key) => {
+        if (hoverKeyRef.current === key) return;
+        hoverKeyRef.current = key;
+        if (rafRef.current) return;
+        rafRef.current = requestAnimationFrame(() => {
+            setHoverSlot(hoverKeyRef.current);
+            rafRef.current = null;
+        });
+    };
+
+    const endDrag = () => {
+        try { cancelAnimationFrame(rafRef.current); } catch { }
+        rafRef.current = null;
+        hoverKeyRef.current = null;
+        try { document.body && document.body.classList.remove('pb-dragging'); } catch { }
+    };
+
+    // Unified begin drag helper (adds body class + uses a real preview image when available)
+    const beginDrag = (e, previewEl = null) => {
+        addBodyClass('pb-dragging');
+        try {
+            if (previewEl) {
+                const rect = previewEl.getBoundingClientRect();
+                e.dataTransfer.setDragImage(previewEl, rect.width / 2, rect.height / 2);
+            } else {
+                e.dataTransfer.setDragImage(getDragGhost(), 0, 0); // tiny fallback
+            }
+        } catch { }
+
+        // Clean up on ANY of these end/cancel paths (and a safety timer)
+        const once = { once: true, capture: true };
+        const cleanup = () => endDrag();
+
+        document.addEventListener('dragend', cleanup, once);
+        document.addEventListener('drop', cleanup, once);
+        document.addEventListener('mouseup', cleanup, once);
+        document.addEventListener('keydown', cleanup, once);
+        window.addEventListener('blur', cleanup, once);
+
+        // Safety fallback in case none of the above fire (ESC on macOS, etc.)
+        try {
+            clearTimeout(window.__PB_DRAG_FAILSAFE);
+            window.__PB_DRAG_FAILSAFE = setTimeout(cleanup, 2000);
+        } catch { }
+    };
 
   // ------------ Helpers: Tops of stacks (index 0 is top) ------------
   const getDeckTop   = () => (deckPile?.length ? deckPile[0] : null);
@@ -58,6 +144,37 @@ export function usePlaytestBoardDragNDown(ctx) {
     });
   };
 
+    // --- Opponent pile helpers ---
+    // tops (index 0 is top)
+    const getODeckTop = () => (oDeckPile?.length ? oDeckPile[0] : null);
+    const removeODeckTop = () => setODeckPile(prev => (prev?.length ? prev.slice(1) : prev));
+
+    const getOShieldTop = () => (oShieldPile?.length ? oShieldPile[0] : null);
+    const removeOShieldTop = () => setOShieldPile(prev => (prev?.length ? prev.slice(1) : prev));
+
+    const getOBanishTop = () => (oBanishPile?.length ? oBanishPile[0] : null);
+    const removeOBanishTop = () => setOBanishPile(prev => (prev?.length ? prev.slice(1) : prev));
+
+    const getOGraveTop = () => (oGravePile?.length ? oGravePile[0] : null);
+    const removeOGraveTop = () => setOGravePile(prev => (prev?.length ? prev.slice(1) : prev));
+
+    // pushers
+    const addToODeckTop = (id) => { if (!id) return; setODeckPile(prev => [id, ...(prev || [])]); };
+    const addToOBanishTop = (id) => { if (!id) return; setOBanishPile(prev => [id, ...(prev || [])]); };
+    const addToOGraveTop = (id) => { if (!id) return; setOGravePile(prev => [id, ...(prev || [])]); };
+
+    const addToOShieldShuffled = (id) => {
+        if (!id) return;
+        setOShieldPile(prev => {
+            const next = [...(prev || []), id];
+            for (let i = next.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [next[i], next[j]] = [next[j], next[i]];
+            }
+            return next;
+        });
+    };
+
   const clearSlotCountersAndLabels = (slotKey) => {
     setSlotCounters(prev => {
       if (!prev || !prev[slotKey]) return prev;
@@ -75,7 +192,7 @@ export function usePlaytestBoardDragNDown(ctx) {
 
   // While moving from battle slot, clear role/origin on the source battle slot
   const clearBattleFlagsIfSource = (slotKey) => {
-    if (!/^b\d+$/.test(String(slotKey || ''))) return;
+    if (!/^(?:ob|b)\d+$/.test(String(slotKey || ''))) return;
     setBattleRole(prev => {
       if (!prev || !prev[slotKey]) return prev;
       const up = { ...prev };
@@ -95,12 +212,22 @@ export function usePlaytestBoardDragNDown(ctx) {
       const pb = e?.dataTransfer?.getData?.('text/pb');
       if (pb) {
           if (pb.startsWith('hand:')) return { kind: 'hand', index: Number(pb.slice(5)) };
+          if (pb.startsWith('ohand:')) return { kind: 'ohand', index: Number(pb.slice(6)) };
           if (pb.startsWith('slot:')) return { kind: 'slot', key: pb.slice(5) };
           if (pb.startsWith('partner:')) return { kind: 'partner', id: pb.slice(8) };
+
+          // player stacks
           if (pb.startsWith('shield:')) return { kind: 'shield', id: pb.slice(7) };
           if (pb.startsWith('banish:')) return { kind: 'banish', id: pb.slice(7) };
           if (pb.startsWith('grave:')) return { kind: 'grave', id: pb.slice(6) };
           if (pb.startsWith('deck:')) return { kind: 'deck', id: pb.slice(5) };
+
+          // opponent stacks
+          if (pb.startsWith('oshield:')) return { kind: 'oshield', id: pb.slice(8) };
+          if (pb.startsWith('obanish:')) return { kind: 'obanish', id: pb.slice(8) };
+          if (pb.startsWith('ograve:')) return { kind: 'ograve', id: pb.slice(7) };
+          if (pb.startsWith('odeck:')) return { kind: 'odeck', id: pb.slice(6) };
+
           if (pb.startsWith('peek:')) {
               const parts = pb.split(':');
               return { kind: 'peek', stack: parts[1], index: Number(parts[2]) };
@@ -124,9 +251,11 @@ export function usePlaytestBoardDragNDown(ctx) {
         setGlobalDrag({ kind: 'hand', index });
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/pb', `hand:${index}`);
-        e.dataTransfer.setData('text/plain', String(index)); // fallback
+        e.dataTransfer.setData('text/plain', String(index));
+        const img = e.currentTarget?.querySelector?.('.pb-card-img') || null;
+        beginDrag(e, img);
     };
-    const onHandDragEnd = () => { setDragIdx(null); clearGlobalDrag(); };
+    const onHandDragEnd = () => { setDragIdx(null); clearGlobalDrag(); endDrag(); };
   const onHandContainerDragOver = (e) => e.preventDefault();
 
   const onHandContainerDrop = (e) => {
@@ -187,6 +316,50 @@ export function usePlaytestBoardDragNDown(ctx) {
     if (src.kind === 'banish') { const m = getBanishTop(); if (!m) return; removeBanishTop(); setHand(prev => [...prev, m]); setDragIdx(null); return; }
     if (src.kind === 'grave')  { const m = getGraveTop();  if (!m) return; removeGraveTop();  setHand(prev => [...prev, m]); setDragIdx(null); return; }
     if (src.kind === 'deck')   { const m = getDeckTop();   if (!m) return; removeDeckTop();   setHand(prev => [...prev, m]); setDragIdx(null); return; }
+      // OPPONENT Shield/Banish/Grave/Deck (top) → User Hand (append)
+      if (src.kind === 'oshield') {
+          const m = getOShieldTop(); if (!m) return;
+          removeOShieldTop();
+          setHand(prev => [...prev, m]);
+          setDragIdx(null);
+          return;
+      }
+      if (src.kind === 'obanish') {
+          const m = getOBanishTop(); if (!m) return;
+          removeOBanishTop();
+          setHand(prev => [...prev, m]);
+          setDragIdx(null);
+          return;
+      }
+      if (src.kind === 'ograve') {
+          const m = getOGraveTop(); if (!m) return;
+          removeOGraveTop();
+          setHand(prev => [...prev, m]);
+          setDragIdx(null);
+          return;
+      }
+      if (src.kind === 'odeck') {
+          const m = getODeckTop(); if (!m) return;
+          removeODeckTop();
+          setHand(prev => [...prev, m]);
+          setDragIdx(null);
+          return;
+      }
+      // Opponent Hand → User Hand (append)
+      if (src.kind === 'ohand' && Number.isFinite(src.index)) {
+          const idx = src.index;
+          const moved = oHand?.[idx];
+          if (moved == null) return;
+          setOHand(prev => {
+              const n = [...(prev || [])];
+              n.splice(idx, 1);
+              return n;
+          });
+          setHand(prev => [...prev, moved]);
+          setDragIdx(null);
+          return;
+      }
+
   };
 
   const onHandItemDragOver = (e) => e.preventDefault();
@@ -261,11 +434,246 @@ export function usePlaytestBoardDragNDown(ctx) {
     if (src.kind === 'banish') { const m = getBanishTop(); if (!m) return; removeBanishTop(); setHand(prev => { const n=[...prev]; n.splice(Math.max(0,Math.min(to,n.length)),0,m); return n; }); return; }
     if (src.kind === 'grave')  { const m = getGraveTop();  if (!m) return; removeGraveTop();  setHand(prev => { const n=[...prev]; n.splice(Math.max(0,Math.min(to,n.length)),0,m); return n; }); return; }
     if (src.kind === 'deck')   { const m = getDeckTop();   if (!m) return; removeDeckTop();   setHand(prev => { const n=[...prev]; n.splice(Math.max(0,Math.min(to,n.length)),0,m); return n; }); return; }
+      // OPPONENT Shield/Banish/Grave/Deck (top) → User Hand (insert)
+      if (src.kind === 'oshield') {
+          const m = getOShieldTop(); if (!m) return;
+          removeOShieldTop();
+          setHand(prev => {
+              const n = [...prev];
+              n.splice(Math.max(0, Math.min(to, n.length)), 0, m);
+              return n;
+          });
+          return;
+      }
+      if (src.kind === 'obanish') {
+          const m = getOBanishTop(); if (!m) return;
+          removeOBanishTop();
+          setHand(prev => {
+              const n = [...prev];
+              n.splice(Math.max(0, Math.min(to, n.length)), 0, m);
+              return n;
+          });
+          return;
+      }
+      if (src.kind === 'ograve') {
+          const m = getOGraveTop(); if (!m) return;
+          removeOGraveTop();
+          setHand(prev => {
+              const n = [...prev];
+              n.splice(Math.max(0, Math.min(to, n.length)), 0, m);
+              return n;
+          });
+          return;
+      }
+      if (src.kind === 'odeck') {
+          const m = getODeckTop(); if (!m) return;
+          removeODeckTop();
+          setHand(prev => {
+              const n = [...prev];
+              n.splice(Math.max(0, Math.min(to, n.length)), 0, m);
+              return n;
+          });
+          return;
+      }
+      // Opponent Hand → User Hand (insert)
+      if (src.kind === 'ohand' && Number.isFinite(src.index)) {
+          const idx = src.index;
+          const moved = oHand?.[idx];
+          if (moved == null) return;
+          setOHand(prev => {
+              const n = [...(prev || [])];
+              n.splice(idx, 1);
+              return n;
+          });
+          setHand(prev => {
+              const n = [...prev];
+              n.splice(Math.max(0, Math.min(to, n.length)), 0, moved);
+              return n;
+          });
+          setDragIdx(null);
+          return;
+      }
+
   };
 
+    // ------------ Opponent Hand DnD (fixed bar) ------------
+    const onOHandDragStart = (index) => (e) => {
+        setGlobalDrag({ kind: 'ohand', index });
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/pb', `ohand:${index}`);
+        const img = e.currentTarget?.querySelector?.('.pb-card-img') || null;
+        beginDrag(e, img);
+    };
+    const onOHandDragEnd = () => { clearGlobalDrag(); endDrag(); };
+
+    const onOHandContainerDragOver = (e) => {
+        e.preventDefault();
+        try { e.dataTransfer.dropEffect = 'move'; } catch { }
+    };
+
+    const onOHandContainerDrop = (e) => {
+        e.preventDefault();
+        const src = getDragSource(e);
+        if (!src) return;
+
+        // Slot → Opponent Hand (append)
+        if (src.kind === 'slot') {
+            const moved = boardSlots?.[src.key];
+            if (!moved) return;
+            setBoardSlots(prev => {
+                if (!prev?.[src.key]) return prev;
+                const up = { ...(prev || {}) };
+                delete up[src.key];
+                return up;
+            });
+            setSlotSides(prev => {
+                if (!prev?.[src.key]) return prev;
+                const up = { ...(prev || {}) };
+                delete up[src.key];
+                return up;
+            });
+            clearSlotCountersAndLabels(src.key);
+            setOHand(prev => [...(prev || []), moved]);
+            return;
+        }
+
+        // ohand → end of ohand
+        if (src.kind === 'ohand' && Number.isFinite(src.index)) {
+            setOHand(prev => {
+                const next = [...(prev || [])];
+                const [m] = next.splice(src.index, 1);
+                next.push(m);
+                return next;
+            });
+            return;
+        }
+
+        // User Hand → Opponent Hand (append)
+        if (src.kind === 'hand' && Number.isFinite(src.index)) {
+            const idx = src.index;
+            const moved = hand?.[idx];
+            if (moved == null) return;
+            setHand(prev => {
+                const n = [...prev];
+                n.splice(idx, 1);
+                return n;
+            });
+            setOHand(prev => [...(prev || []), moved]);
+            setDragIdx(null);
+            return;
+        }
+
+        // Piles → Opponent Hand (append)
+        if (src.kind === 'shield') { const m = getShieldTop(); if (!m) return; removeShieldTop(); setOHand(p => [...(p || []), m]); return; }
+        if (src.kind === 'banish') { const m = getBanishTop(); if (!m) return; removeBanishTop(); setOHand(p => [...(p || []), m]); return; }
+        if (src.kind === 'grave') { const m = getGraveTop(); if (!m) return; removeGraveTop(); setOHand(p => [...(p || []), m]); return; }
+        if (src.kind === 'deck') { const m = getDeckTop(); if (!m) return; removeDeckTop(); setOHand(p => [...(p || []), m]); return; }
+
+        // Opponent piles → Opponent Hand (append)
+        if (src.kind === 'oshield') { const m = getOShieldTop(); if (!m) return; removeOShieldTop(); setOHand(p => [...(p || []), m]); return; }
+        if (src.kind === 'obanish') { const m = getOBanishTop(); if (!m) return; removeOBanishTop(); setOHand(p => [...(p || []), m]); return; }
+        if (src.kind === 'ograve') { const m = getOGraveTop(); if (!m) return; removeOGraveTop(); setOHand(p => [...(p || []), m]); return; }
+        if (src.kind === 'odeck') { const m = getODeckTop(); if (!m) return; removeODeckTop(); setOHand(p => [...(p || []), m]); return; }
+    };
+
+    const onOHandItemDragOver = (e) => e.preventDefault();
+
+    const onOHandItemDrop = (overIndex) => (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const src = getDragSource(e);
+        if (!src) return;
+
+        const rect = e.currentTarget.getBoundingClientRect();
+        const isAfter = e.clientX > rect.left + rect.width / 2;
+        let to = overIndex + (isAfter ? 1 : 0);
+
+        // ohand → position in ohand
+        if (src.kind === 'ohand') {
+            const from = src.index;
+            if (!Number.isFinite(from)) return;
+            if (from < to) to--;
+            if (to === from) return;
+            setOHand(prev => {
+                const next = [...(prev || [])];
+                const [m] = next.splice(from, 1);
+                next.splice(Math.max(0, Math.min(to, next.length)), 0, m);
+                return next;
+            });
+            return;
+        }
+
+        // Slot → insert into ohand
+        if (src.kind === 'slot') {
+            const moved = boardSlots?.[src.key];
+            if (!moved) return;
+            setBoardSlots(prev => {
+                if (!prev?.[src.key]) return prev;
+                const up = { ...(prev || {}) };
+                delete up[src.key];
+                return up;
+            });
+            setSlotSides(prev => {
+                if (!prev?.[src.key]) return prev;
+                const up = { ...(prev || {}) };
+                delete up[src.key];
+                return up;
+            });
+            clearSlotCountersAndLabels(src.key);
+            setOHand(prev => {
+                const next = [...(prev || [])];
+                next.splice(Math.max(0, Math.min(to, next.length)), 0, moved);
+                return next;
+            });
+            return;
+        }
+
+        // User Hand → Opponent Hand (insert)
+        if (src.kind === 'hand' && Number.isFinite(src.index)) {
+            const idx = src.index;
+            const moved = hand?.[idx];
+            if (moved == null) return;
+            setHand(prev => {
+                const n = [...prev];
+                n.splice(idx, 1);
+                return n;
+            });
+            setOHand(prev => {
+                const n = [...(prev || [])];
+                n.splice(Math.max(0, Math.min(to, n.length)), 0, moved);
+                return n;
+            });
+            setDragIdx(null);
+            return;
+        }
+
+        // Piles → insert into ohand
+        const insert = (m) => setOHand(prev => {
+            const n = [...(prev || [])];
+            n.splice(Math.max(0, Math.min(to, n.length)), 0, m);
+            return n;
+        });
+        if (src.kind === 'shield') { const m = getShieldTop(); if (!m) return; removeShieldTop(); insert(m); return; }
+        if (src.kind === 'banish') { const m = getBanishTop(); if (!m) return; removeBanishTop(); insert(m); return; }
+        if (src.kind === 'grave') { const m = getGraveTop(); if (!m) return; removeGraveTop(); insert(m); return; }
+        if (src.kind === 'deck') { const m = getDeckTop(); if (!m) return; removeDeckTop(); insert(m); return; }
+
+        // Opponent piles → insert into ohand
+        if (src.kind === 'oshield') { const m = getOShieldTop(); if (!m) return; removeOShieldTop(); insert(m); return; }
+        if (src.kind === 'obanish') { const m = getOBanishTop(); if (!m) return; removeOBanishTop(); insert(m); return; }
+        if (src.kind === 'ograve') { const m = getOGraveTop(); if (!m) return; removeOGraveTop(); insert(m); return; }
+        if (src.kind === 'odeck') { const m = getODeckTop(); if (!m) return; removeODeckTop(); insert(m); return; }
+    };
+
   // ------------ Board Slot DnD ------------
-  const onSlotDragOver = (key) => (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setHoverSlot(key); };
-  const onSlotDragLeave = () => setHoverSlot(null);
+    const onSlotDragOver = (key) => (e) => {
+        e.preventDefault();
+        try { e.dataTransfer.dropEffect = 'move'; } catch { }
+        requestHover(key);
+    };
+    const onSlotDragLeave = () => {
+        requestHover(null);
+    };
 
   const onSlotDrop = (key) => async (e) => {
       e.preventDefault();
@@ -278,6 +686,90 @@ export function usePlaytestBoardDragNDown(ctx) {
     if (src.kind === 'slot' && src.key === key) return;
 
     const prevInTarget = boardSlots?.[key] || null;
+
+      // Opponent Partner zone: only accept the opponent's partner; reject all others
+      if (String(key) === 'opartner') {
+
+          // Helper to place into opartner
+          const placeOPartner = (id, side = 'a') => {
+              setBoardSlots(cur => ({ ...(cur || {}), opartner: id }));
+              setSlotSides(cur => ({ ...(cur || {}), opartner: side }));
+              if (prevInTarget) {
+                  // If anything was in opartner (shouldn't be), bump to opponent hand
+                  setOHand(p => ([...(p || []), prevInTarget]));
+                  clearSlotCountersAndLabels('opartner');
+              }
+          };
+
+          // Only allow the opponent's partner id
+          const allowId = oPartnerId ? baseId(oPartnerId) : null;
+
+          // From opponent HAND → opartner
+          if (src?.kind === 'ohand' && Number.isFinite(src.index)) {
+              const moved = oHand?.[src.index];
+              if (!moved) return;
+              if (allowId && baseId(moved) !== allowId) return; // not the partner
+              // remove from ohand, place in opartner (preserve face from id)
+              setOHand(prev => {
+                  const n = [...(prev || [])];
+                  n.splice(src.index, 1);
+                  return n;
+              });
+              const sideFromId = /_b$/i.test(String(moved)) ? 'b' : 'a';
+              placeOPartner(moved, sideFromId);
+              return;
+          }
+
+          // From a BOARD SLOT → opartner (only if that slot currently holds the opponent partner)
+          if (src?.kind === 'slot') {
+              const moved = boardSlots?.[src.key];
+              if (!moved) return;
+              if (allowId && baseId(moved) !== allowId) return; // not the partner
+              // remove from source slot
+              const srcSide = (slotSides && slotSides[src.key]) === 'b' ? 'b' : 'a';
+              setBoardSlots(prev => {
+                  if (!prev?.[src.key]) return prev;
+                  const up = { ...(prev || {}) };
+                  delete up[src.key];
+                  return up;
+              });
+              setSlotSides(prev => {
+                  if (!prev?.[src.key]) return prev;
+                  const up = { ...(prev || {}) };
+                  delete up[src.key];
+                  return up;
+              });
+              setExhaustedSlots(prev => {
+                  if (!prev?.size) return prev;
+                  const next = new Set(prev);
+                  next.delete(src.key);
+                  return next;
+              });
+              clearBattleFlagsIfSource(src.key);
+              clearSlotCountersAndLabels(src.key);
+              // place in opartner preserving side from the slot
+              placeOPartner(moved, srcSide);
+              return;
+          }
+
+          // From OPPONENT STACK TOPS → opartner (only if top is the partner)
+          const tryFromTop = (getTop, removeTop) => {
+              const top = getTop();
+              if (!top) return false;
+              if (allowId && baseId(top) !== allowId) return false;
+              removeTop();
+              const sideFromId = /_b$/i.test(String(top)) ? 'b' : 'a';
+              placeOPartner(top, sideFromId);
+              return true;
+          };
+          if (src?.kind === 'oshield') { tryFromTop(getOShieldTop, removeOShieldTop); return; }
+          if (src?.kind === 'obanish') { tryFromTop(getOBanishTop, removeOBanishTop); return; }
+          if (src?.kind === 'ograve') { tryFromTop(getOGraveTop, removeOGraveTop); return; }
+          if (src?.kind === 'odeck') { tryFromTop(getODeckTop, removeODeckTop); return; }
+
+          // Any other source → reject (no-op)
+          return;
+      }
 
     // Target becomes Ready; if we’re vacating a source slot, clear its exhaustion
     setExhaustedSlots(prev => {
@@ -293,7 +785,7 @@ export function usePlaytestBoardDragNDown(ctx) {
           if (!Number.isFinite(from)) return;
 
           // Only trigger the Cost Modal when dropping to a Unit/Support slot
-          const isPlaySlot = /^u\d+$|^s\d+$/.test(String(key || ""));
+          const isPlaySlot = /^(?:ou|u)\d+$|^(?:os|s)\d+$/.test(String(key || ""));
           if (isPlaySlot) {
 
               const mode = (typeof window !== 'undefined' && window.__PB_COST_MODULE_MODE) || 'on';
@@ -307,7 +799,13 @@ export function usePlaytestBoardDragNDown(ctx) {
                       const next = [...prev];
                       const [card] = next.splice(from, 1);
                       setBoardSlots(cur => ({ ...(cur || {}), [key]: card }));
-                      if (prevInTarget) next.push(prevInTarget);
+                      if (prevInTarget) {
+                          if (/^o/.test(String(key))) {
+                              setOHand(p => ([...(p || []), prevInTarget]));
+                          } else {
+                              next.push(prevInTarget);
+                          }
+                      }
                       return next;
                   });
                   setSlotSides(prev => ({ ...(prev || {}), [key]: sideFromId }));
@@ -316,21 +814,29 @@ export function usePlaytestBoardDragNDown(ctx) {
                   return;
               }
 
-              // Read current pool counts; you can also pass your own map here
-              const available = getAvailableElements();
-              const paid = await openPlayCostModal({ cardId, side: sideFromId, available });
+              // Read current pool counts for the correct owner
+              const isOpp = /^o/.test(String(key || ''));
+              const owner = isOpp ? 'opponent' : 'player';
+              const available = getAvailableElements(owner);
+              const paid = await openPlayCostModal({ owner, cardId, side: sideFromId, available });
 
               // Cancelled → leave everything exactly as-is
               if (!paid) { setDragIdx(null); return; }
 
               // Spend resources (best effort) THEN place the card
-              spendElements(paid);
+              spendElements(paid, owner);
 
               setHand(prev => {
                   const next = [...prev];
                   const [card] = next.splice(from, 1);
                   setBoardSlots(cur => ({ ...(cur || {}), [key]: card }));
-                  if (prevInTarget) next.push(prevInTarget);
+                  if (prevInTarget) {
+                      if (/^o/.test(String(key))) {
+                          setOHand(p => ([...(p || []), prevInTarget]));
+                      } else {
+                          next.push(prevInTarget);
+                      }
+                  }
                   return next;
               });
               setSlotSides(prev => ({ ...(prev || {}), [key]: 'a' }));
@@ -347,12 +853,65 @@ export function usePlaytestBoardDragNDown(ctx) {
               const next = [...prev];
               const [card] = next.splice(from, 1);
               setBoardSlots(cur => ({ ...(cur || {}), [key]: card }));
-              if (prevInTarget) next.push(prevInTarget);
+              if (prevInTarget) {
+                  if (/^o/.test(String(key))) {
+                      setOHand(p => ([...(p || []), prevInTarget]));
+                  } else {
+                      next.push(prevInTarget);
+                  }
+              }
               return next;
           });
           setSlotSides(prev => ({ ...(prev || {}), [key]: sideFromId }));
           if (prevInTarget) clearSlotCountersAndLabels(key);
           setDragIdx(null);
+          return;
+      }
+
+      // Opponent Hand → Slot (Cost modal for ou*/os*; preserve face from id)
+      if (src.kind === 'ohand') {
+          const from = src.index;
+          if (!Number.isFinite(from)) return;
+
+          // Only charge when playing to opponent Unit/Support slots
+          const isOpponentPlaySlot = /^(?:ou|os)\d+$/.test(String(key || ""));
+          const mode = (typeof window !== 'undefined' && window.__PB_COST_MODULE_MODE) || 'on';
+
+          // Identify card + face from oHand
+          const cardId = oHand?.[from];
+          if (!cardId) return;
+          const sideFromId = /_(b)$/i.test(String(cardId)) ? 'b' : 'a';
+
+          // If Cost Module is ON and this is a play slot, open the modal with opponent pools
+          if (isOpponentPlaySlot && mode !== 'off') {
+              const available = (typeof getAvailableElementsOpponent === 'function')
+                  ? getAvailableElementsOpponent()
+                  : {};
+
+              const paid = await openPlayCostModal({ owner: 'opponent', cardId, side: sideFromId, available });
+              if (!paid) { setDragIdx(null); return; }
+
+              if (typeof spendOpponentElements === 'function') {
+                  spendOpponentElements(paid);
+              }
+          }
+
+          const prevInTarget = boardSlots?.[key] || null;
+          setOHand(prev => {
+              const next = [...(prev || [])];
+              const [card] = next.splice(from, 1);
+              if (!card) return prev;
+
+              // Preserve face from the id suffix (_a/_b)
+              setBoardSlots(cur => ({ ...(cur || {}), [key]: card }));
+              setSlotSides(cur => ({ ...(cur || {}), [key]: sideFromId }));
+
+              if (prevInTarget) {
+                  // bumped card goes to oHand end
+                  next.push(prevInTarget);
+              }
+              return next;
+          });
           return;
       }
 
@@ -382,7 +941,7 @@ export function usePlaytestBoardDragNDown(ctx) {
       setSlotCounters(prev => {
         const next = { ...(prev || {}) };
         const srcCounters = next[srcKey];
-        const tracked = (slot) => /^u\d+$|^s\d+$|^b\d+$/.test(slot);
+        const tracked = (slot) => /^(?:ou|u)\d+$|^(?:os|s)\d+$|^(?:ob|b)\d+$/.test(slot);
         if (prevInTarget) delete next[dstKey];
         if (srcCounters && tracked(srcKey) && tracked(dstKey)) next[dstKey] = srcCounters;
         delete next[srcKey];
@@ -393,7 +952,7 @@ export function usePlaytestBoardDragNDown(ctx) {
       setSlotLabels(prev => {
         const next = { ...(prev || {}) };
         const srcLabels = next[srcKey];
-        const tracked = (slot) => /^u\d+$|^s\d+$|^b\d+$/.test(slot);
+        const tracked = (slot) => /^(?:ou|u)\d+$|^(?:os|s)\d+$|^(?:ob|b)\d+$/.test(slot);
         if (prevInTarget) delete next[dstKey];
         if (srcLabels && tracked(srcKey) && tracked(dstKey)) next[dstKey] = srcLabels;
         delete next[srcKey];
@@ -402,27 +961,44 @@ export function usePlaytestBoardDragNDown(ctx) {
 
       clearBattleFlagsIfSource(srcKey);
 
-      if (prevInTarget) setHand(prev => [...prev, prevInTarget]);
+        if (prevInTarget) {
+            if (/^o/.test(String(dstKey))) {
+                setOHand(p => ([...(p || []), prevInTarget]));
+            } else {
+                setHand(prev => [...prev, prevInTarget]);
+            }
+        }
       return;
     }
 
     // Shield/Banish/Grave/Deck → Slot
-    const moveTopToSlot = (getTop, removeTop) => {
-      const moved = getTop();
-      if (!moved) return;
-      setBoardSlots(prev => ({ ...(prev || {}), [key]: moved }));
-      setSlotSides(prev => ({ ...(prev || {}), [key]: 'a' }));
-      removeTop();
-      if (prevInTarget) {
-        clearSlotCountersAndLabels(key);
-        setHand(prev => [...prev, prevInTarget]);
-      }
-    };
+      // Shield/Banish/Grave/Deck → Slot
+      const moveTopToSlot = (getTop, removeTop) => {
+          const moved = getTop();
+          if (!moved) return;
+          setBoardSlots(prev => ({ ...(prev || {}), [key]: moved }));
+          setSlotSides(prev => ({ ...(prev || {}), [key]: 'a' }));
+          removeTop();
+          if (prevInTarget) {
+              clearSlotCountersAndLabels(key);
+              if (/^o/.test(String(key))) {
+                  setOHand(p => ([...(p || []), prevInTarget]));
+              } else {
+                  setHand(prev => [...prev, prevInTarget]);
+              }
+          }
+      };
 
-    if (src.kind === 'shield') { moveTopToSlot(getShieldTop, removeShieldTop); return; }
-    if (src.kind === 'banish') { moveTopToSlot(getBanishTop, removeBanishTop); return; }
-    if (src.kind === 'grave')  { moveTopToSlot(getGraveTop,  removeGraveTop ); return; }
-    if (src.kind === 'deck')   { moveTopToSlot(getDeckTop,   removeDeckTop  ); return; }
+      if (src.kind === 'shield') { moveTopToSlot(getShieldTop, removeShieldTop); return; }
+      if (src.kind === 'banish') { moveTopToSlot(getBanishTop, removeBanishTop); return; }
+      if (src.kind === 'grave') { moveTopToSlot(getGraveTop, removeGraveTop); return; }
+      if (src.kind === 'deck') { moveTopToSlot(getDeckTop, removeDeckTop); return; }
+
+      // NEW: opponent stacks → Slot
+      if (src.kind === 'oshield') { moveTopToSlot(getOShieldTop, removeOShieldTop); return; }
+      if (src.kind === 'obanish') { moveTopToSlot(getOBanishTop, removeOBanishTop); return; }
+      if (src.kind === 'ograve') { moveTopToSlot(getOGraveTop, removeOGraveTop); return; }
+      if (src.kind === 'odeck') { moveTopToSlot(getODeckTop, removeODeckTop); return; }
 
       // Partner → Slot (unique copy; carry partnerSide; clear any partner-slot counters/labels)
       if (src.kind === 'partner') {
@@ -430,25 +1006,22 @@ export function usePlaytestBoardDragNDown(ctx) {
           if (!id) return;
 
           // Only trigger Cost Modal when dropping to a Unit/Support slot AND partner is on back side
-          const isPlaySlot = /^u\d+$|^s\d+$/.test(String(key || ""));
+          const isPlaySlot = /^(?:ou|u)\d+$|^(?:os|s)\d+$/.test(String(key || ""));
           const mode = (typeof window !== 'undefined' && window.__PB_COST_MODULE_MODE) || 'on';
           const shouldUseCostModal = (mode !== 'off') && isPlaySlot && (String(partnerSide) === 'b');
 
           if (shouldUseCostModal) {
-              // Open Cost Modal for the partner's back side
-              const available = getAvailableElements();
-              const paid = await openPlayCostModal({ cardId: id, side: 'b', available });
-              // If cancelled, do nothing
+              // Open Cost Modal for the partner's back side (owner-aware)
+              const isOpp = /^o/.test(String(key || ''));
+              const owner = isOpp ? 'opponent' : 'player';
+              const available = getAvailableElements(owner);
+              const paid = await openPlayCostModal({ owner, cardId: id, side: 'b', available });
               if (!paid) { return; }
-              // Apply spend then place
-              spendElements(paid);
+              spendElements(paid, owner);
           }
 
           setBoardSlots(prev => {
-              let existingKey = null;
-              for (const k in (prev || {})) if (prev[k] === id) { existingKey = k; break; }
               const up = { ...(prev || {}) };
-              if (existingKey && existingKey !== key) delete up[existingKey];
               up[key] = id;
               return up;
           });
@@ -456,10 +1029,17 @@ export function usePlaytestBoardDragNDown(ctx) {
           // Preserve the current partnerSide (a/b) when placing
           setSlotSides(prev => ({ ...(prev || {}), [key]: partnerSide || 'a' }));
 
-          if (prevInTarget) setHand(prev => [...prev, prevInTarget]);
+          if (prevInTarget) {
+              if (/^o/.test(String(key))) {
+                  setOHand(p => ([...(p || []), prevInTarget]));
+              } else {
+                  setHand(prev => [...prev, prevInTarget]);
+              }
+          }
 
           clearSlotCountersAndLabels(key);       // drop counters/labels on the card we bumped
           clearSlotCountersAndLabels('partner'); // and partner-slot
+          if (typeof setPartnerInArea === 'function') setPartnerInArea(false);
           return;
       }
   };
@@ -469,8 +1049,10 @@ export function usePlaytestBoardDragNDown(ctx) {
         setGlobalDrag({ kind: 'slot', key });
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/pb', `slot:${key}`);
+        const img = e.currentTarget?.querySelector?.('.pb-card-img') || null;
+        beginDrag(e, img);
     };
-    const onSlotCardDragEnd = () => { clearGlobalDrag(); };
+    const onSlotCardDragEnd = () => { clearGlobalDrag(); endDrag(); };
 
   // ------------ Partner zone DnD ------------
     const onPartnerDragStart = (e) => {
@@ -478,65 +1060,90 @@ export function usePlaytestBoardDragNDown(ctx) {
         setGlobalDrag({ kind: 'partner', id: partnerId });
         e.dataTransfer.effectAllowed = 'copyMove';
         e.dataTransfer.setData('text/pb', `partner:${partnerId}`);
+        const img = e.currentTarget?.querySelector?.('.pb-card-img') || null;
+        beginDrag(e, img);
     };
   const onPartnerAreaDragOver = (e) => { e.preventDefault(); try { e.dataTransfer.dropEffect = 'move'; } catch {} };
 
-  const onPartnerAreaDrop = (e) => {
-    e.preventDefault();
-    const src = getDragSource(e);
-    if (!src) return;
+    const onPartnerAreaDrop = (e) => {
+        e.preventDefault();
+        const src = getDragSource(e);
+        if (!src || !partnerId) return;
 
-    // From a slot: remove partner from that slot
-      if (src.kind === 'slot' && boardSlots?.[src.key] === partnerId) {
-          const srcKey = src.key;
+        const allowId = baseId(partnerId);
+        const setSide = (side) => {
+            if (typeof setPartnerSide === 'function') setPartnerSide(side);
+        };
 
-          setBoardSlots(prev => {
-              if (!prev?.[srcKey]) return prev;
-              const up = { ...prev };
-              delete up[srcKey];
-              return up;
-          });
+        // Slot → Partner area (only if that slot holds our partner, either side)
+        if (src.kind === 'slot') {
+            const moved = boardSlots?.[src.key];
+            if (!moved || baseId(moved) !== allowId) return;
 
-          // Also clear any side set on the vacated slot
-          setSlotSides(prev => {
-              if (!prev?.[srcKey]) return prev;
-              const up = { ...prev };
-              delete up[srcKey];
-              return up;
-          });
+            const srcKey = src.key;
+            const sideFromSlot = (slotSides && slotSides[srcKey]) === 'b' ? 'b' : 'a';
 
-          // Clear exhaustion and any battle flags on that slot
-          setExhaustedSlots(prev => {
-              if (!prev?.size) return prev;
-              const next = new Set(prev);
-              next.delete(srcKey);
-              return next;
-          });
-          clearBattleFlagsIfSource(srcKey);
+            setBoardSlots(prev => {
+                if (!prev?.[srcKey]) return prev;
+                const up = { ...prev };
+                delete up[srcKey];
+                return up;
+            });
 
-          clearSlotCountersAndLabels(srcKey);
-          return;
-      }
+            setSlotSides(prev => {
+                if (!prev?.[srcKey]) return prev;
+                const up = { ...prev };
+                delete up[srcKey];
+                return up;
+            });
 
-    // From hand: remove partner from hand
-    if (src.kind === 'hand' && hand?.[src.index] === partnerId) {
-      const idx = src.index;
-      setHand(prev => {
-        const next = [...prev];
-        next.splice(idx, 1);
-        return next;
-      });
-      setDragIdx(null);
-      return;
-    }
+            setExhaustedSlots(prev => {
+                if (!prev?.size) return prev;
+                const next = new Set(prev);
+                next.delete(srcKey);
+                return next;
+            });
+            clearBattleFlagsIfSource(srcKey);
+            clearSlotCountersAndLabels(srcKey);
 
-    // From stacks: if partner is the top, remove from that stack (returns to zone)
-    if (src.kind === 'banish' && banishPile?.[0] === partnerId) { setBanishPile(p => (p?.length ? p.slice(1) : p)); return; }
-    if (src.kind === 'grave'  && gravePile?.[0]  === partnerId) { setGravePile(p => (p?.length ? p.slice(1) : p));  return; }
-    if (src.kind === 'deck'   && deckPile?.[0]   === partnerId) { setDeckPile(p => (p?.length ? p.slice(1) : p));   return; }
+            // Update partner’s current face based on the source slot
+            setSide(sideFromSlot);
+            if (typeof setPartnerInArea === 'function') setPartnerInArea(true);
+            return;
+        }
 
-    // From Partner area itself: no-op
-  };
+        // Hand → Partner area (only our partner; choose side from id suffix)
+        if (src.kind === 'hand' && Number.isFinite(src.index)) {
+            const moved = hand?.[src.index];
+            if (!moved || baseId(moved) !== allowId) return;
+
+            setHand(prev => {
+                const n = [...prev];
+                n.splice(src.index, 1);
+                return n;
+            });
+            setDragIdx(null);
+
+            setSide(/_b$/i.test(String(moved)) ? 'b' : 'a');
+            return;
+        }
+
+        // Stacks (top) → Partner area (Shield/Banish/Grave/Deck) — only our partner
+        const tryFromTop = (pileTop, removeTop) => {
+            const top = pileTop();
+            if (!top || baseId(top) !== allowId) return false;
+            removeTop();
+            setSide(/_b$/i.test(String(top)) ? 'b' : 'a');
+            return true;
+        };
+
+        if (src.kind === 'shield') { tryFromTop(getShieldTop, removeShieldTop); return; }
+        if (src.kind === 'banish') { tryFromTop(getBanishTop, removeBanishTop); return; }
+        if (src.kind === 'grave') { tryFromTop(getGraveTop, removeGraveTop); return; }
+        if (src.kind === 'deck') { tryFromTop(getDeckTop, removeDeckTop); return; }
+
+        // From Partner area itself: no-op
+    };
 
   // ------------ Shield pile DnD ------------
   const onShieldDragOver = (e) => { e.preventDefault(); try { e.dataTransfer.dropEffect = 'move'; } catch {} };
@@ -558,6 +1165,23 @@ export function usePlaytestBoardDragNDown(ctx) {
       return;
     }
 
+      // Opponent Hand → Shield
+      if (src.kind === 'ohand' && Number.isFinite(src.index)) {
+          const idx = src.index;
+          const moved = oHand?.[idx];
+          if (moved == null) return;
+          setOHand(prev => {
+              const n = [...(prev || [])];
+              n.splice(idx, 1);
+              return n;
+          });
+          // use same helper as Hand → Shield
+          const addAndShuffle = addToShieldShuffled;
+          addAndShuffle(moved);
+          setDragIdx(null);
+          return;
+      }
+
     // Slot → Shield
     if (src.kind === 'slot') {
       const moved = boardSlots?.[src.key];
@@ -572,11 +1196,17 @@ export function usePlaytestBoardDragNDown(ctx) {
     if (src.kind === 'deck')   { const m = getDeckTop();   if (!m) return; removeDeckTop();   addAndShuffle(m); return; }
     if (src.kind === 'grave')  { const m = getGraveTop();  if (!m) return; removeGraveTop();  addAndShuffle(m); return; }
     if (src.kind === 'banish') { const m = getBanishTop(); if (!m) return; removeBanishTop(); addAndShuffle(m); return; }
+      // NEW: Opponent stacks → Shield (top to shuffled)
+      if (src.kind === 'oshield') { const m = getOShieldTop(); if (!m) return; removeOShieldTop(); addAndShuffle(m); return; }
+      if (src.kind === 'odeck') { const m = getODeckTop(); if (!m) return; removeODeckTop(); addAndShuffle(m); return; }
+      if (src.kind === 'ograve') { const m = getOGraveTop(); if (!m) return; removeOGraveTop(); addAndShuffle(m); return; }
+      if (src.kind === 'obanish') { const m = getOBanishTop(); if (!m) return; removeOBanishTop(); addAndShuffle(m); return; }
 
     // Partner → Shield
     if (src.kind === 'partner' && partnerId) {
       addAndShuffle(partnerId);
       clearSlotCountersAndLabels('partner');
+      if (typeof setPartnerInArea === 'function') setPartnerInArea(false);
       return;
     }
   };
@@ -586,6 +1216,7 @@ export function usePlaytestBoardDragNDown(ctx) {
         setGlobalDrag({ kind: 'shield', id: top });
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/pb', `shield:${top}`);
+        beginDrag(e);
     };
 
   // ------------ Banish pile DnD ------------
@@ -606,6 +1237,21 @@ export function usePlaytestBoardDragNDown(ctx) {
       return;
     }
 
+      // Opponent Hand → Banish
+      if (src.kind === 'ohand' && Number.isFinite(src.index)) {
+          const idx = src.index;
+          const moved = oHand?.[idx];
+          if (moved == null) return;
+          setOHand(prev => {
+              const n = [...(prev || [])];
+              n.splice(idx, 1);
+              return n;
+          });
+          addToBanishTop(moved);
+          setDragIdx(null);
+          return;
+      }
+
     // Slot → Banish
     if (src.kind === 'slot') {
       const moved = boardSlots?.[src.key];
@@ -620,11 +1266,18 @@ export function usePlaytestBoardDragNDown(ctx) {
     if (src.kind === 'shield') { const m = getShieldTop(); if (!m) return; removeShieldTop(); addToBanishTop(m); return; }
     if (src.kind === 'deck')   { const m = getDeckTop();   if (!m) return; removeDeckTop();   addToBanishTop(m); return; }
     if (src.kind === 'grave')  { const m = getGraveTop();  if (!m) return; removeGraveTop();  addToBanishTop(m); return; }
+      // NEW: Opponent stacks → Banish
+      if (src.kind === 'oshield') { const m = getOShieldTop(); if (!m) return; removeOShieldTop(); addToBanishTop(m); return; }
+      if (src.kind === 'odeck') { const m = getODeckTop(); if (!m) return; removeODeckTop(); addToBanishTop(m); return; }
+      if (src.kind === 'ograve') { const m = getOGraveTop(); if (!m) return; removeOGraveTop(); addToBanishTop(m); return; }
+      if (src.kind === 'obanish') { const m = getOBanishTop(); if (!m) return; removeOBanishTop(); addToBanishTop(m); return; }
+
 
     // Partner → Banish
     if (src.kind === 'partner' && partnerId) {
       addToBanishTop(partnerId);
       clearSlotCountersAndLabels('partner');
+      if (typeof setPartnerInArea === 'function') setPartnerInArea(false);
       return;
     }
   };
@@ -634,6 +1287,7 @@ export function usePlaytestBoardDragNDown(ctx) {
         setGlobalDrag({ kind: 'banish', id: top });
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/pb', `banish:${top}`);
+        beginDrag(e);
     };
 
   // ------------ Grave pile DnD ------------
@@ -654,6 +1308,21 @@ export function usePlaytestBoardDragNDown(ctx) {
       return;
     }
 
+      // Opponent Hand → Grave
+      if (src.kind === 'ohand' && Number.isFinite(src.index)) {
+          const idx = src.index;
+          const moved = oHand?.[idx];
+          if (moved == null) return;
+          setOHand(prev => {
+              const n = [...(prev || [])];
+              n.splice(idx, 1);
+              return n;
+          });
+          addToGraveTop(moved);
+          setDragIdx(null);
+          return;
+      }
+
     // Slot → Grave
     if (src.kind === 'slot') {
       const moved = boardSlots?.[src.key];
@@ -668,11 +1337,17 @@ export function usePlaytestBoardDragNDown(ctx) {
     if (src.kind === 'shield') { const m = getShieldTop(); if (!m) return; removeShieldTop(); addToGraveTop(m); return; }
     if (src.kind === 'banish') { const m = getBanishTop(); if (!m) return; removeBanishTop(); addToGraveTop(m); return; }
     if (src.kind === 'deck')   { const m = getDeckTop();   if (!m) return; removeDeckTop();   addToGraveTop(m); return; }
+      // NEW: Opponent stacks → Grave
+      if (src.kind === 'oshield') { const m = getOShieldTop(); if (!m) return; removeOShieldTop(); addToGraveTop(m); return; }
+      if (src.kind === 'obanish') { const m = getOBanishTop(); if (!m) return; removeOBanishTop(); addToGraveTop(m); return; }
+      if (src.kind === 'odeck') { const m = getODeckTop(); if (!m) return; removeODeckTop(); addToGraveTop(m); return; }
+      if (src.kind === 'ograve') { const m = getOGraveTop(); if (!m) return; removeOGraveTop(); addToGraveTop(m); return; }
 
     // Partner → Grave
     if (src.kind === 'partner' && partnerId) {
       addToGraveTop(partnerId);
       clearSlotCountersAndLabels('partner');
+      if (typeof setPartnerInArea === 'function') setPartnerInArea(false);
       return;
     }
   };
@@ -682,6 +1357,7 @@ export function usePlaytestBoardDragNDown(ctx) {
         setGlobalDrag({ kind: 'grave', id: top });
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/pb', `grave:${top}`);
+        beginDrag(e);
     };
 
   // ------------ Deck pile DnD ------------
@@ -702,6 +1378,21 @@ export function usePlaytestBoardDragNDown(ctx) {
       return;
     }
 
+      // Opponent Hand → Deck (top)
+      if (src.kind === 'ohand' && Number.isFinite(src.index)) {
+          const idx = src.index;
+          const moved = oHand?.[idx];
+          if (moved == null) return;
+          setOHand(prev => {
+              const n = [...(prev || [])];
+              n.splice(idx, 1);
+              return n;
+          });
+          addToDeckTop(moved);
+          setDragIdx(null);
+          return;
+      }
+
     // Slot → Deck (top)
     if (src.kind === 'slot') {
       const moved = boardSlots?.[src.key];
@@ -716,46 +1407,334 @@ export function usePlaytestBoardDragNDown(ctx) {
     if (src.kind === 'shield') { const m = getShieldTop(); if (!m) return; removeShieldTop(); addToDeckTop(m); return; }
     if (src.kind === 'banish') { const m = getBanishTop(); if (!m) return; removeBanishTop(); addToDeckTop(m); return; }
     if (src.kind === 'grave')  { const m = getGraveTop();  if (!m) return; removeGraveTop();  addToDeckTop(m); return; }
+      // NEW: Opponent stacks → Deck (top)
+      if (src.kind === 'oshield') { const m = getOShieldTop(); if (!m) return; removeOShieldTop(); addToDeckTop(m); return; }
+      if (src.kind === 'ograve') { const m = getOGraveTop(); if (!m) return; removeOGraveTop(); addToDeckTop(m); return; }
+      if (src.kind === 'obanish') { const m = getOBanishTop(); if (!m) return; removeOBanishTop(); addToDeckTop(m); return; }
+      if (src.kind === 'odeck') { const m = getODeckTop(); if (!m) return; removeODeckTop(); addToDeckTop(m); return; }
 
     // Partner → Deck (top)
     if (src.kind === 'partner' && partnerId) {
       addToDeckTop(partnerId);
       clearSlotCountersAndLabels('partner');
+      if (typeof setPartnerInArea === 'function') setPartnerInArea(false);
       return;
     }
   };
+
+    // ------------ Opponent stacks DnD (drop targets) ------------
+    const onOShieldDragOver = (e) => { e.preventDefault(); try { e.dataTransfer.dropEffect = 'move'; } catch { } };
+    const onOShieldDrop = (e) => {
+        e.preventDefault();
+        const src = getDragSource(e);
+        if (!src) return;
+
+        // Hand → Opponent Shield
+        if (src.kind === 'hand' && Number.isFinite(src.index)) {
+            const idx = src.index;
+            const moved = hand?.[idx];
+            if (moved == null) return;
+            setHand(prev => { const n = [...prev]; n.splice(idx, 1); return n; });
+            addToOShieldShuffled(moved);
+            setDragIdx(null);
+            return;
+        }
+
+        // Opponent Hand → Opponent Shield
+        if (src.kind === 'ohand' && Number.isFinite(src.index)) {
+            const idx = src.index;
+            const moved = oHand?.[idx];
+            if (moved == null) return;
+            setOHand(prev => {
+                const n = [...(prev || [])];
+                n.splice(idx, 1);
+                return n;
+            });
+            addToOShieldShuffled(moved);
+            setDragIdx(null);
+            return;
+        }
+
+        // Slot → Opponent Shield
+        if (src.kind === 'slot') {
+            const moved = boardSlots?.[src.key];
+            if (!moved) return;
+            setBoardSlots(prev => { const up = { ...(prev || {}) }; delete up[src.key]; return up; });
+            clearSlotCountersAndLabels(src.key);
+            addToOShieldShuffled(moved);
+            return;
+        }
+
+        // Player stacks → Opponent Shield
+        if (src.kind === 'deck') { const m = deckPile?.[0]; if (!m) return; setDeckPile(p => p.slice(1)); addToOShieldShuffled(m); return; }
+        if (src.kind === 'grave') { const m = gravePile?.[0]; if (!m) return; setGravePile(p => p.slice(1)); addToOShieldShuffled(m); return; }
+        if (src.kind === 'banish') { const m = banishPile?.[0]; if (!m) return; setBanishPile(p => p.slice(1)); addToOShieldShuffled(m); return; }
+
+        // NEW: Opponent stacks → Opponent Shield
+        if (src.kind === 'odeck') { const m = getODeckTop(); if (!m) return; removeODeckTop(); addToOShieldShuffled(m); return; }
+        if (src.kind === 'ograve') { const m = getOGraveTop(); if (!m) return; removeOGraveTop(); addToOShieldShuffled(m); return; }
+        if (src.kind === 'obanish') { const m = getOBanishTop(); if (!m) return; removeOBanishTop(); addToOShieldShuffled(m); return; }
+
+        // Partner → Opponent Shield
+        if (src.kind === 'partner' && partnerId) {
+            addToOShieldShuffled(partnerId);
+            clearSlotCountersAndLabels('partner');
+            if (typeof setPartnerInArea === 'function') setPartnerInArea(false);
+            return;
+        }
+    };
+
+    const onOBanishDragOver = (e) => { e.preventDefault(); try { e.dataTransfer.dropEffect = 'move'; } catch { } };
+    const onOBanishDrop = (e) => {
+        e.preventDefault();
+        const src = getDragSource(e);
+        if (!src) return;
+
+        if (src.kind === 'hand' && Number.isFinite(src.index)) {
+            const idx = src.index;
+            const moved = hand?.[idx];
+            if (moved == null) return;
+            setHand(prev => { const n = [...prev]; n.splice(idx, 1); return n; });
+            addToOBanishTop(moved);
+            setDragIdx(null);
+            return;
+        }
+
+        // Opponent Hand → Opponent Banish
+        if (src.kind === 'ohand' && Number.isFinite(src.index)) {
+            const idx = src.index;
+            const moved = oHand?.[idx];
+            if (moved == null) return;
+            setOHand(prev => {
+                const n = [...(prev || [])];
+                n.splice(idx, 1);
+                return n;
+            });
+            addToOBanishTop(moved);
+            setDragIdx(null);
+            return;
+        }
+
+        if (src.kind === 'slot') {
+            const moved = boardSlots?.[src.key];
+            if (!moved) return;
+            setBoardSlots(prev => { const up = { ...(prev || {}) }; delete up[src.key]; return up; });
+            clearSlotCountersAndLabels(src.key);
+            addToOBanishTop(moved);
+            return;
+        }
+
+        // Player stacks → Opponent Banish
+        if (src.kind === 'shield') { const m = shieldPile?.[0]; if (!m) return; setShieldPile(p => p.slice(1)); addToOBanishTop(m); return; }
+        if (src.kind === 'deck') { const m = deckPile?.[0]; if (!m) return; setDeckPile(p => p.slice(1)); addToOBanishTop(m); return; }
+        if (src.kind === 'grave') { const m = gravePile?.[0]; if (!m) return; setGravePile(p => p.slice(1)); addToOBanishTop(m); return; }
+
+        // NEW: Opponent stacks → Opponent Banish
+        if (src.kind === 'oshield') { const m = getOShieldTop(); if (!m) return; removeOShieldTop(); addToOBanishTop(m); return; }
+        if (src.kind === 'odeck') { const m = getODeckTop(); if (!m) return; removeODeckTop(); addToOBanishTop(m); return; }
+        if (src.kind === 'ograve') { const m = getOGraveTop(); if (!m) return; removeOGraveTop(); addToOBanishTop(m); return; }
+
+        if (src.kind === 'partner' && partnerId) {
+            addToOBanishTop(partnerId);
+            clearSlotCountersAndLabels('partner');
+            if (typeof setPartnerInArea === 'function') setPartnerInArea(false);
+            return;
+        }
+    };
+
+    const onOGraveDragOver = (e) => { e.preventDefault(); try { e.dataTransfer.dropEffect = 'move'; } catch { } };
+    const onOGraveDrop = (e) => {
+        e.preventDefault();
+        const src = getDragSource(e);
+        if (!src) return;
+
+        if (src.kind === 'hand' && Number.isFinite(src.index)) {
+            const idx = src.index;
+            const moved = hand?.[idx];
+            if (moved == null) return;
+            setHand(prev => { const n = [...prev]; n.splice(idx, 1); return n; });
+            addToOGraveTop(moved);
+            setDragIdx(null);
+            return;
+        }
+
+        // Opponent Hand → Opponent Grave
+        if (src.kind === 'ohand' && Number.isFinite(src.index)) {
+            const idx = src.index;
+            const moved = oHand?.[idx];
+            if (moved == null) return;
+            setOHand(prev => {
+                const n = [...(prev || [])];
+                n.splice(idx, 1);
+                return n;
+            });
+            addToOGraveTop(moved);
+            setDragIdx(null);
+            return;
+        }
+
+        if (src.kind === 'slot') {
+            const moved = boardSlots?.[src.key];
+            if (!moved) return;
+            setBoardSlots(prev => { const up = { ...(prev || {}) }; delete up[src.key]; return up; });
+            clearSlotCountersAndLabels(src.key);
+            addToOGraveTop(moved);
+            return;
+        }
+
+        // Player stacks → Opponent Grave
+        if (src.kind === 'shield') { const m = shieldPile?.[0]; if (!m) return; setShieldPile(p => p.slice(1)); addToOGraveTop(m); return; }
+        if (src.kind === 'banish') { const m = banishPile?.[0]; if (!m) return; setBanishPile(p => p.slice(1)); addToOGraveTop(m); return; }
+        if (src.kind === 'deck') { const m = deckPile?.[0]; if (!m) return; setDeckPile(p => p.slice(1)); addToOGraveTop(m); return; }
+
+        // NEW: Opponent stacks → Opponent Grave
+        if (src.kind === 'oshield') { const m = getOShieldTop(); if (!m) return; removeOShieldTop(); addToOGraveTop(m); return; }
+        if (src.kind === 'obanish') { const m = getOBanishTop(); if (!m) return; removeOBanishTop(); addToOGraveTop(m); return; }
+        if (src.kind === 'odeck') { const m = getODeckTop(); if (!m) return; removeODeckTop(); addToOGraveTop(m); return; }
+
+        if (src.kind === 'partner' && partnerId) {
+            addToOGraveTop(partnerId);
+            clearSlotCountersAndLabels('partner');
+            if (typeof setPartnerInArea === 'function') setPartnerInArea(false);
+            return;
+        }
+    };
+
+    const onODeckDragOver = (e) => { e.preventDefault(); try { e.dataTransfer.dropEffect = 'move'; } catch { } };
+    const onODeckDrop = (e) => {
+        e.preventDefault();
+        const src = getDragSource(e);
+        if (!src) return;
+
+        if (src.kind === 'hand' && Number.isFinite(src.index)) {
+            const idx = src.index;
+            const moved = hand?.[idx];
+            if (moved == null) return;
+            setHand(prev => { const n = [...prev]; n.splice(idx, 1); return n; });
+            addToODeckTop(moved);
+            setDragIdx(null);
+            return;
+        }
+
+        // Opponent Hand → Opponent Deck (top)
+        if (src.kind === 'ohand' && Number.isFinite(src.index)) {
+            const idx = src.index;
+            const moved = oHand?.[idx];
+            if (moved == null) return;
+            setOHand(prev => {
+                const n = [...(prev || [])];
+                n.splice(idx, 1);
+                return n;
+            });
+            addToODeckTop(moved);
+            setDragIdx(null);
+            return;
+        }
+
+        if (src.kind === 'slot') {
+            const moved = boardSlots?.[src.key];
+            if (!moved) return;
+            setBoardSlots(prev => { const up = { ...(prev || {}) }; delete up[src.key]; return up; });
+            clearSlotCountersAndLabels(src.key);
+            addToODeckTop(moved);
+            return;
+        }
+
+        // Player stacks → Opponent Deck
+        if (src.kind === 'shield') { const m = shieldPile?.[0]; if (!m) return; setShieldPile(p => p.slice(1)); addToODeckTop(m); return; }
+        if (src.kind === 'banish') { const m = banishPile?.[0]; if (!m) return; setBanishPile(p => p.slice(1)); addToODeckTop(m); return; }
+        if (src.kind === 'grave') { const m = gravePile?.[0]; if (!m) return; setGravePile(p => p.slice(1)); addToODeckTop(m); return; }
+
+        // NEW: Opponent stacks → Opponent Deck
+        if (src.kind === 'oshield') { const m = getOShieldTop(); if (!m) return; removeOShieldTop(); addToODeckTop(m); return; }
+        if (src.kind === 'obanish') { const m = getOBanishTop(); if (!m) return; removeOBanishTop(); addToODeckTop(m); return; }
+        if (src.kind === 'ograve') { const m = getOGraveTop(); if (!m) return; removeOGraveTop(); addToODeckTop(m); return; }
+
+        if (src.kind === 'partner' && partnerId) {
+            addToODeckTop(partnerId);
+            clearSlotCountersAndLabels('partner');
+            if (typeof setPartnerInArea === 'function') setPartnerInArea(false);
+            return;
+        }
+    };
+
+    // --- Opponent stack drag starts (top-card) ---
+    const onOShieldDragStart = (e) => {
+        const top = getOShieldTop();
+        if (!top) { e.preventDefault(); return; }
+        setGlobalDrag({ kind: 'oshield', id: top });
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/pb', `oshield:${top}`);
+        beginDrag(e);
+    };
+    const onOBanishDragStart = (e) => {
+        const top = getOBanishTop();
+        if (!top) { e.preventDefault(); return; }
+        setGlobalDrag({ kind: 'obanish', id: top });
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/pb', `obanish:${top}`);
+        beginDrag(e);
+    };
+    const onOGraveDragStart = (e) => {
+        const top = getOGraveTop();
+        if (!top) { e.preventDefault(); return; }
+        setGlobalDrag({ kind: 'ograve', id: top });
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/pb', `ograve:${top}`);
+        beginDrag(e);
+    };
+    const onODeckDragStart = (e) => {
+        const top = getODeckTop();
+        if (!top) { e.preventDefault(); return; }
+        setGlobalDrag({ kind: 'odeck', id: top });
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/pb', `odeck:${top}`);
+        beginDrag(e);
+    };
+
     const onDeckDragStart = (e) => {
         const top = getDeckTop();
         if (!top) { e.preventDefault(); return; }
         setGlobalDrag({ kind: 'deck', id: top });
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/pb', `deck:${top}`);
+        beginDrag(e);
     };
 
-  return {
-    // payload utils
-    getDragSource,
+    return {
+        // payload utils
+        getDragSource,
 
-    // hand
-    onHandDragStart, onHandDragEnd, onHandContainerDragOver, onHandContainerDrop,
-    onHandItemDragOver, onHandItemDrop,
+        // hand
+        onHandDragStart, onHandDragEnd, onHandContainerDragOver, onHandContainerDrop,
+        onHandItemDragOver, onHandItemDrop,
 
-    // board slots
-    onSlotDragOver, onSlotDragLeave, onSlotDrop, onSlotCardDragStart, onSlotCardDragEnd,
+        // opponent hand
+        onOHandDragStart, onOHandDragEnd, onOHandContainerDragOver, onOHandContainerDrop,
+        onOHandItemDragOver, onOHandItemDrop,
 
-    // partner zone
-    onPartnerDragStart, onPartnerAreaDragOver, onPartnerAreaDrop,
+        // board slots
+        onSlotDragOver, onSlotDragLeave, onSlotDrop, onSlotCardDragStart, onSlotCardDragEnd,
 
-    // shield
-    onShieldDragOver, onShieldDrop, onShieldDragStart,
+        // partner zone
+        onPartnerDragStart, onPartnerAreaDragOver, onPartnerAreaDrop,
 
-    // banish
-    onBanishDragOver, onBanishDrop, onBanishDragStart,
+        // shield
+        onShieldDragOver, onShieldDrop, onShieldDragStart,
 
-    // grave
-    onGraveDragOver, onGraveDrop, onGraveDragStart,
+        // banish
+        onBanishDragOver, onBanishDrop, onBanishDragStart,
 
-    // deck
-    onDeckDragOver, onDeckDrop, onDeckDragStart,
-  };
+        // grave
+        onGraveDragOver, onGraveDrop, onGraveDragStart,
+
+        // deck
+        onDeckDragOver, onDeckDrop, onDeckDragStart,
+
+        // NEW: opponent stack drop targets + drag starts
+        onOShieldDragOver, onOShieldDrop, onOShieldDragStart,
+        onOBanishDragOver, onOBanishDrop, onOBanishDragStart,
+        onOGraveDragOver, onOGraveDrop, onOGraveDragStart,
+        onODeckDragOver, onODeckDrop, onODeckDragStart,
+    };
 }
