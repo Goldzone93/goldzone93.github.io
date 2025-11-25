@@ -302,14 +302,15 @@ export function usePlaytestBoardDragNDown(ctx) {
       return;
     }
 
-    // Partner → Hand (avoid dups)
-    if (src.kind === 'partner' && partnerId) {
-      setHand(prev => (prev.includes(partnerId) ? prev : [...prev, partnerId]));
-      // clear partner-slot counters/labels if leaving that zone
-      clearSlotCountersAndLabels('partner');
-      setDragIdx(null);
-      return;
-    }
+      // Partner → Hand (move from partner area; avoid dups)
+      if (src.kind === 'partner' && partnerId) {
+          setHand(prev => (prev.includes(partnerId) ? prev : [...prev, partnerId]));
+          // Leaving the partner zone — clear its per-slot state and mark partner as no longer in the area
+          clearSlotCountersAndLabels('partner');
+          if (typeof setPartnerInArea === 'function') setPartnerInArea(false);
+          setDragIdx(null);
+          return;
+      }
 
     // Shield/Banish/Grave/Deck (top) → Hand (append)
     if (src.kind === 'shield') { const m = getShieldTop(); if (!m) return; removeShieldTop(); setHand(prev => [...prev, m]); setDragIdx(null); return; }
@@ -1125,6 +1126,7 @@ export function usePlaytestBoardDragNDown(ctx) {
             setDragIdx(null);
 
             setSide(/_b$/i.test(String(moved)) ? 'b' : 'a');
+            if (typeof setPartnerInArea === 'function') setPartnerInArea(true);
             return;
         }
 
@@ -1134,6 +1136,7 @@ export function usePlaytestBoardDragNDown(ctx) {
             if (!top || baseId(top) !== allowId) return false;
             removeTop();
             setSide(/_b$/i.test(String(top)) ? 'b' : 'a');
+            if (typeof setPartnerInArea === 'function') setPartnerInArea(true);
             return true;
         };
 
