@@ -42,6 +42,11 @@ export function getVisibleElementNames(owner = 'player') {
 
 // Best-effort “spend” (owner-aware)
 export function spendElements(spendMap, owner = 'player') {
+    // Support callers that pass { spend, hoards } payloads
+    if (spendMap && typeof spendMap === 'object' && !Array.isArray(spendMap) && spendMap.spend && typeof spendMap.spend === 'object') {
+        spendMap = spendMap.spend;
+    }
+
     const st = (typeof window !== 'undefined')
         ? (owner === 'opponent' ? window.__PB_O_ELEMENTS_STATE : window.__PB_ELEMENTS_STATE)
         : null;
@@ -78,6 +83,11 @@ export function getAvailableElementsOpponent() {
 
 // Best-effort “spend” from opponent pools
 export function spendOpponentElements(spendMap) {
+    // Support callers that pass { spend, hoards } payloads
+    if (spendMap && typeof spendMap === 'object' && !Array.isArray(spendMap) && spendMap.spend && typeof spendMap.spend === 'object') {
+        spendMap = spendMap.spend;
+    }
+
     const st = (typeof window !== "undefined" && window.__PB_O_ELEMENTS_STATE) || null;
 
     const normalized = Object.entries(spendMap || {}).reduce((acc, [rawK, rawV]) => {
@@ -205,7 +215,7 @@ function clamp(n, min, max) {
 const sum = (obj) => Object.values(obj || {}).reduce((a, b) => a + (Number(b) || 0), 0);
 
 // Cache element & card metadata
-const EL = { list: null, byLetter: null, colorByName: null, order: null };
+const EL = { list: null, byLetter: null, colorByName: null, order: null, byInternal: null, colorByInternal: null };
 const CARDS = { map: null };
 // NEW: caches for other public data files
 const PARTNERS = { map: null };
@@ -221,16 +231,23 @@ async function getElementsMeta() {
     const list = Array.isArray(elRes) ? elRes : [];
     const byLetter = {};
     const colorByName = {};
+    const byInternal = {};
+    const colorByInternal = {};
     list.forEach(e => {
+        const internal = String(e.InternalName || '').trim();
         const name = e.DisplayName;
         const letter = (e.CostStringLetter || "").toUpperCase();
         const color = e.HexColor || "#888";
         if (letter) byLetter[letter] = name;
         if (name) colorByName[name] = color;
+        if (internal) byInternal[internal] = name || internal;
+        if (internal) colorByInternal[internal] = color;
     });
     EL.list = list;
     EL.byLetter = byLetter;
     EL.colorByName = colorByName;
+    EL.byInternal = byInternal;
+    EL.colorByInternal = colorByInternal;
     EL.order = order.length ? order : list.map(e => e.DisplayName).filter(Boolean);
     return EL;
 }
@@ -342,21 +359,26 @@ function parseCostString(str, byLetter) {
    ========================= */
 
 function CostModal({ options, onCancel, onConfirm }) {
-    const { cardId, side = "a", available = null, owner = "player" } = options || {};
-    const [meta, setMeta] = useState({ order: [], colors: {}, byLetter: {} });
+    const { cardId, side = "a", available = null, owner = "player", hoardCards = [] } = options || {};
+    const [meta, setMeta] = useState({ order: [], colors: {}, byLetter: {}, byInternal: {}, colorByInternal: {} });
+    const [baseRequired, setBaseRequired] = useState({ fixed: {}, wild: 0 });
+    const [baseCostStr, setBaseCostStr] = useState("");
     const [required, setRequired] = useState({ fixed: {}, wild: 0 });
     const [spend, setSpend] = useState({});
+    const [overrideCost, setOverrideCost] = useState(false);
+    const [overrideCostStr, setOverrideCostStr] = useState("");
     const [avail, setAvail] = useState(available || getAvailableElements(owner));
     const visibleSet = useMemo(() => getVisibleElementNames(owner), [owner]);
     const [title, setTitle] = useState("Cost Window");
     const [imgSrc, setImgSrc] = useState(null);
     const [anyType, setAnyType] = useState(false);
+    const [hoardPick, setHoardPick] = useState({}); // { [slotKey]: internalName }
 
     // Load metadata and card info
     useEffect(() => {
         (async () => {
-            const { order, colorByName, byLetter } = await getElementsMeta();
-            setMeta({ order, colors: colorByName, byLetter });
+            const { order, colorByName, byLetter, byInternal, colorByInternal } = await getElementsMeta();
+            setMeta({ order, colors: colorByName, byLetter, byInternal, colorByInternal });
 
             const { rec: card, resolvedId } = await getCardRecordById(cardId, side);
             const name = card?.Name || card?.CardName || resolvedId || cardId;
@@ -373,9 +395,28 @@ function CostModal({ options, onCancel, onConfirm }) {
                 card?.["Cost ID"] ?? card?.CostID ?? card?.CostId ?? card?.CostString ?? "";
 
             const parsed = parseCostString(costStr, byLetter);
+            setBaseCostStr(String(costStr || ""));
+            setBaseRequired(parsed);
             setRequired(parsed);
+
+            // Reset override state when opening a new card
+            setOverrideCost(false);
+            setOverrideCostStr("");
+            setHoardPick({});
         })();
     }, [cardId, side]);
+
+    // Apply override cost when enabled
+    useEffect(() => {
+        if (!overrideCost) {
+            setRequired(baseRequired);
+            return;
+        }
+
+        const str = String(overrideCostStr || baseCostStr || "");
+        const parsed = parseCostString(str, meta.byLetter || {});
+        setRequired(parsed);
+    }, [overrideCost, overrideCostStr, baseCostStr, baseRequired, meta.byLetter]);
 
     // Initialize spend with zeros for visible keys
     useEffect(() => {
@@ -390,8 +431,18 @@ function CostModal({ options, onCancel, onConfirm }) {
         setSpend(base);
     }, [avail, meta.order, required.fixed, visibleSet]);
 
+    const hoardSpend = useMemo(() => {
+        const out = {};
+        for (const internal of Object.values(hoardPick || {})) {
+            if (!internal) continue;
+            const name = (meta.byInternal && meta.byInternal[internal]) || String(internal);
+            out[name] = (out[name] || 0) + 1;
+        }
+        return out;
+    }, [hoardPick, meta.byInternal]);
+
     const totalRequired = useMemo(() => sum(required.fixed) + (required.wild || 0), [required]);
-    const totalSpent = useMemo(() => sum(spend), [spend]);
+    const totalSpent = useMemo(() => sum(spend) + sum(hoardSpend), [spend, hoardSpend]);
 
     // Total fixed requirement (sum across all specific elements)
     const fixedNeedTotal = useMemo(() => sum(required.fixed), [required]);
@@ -403,10 +454,11 @@ function CostModal({ options, onCancel, onConfirm }) {
         }
         // Normal rule: meet each element's specific fixed requirement
         for (const [name, need] of Object.entries(required.fixed || {})) {
-            if ((spend[name] || 0) < (need || 0)) return false;
+            const have = (spend[name] || 0) + (hoardSpend[name] || 0);
+            if (have < (need || 0)) return false;
         }
         return true;
-    }, [required, spend, totalSpent, anyType, fixedNeedTotal]);
+    }, [required, spend, hoardSpend, totalSpent, anyType, fixedNeedTotal]);
 
     const meetsWild = useMemo(() => {
         const wildNeed = required.wild || 0;
@@ -419,9 +471,10 @@ function CostModal({ options, onCancel, onConfirm }) {
         }
 
         // Normal rule: only "extra beyond fixed-by-type" can cover wild
-        const fixedOnly = Object.entries(required.fixed || {}).reduce(
-            (acc, [k, need]) => acc + Math.min(need, spend[k] || 0), 0
-        );
+        const fixedOnly = Object.entries(required.fixed || {}).reduce((acc, [k, need]) => {
+            const have = (spend[k] || 0) + (hoardSpend[k] || 0);
+            return acc + Math.min(need, have);
+        }, 0);
         const extra = totalSpent - fixedOnly;
         return extra >= wildNeed;
     }, [required, spend, totalSpent, anyType, fixedNeedTotal]);
@@ -431,6 +484,19 @@ function CostModal({ options, onCancel, onConfirm }) {
     const setQty = (name, n) => {
         const have = Number(avail?.[name] || 0);
         setSpend(prev => ({ ...prev, [name]: clamp(n, 0, have) }));
+    };
+
+    const toggleHoardPick = (slotKey, internalName) => {
+        setHoardPick((prev) => {
+            const cur = prev?.[slotKey];
+            const next = { ...(prev || {}) };
+            if (cur === internalName) {
+                delete next[slotKey];
+                return next;
+            }
+            next[slotKey] = internalName;
+            return next;
+        });
     };
 
     const chip = (key, label, n, color) => {
@@ -451,9 +517,15 @@ function CostModal({ options, onCancel, onConfirm }) {
         ...(required.wild ? [chip("req-wild", "Wild", required.wild, "#9aa0a6")] : []),
     ];
 
-    const payingChips = Object.entries(spend || {})
-        .filter(([, v]) => (v || 0) > 0)
-        .map(([name, amt]) => chip(`pay-${name}`, name, amt, meta.colors[name]));
+    const payingChips = (() => {
+        const combined = { ...(spend || {}) };
+        for (const [k, v] of Object.entries(hoardSpend || {})) {
+            combined[k] = (combined[k] || 0) + (Number(v) || 0);
+        }
+        return Object.entries(combined)
+            .filter(([, v]) => (v || 0) > 0)
+            .map(([name, amt]) => chip(`pay-${name}`, name, amt, meta.colors[name]));
+    })();
 
     return (
         <div className="pb-modal" role="dialog" aria-modal="true">
@@ -548,6 +620,65 @@ function CostModal({ options, onCancel, onConfirm }) {
                     </div>
                 </div>
 
+                {/* === HOARD COUNTERS (Resource Counters on board cards) === */}
+                {Array.isArray(hoardCards) && hoardCards.length ? (
+                    <div className="pb-cost-hoards">
+                        <div className="pb-eg-sectionlabel">Hoard Counters</div>
+
+                        <div className="pb-cost-hoards-grid">
+                            {hoardCards.map((c) => {
+                                const slotKey = String(c.slotKey || '').trim();
+                                const cid = c.cardId;
+                                if (!slotKey || !cid) return null;
+
+                                const counts = c.counts || {};
+                                const picked = hoardPick?.[slotKey];
+                                const img = getImagePath(cid, c.side || 'a');
+
+                                const chips = Object.entries(counts)
+                                    .filter(([, v]) => (Number(v) || 0) > 0)
+                                    .map(([internal, v]) => {
+                                        const display = (meta.byInternal && meta.byInternal[internal]) || internal;
+                                        const color = (meta.colorByInternal && meta.colorByInternal[internal]) || meta.colors[display] || '#777';
+                                        const active = picked === internal;
+                                        const bg = hexToRGBA(color, active ? 0.35 : 0.18);
+                                        const bd = active ? color : hexToRGBA(color, 0.45);
+                                        return (
+                                            <button
+                                                key={`${slotKey}-${internal}`}
+                                                type="button"
+                                                className={`pb-filter-chip${active ? ' active' : ''}`}
+                                                style={{ borderColor: bd, backgroundColor: bg }}
+                                                onClick={() => toggleHoardPick(slotKey, internal)}
+                                                title={`Use 1 ${display} from ${slotKey}`}
+                                            >
+                                                <span>{display}</span>
+                                                <span style={{ marginLeft: 8, padding: '0 6px', borderRadius: 6, background: 'rgba(0,0,0,0.25)' }}>
+                                                    x {Number(v) || 0}
+                                                </span>
+                                            </button>
+                                        );
+                                    });
+
+                                return (
+                                    <div key={slotKey} className="pb-cost-hoard-item">
+                                        <img
+                                            className="pb-card-img pb-cost-hoard-img"
+                                            src={img}
+                                            alt={`hoard:${slotKey}:${cid}`}
+                                            draggable="false"
+                                            onError={onImgError(cid, c.side || 'a')}
+                                        />
+                                        <div className="pb-cost-hoard-chips">
+                                            {chips.length ? chips : null}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                ) : null}
+
                 {/* === Footer actions === */}
                 <div className="pb-encounter-actions" style={{ justifyContent: "space-between" }}>
                     <div style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
@@ -555,6 +686,7 @@ function CostModal({ options, onCancel, onConfirm }) {
                             const zeros = {};
                             for (const k of Object.keys(spend || {})) zeros[k] = 0;
                             setSpend(zeros);
+                            setHoardPick({});
                         }}>Reset</button>
 
                         {/* Moved to the RIGHT of Reset; smaller checkbox via pb-check--small */}
@@ -566,6 +698,31 @@ function CostModal({ options, onCancel, onConfirm }) {
                                 onChange={(e) => setAnyType(e.target.checked)}
                             />
                         </label>
+
+                        <label className="pb-check pb-check--small" title="Override this card's required cost string">
+                            <span>Override Cost</span>
+                            <input
+                                type="checkbox"
+                                checked={overrideCost}
+                                onChange={(e) => {
+                                    const checked = e.target.checked;
+                                    setOverrideCost(checked);
+                                    if (checked && !String(overrideCostStr || "").trim()) {
+                                        setOverrideCostStr(String(baseCostStr || ""));
+                                    }
+                                }}
+                            />
+                        </label>
+
+                        <input
+                            className="pb-search-input pb-cost-override-input"
+                            type="text"
+                            value={overrideCostStr}
+                            onChange={(e) => setOverrideCostStr(e.target.value)}
+                            disabled={!overrideCost}
+                            placeholder={overrideCost ? "e.g. 2W1A" : ""}
+                            title="Cost string (same rules as card Cost)"
+                        />
                     </div>
 
                     <div className="pb-encounter-count">{totalSpent} / {totalRequired}</div>
@@ -579,7 +736,11 @@ function CostModal({ options, onCancel, onConfirm }) {
                                     .map(([k, v]) => [String(k).trim(), Math.max(0, Math.floor(Number(v) || 0))])
                                     .filter(([, v]) => v > 0)
                             );
-                            onConfirm(finalSpend);
+                            const hoardsUsed = Object.entries(hoardPick || {})
+                                .map(([slotKey, internal]) => ({ slotKey: String(slotKey), internal: String(internal) }))
+                                .filter((x) => x.slotKey && x.internal);
+
+                            onConfirm({ spend: finalSpend, hoards: hoardsUsed });
                         }}
                     >
                         Confirm

@@ -4140,7 +4140,6 @@ export default function App() {
 
         <div style={{marginTop:12}} className="row">
                   <button className="deck-action-btn" onClick={exportJSON}>Export JSON</button>
-                  <button className="deck-action-btn" onClick={exportCSV}>Export CSV</button>
         </div>
 
               {/* Floating deck preview tooltip (rendered to <body>) */}

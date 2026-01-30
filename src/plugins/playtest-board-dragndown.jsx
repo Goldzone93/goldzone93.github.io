@@ -20,6 +20,7 @@ export function usePlaytestBoardDragNDown(ctx) {
         slotSides, setSlotSides,
         slotCounters, setSlotCounters,
         slotLabels, setSlotLabels,
+        slotResources, setSlotResources,
         hand, setHand,
         oHand, setOHand,
         deckPile, setDeckPile,
@@ -52,6 +53,47 @@ export function usePlaytestBoardDragNDown(ctx) {
 
     // Helper: normalize id without _a/_b suffix
     const baseId = (s) => String(s || '').replace(/_(a|b)$/i, '');
+
+    // Gather cards on the paying side that have hoard/resource counters
+    const gatherHoardCardsForOwner = (payOwner) => {
+        const who = String(payOwner || 'player').toLowerCase();
+        const wantOpp = who === 'opponent';
+
+        const out = [];
+
+        for (const [slotKeyRaw, cid] of Object.entries(boardSlots || {})) {
+            const slotKey = String(slotKeyRaw || '').trim();
+            if (!slotKey || !cid) continue;
+
+            const isOppSlot = /^o/i.test(slotKey);
+            if (wantOpp !== isOppSlot) continue;
+
+            const counts = slotResources?.[slotKey];
+            if (!counts) continue;
+
+            const total = Object.values(counts).reduce((a, b) => a + (Number(b) || 0), 0);
+            if (total <= 0) continue;
+
+            const side = slotSides?.[slotKey] || (/_b$/i.test(String(cid)) ? 'b' : 'a');
+            out.push({ slotKey, cardId: cid, side, counts: { ...counts } });
+        }
+
+        // Player partner is not in boardSlots
+        if (!wantOpp && partnerId) {
+            const counts = slotResources?.partner;
+            const total = counts ? Object.values(counts).reduce((a, b) => a + (Number(b) || 0), 0) : 0;
+            if (total > 0) {
+                out.push({
+                    slotKey: 'partner',
+                    cardId: partnerId,
+                    side: partnerSide || 'a',
+                    counts: { ...(counts || {}) },
+                });
+            }
+        }
+
+        return out;
+    };
 
     // ---- Drag performance helpers (prevent GPU spikes & reflow storms) ----
     const getDragGhost = () => {
@@ -175,20 +217,26 @@ export function usePlaytestBoardDragNDown(ctx) {
         });
     };
 
-  const clearSlotCountersAndLabels = (slotKey) => {
-    setSlotCounters(prev => {
-      if (!prev || !prev[slotKey]) return prev;
-      const up = { ...prev };
-      delete up[slotKey];
-      return up;
-    });
-    setSlotLabels(prev => {
-      if (!prev || !prev[slotKey]) return prev;
-      const up = { ...prev };
-      delete up[slotKey];
-      return up;
-    });
-  };
+    const clearSlotCountersAndLabels = (slotKey) => {
+        setSlotCounters(prev => {
+            if (!prev || !prev[slotKey]) return prev;
+            const up = { ...prev };
+            delete up[slotKey];
+            return up;
+        });
+        setSlotLabels(prev => {
+            if (!prev || !prev[slotKey]) return prev;
+            const up = { ...prev };
+            delete up[slotKey];
+            return up;
+        });
+        setSlotResources?.(prev => {
+            if (!prev || !prev[slotKey]) return prev;
+            const up = { ...prev };
+            delete up[slotKey];
+            return up;
+        });
+    };
 
   // While moving from battle slot, clear role/origin on the source battle slot
   const clearBattleFlagsIfSource = (slotKey) => {
@@ -819,13 +867,38 @@ export function usePlaytestBoardDragNDown(ctx) {
               const isOpp = /^o/.test(String(key || ''));
               const owner = isOpp ? 'opponent' : 'player';
               const available = getAvailableElements(owner);
-              const paid = await openPlayCostModal({ owner, cardId, side: sideFromId, available });
+              const paid = await openPlayCostModal({ owner, cardId, side: sideFromId, available, hoardCards: gatherHoardCardsForOwner(owner) });
 
               // Cancelled → leave everything exactly as-is
               if (!paid) { setDragIdx(null); return; }
 
+              const paidSpend = (paid && typeof paid === 'object' && paid.spend) ? paid.spend : paid;
+              const paidHoards = (paid && typeof paid === 'object' && Array.isArray(paid.hoards)) ? paid.hoards : [];
+
               // Spend resources (best effort) THEN place the card
-              spendElements(paid, owner);
+              spendElements(paidSpend, owner);
+
+              // Spend selected hoard counters (each selected card contributes exactly 1)
+              if (paidHoards.length && typeof setSlotResources === 'function') {
+                  setSlotResources((prev) => {
+                      const next = { ...(prev || {}) };
+                      for (const it of paidHoards) {
+                          const slotKey = String(it.slotKey || '').trim();
+                          const internal = String(it.internal || '').trim();
+                          if (!slotKey || !internal) continue;
+
+                          const cur = { ...(next[slotKey] || {}) };
+                          const now = Math.max(0, (Number(cur[internal]) || 0) - 1);
+
+                          if (now <= 0) delete cur[internal];
+                          else cur[internal] = now;
+
+                          if (Object.keys(cur).length) next[slotKey] = cur;
+                          else delete next[slotKey];
+                      }
+                      return next;
+                  });
+              }
 
               setHand(prev => {
                   const next = [...prev];
@@ -840,7 +913,7 @@ export function usePlaytestBoardDragNDown(ctx) {
                   }
                   return next;
               });
-              setSlotSides(prev => ({ ...(prev || {}), [key]: 'a' }));
+              setSlotSides(prev => ({ ...(prev || {}), [key]: sideFromId }));
               if (prevInTarget) clearSlotCountersAndLabels(key);
               setDragIdx(null);
               return;
@@ -889,11 +962,35 @@ export function usePlaytestBoardDragNDown(ctx) {
                   ? getAvailableElementsOpponent()
                   : {};
 
-              const paid = await openPlayCostModal({ owner: 'opponent', cardId, side: sideFromId, available });
+              const paid = await openPlayCostModal({ owner: 'opponent', cardId, side: sideFromId, available, hoardCards: gatherHoardCardsForOwner('opponent') });
               if (!paid) { setDragIdx(null); return; }
 
+              const paidSpend = (paid && typeof paid === 'object' && paid.spend) ? paid.spend : paid;
+              const paidHoards = (paid && typeof paid === 'object' && Array.isArray(paid.hoards)) ? paid.hoards : [];
+
               if (typeof spendOpponentElements === 'function') {
-                  spendOpponentElements(paid);
+                  spendOpponentElements(paidSpend);
+              }
+
+              // Spend selected hoard counters
+              if (paidHoards.length && typeof setSlotResources === 'function') {
+                  setSlotResources((prev) => {
+                      const next = { ...(prev || {}) };
+                      for (const it of paidHoards) {
+                          const slotKey = String(it.slotKey || '').trim();
+                          const internal = String(it.internal || '').trim();
+                          if (!slotKey || !internal) continue;
+
+                          const cur = { ...(next[slotKey] || {}) };
+                          const now = Math.max(0, (Number(cur[internal]) || 0) - 1);
+                          if (now <= 0) delete cur[internal];
+                          else cur[internal] = now;
+
+                          if (Object.keys(cur).length) next[slotKey] = cur;
+                          else delete next[slotKey];
+                      }
+                      return next;
+                  });
               }
           }
 
@@ -916,61 +1013,119 @@ export function usePlaytestBoardDragNDown(ctx) {
           return;
       }
 
-    // Slot → Slot (carry side, counters, labels; clear battle flags if leaving)
-    if (src.kind === 'slot') {
-      const moved = boardSlots?.[src.key];
-      if (!moved) return;
+      // Slot → Slot (carry side, counters, labels; clear battle flags if leaving)
+      if (src.kind === 'slot') {
+          const moved = boardSlots?.[src.key];
+          if (!moved) return;
 
-      const srcKey = src.key;
-      const dstKey = key;
+          const srcKey = src.key;
+          const dstKey = key;
 
-      setBoardSlots(prev => {
-        const up = { ...(prev || {}) };
-        delete up[srcKey];
-        up[dstKey] = moved;
-        return up;
-      });
-      setSlotSides(prev => {
-        const next = { ...(prev || {}) };
-        const side = prev?.[srcKey] === 'b' ? 'b' : 'a';
-        delete next[srcKey];
-        next[dstKey] = side;
-        return next;
-      });
+          // Special case: Opponent Partner (opartner) → Opponent play slot should trigger Cost Modal
+          const mode = (typeof window !== 'undefined' && window.__PB_COST_MODULE_MODE) || 'on';
+          const isOpponentPlaySlot = /^(?:ou|os)\d+$/.test(String(dstKey || ""));
+          const srcSide = (slotSides?.[srcKey] === 'b') ? 'b' : 'a';
+          const isOPartner = (srcKey === 'opartner' && oPartnerId && baseId(moved) === baseId(oPartnerId));
 
-      // counters mirror
-      setSlotCounters(prev => {
-        const next = { ...(prev || {}) };
-        const srcCounters = next[srcKey];
-        const tracked = (slot) => /^(?:ou|u)\d+$|^(?:os|s)\d+$|^(?:ob|b)\d+$/.test(slot);
-        if (prevInTarget) delete next[dstKey];
-        if (srcCounters && tracked(srcKey) && tracked(dstKey)) next[dstKey] = srcCounters;
-        delete next[srcKey];
-        return next;
-      });
+          if (isOPartner && isOpponentPlaySlot && srcSide === 'b' && mode !== 'off') {
+              const available = (typeof getAvailableElementsOpponent === 'function')
+                  ? getAvailableElementsOpponent()
+                  : {};
 
-      // labels mirror
-      setSlotLabels(prev => {
-        const next = { ...(prev || {}) };
-        const srcLabels = next[srcKey];
-        const tracked = (slot) => /^(?:ou|u)\d+$|^(?:os|s)\d+$|^(?:ob|b)\d+$/.test(slot);
-        if (prevInTarget) delete next[dstKey];
-        if (srcLabels && tracked(srcKey) && tracked(dstKey)) next[dstKey] = srcLabels;
-        delete next[srcKey];
-        return next;
-      });
+              const paid = await openPlayCostModal({
+                  owner: 'opponent',
+                  cardId: moved,
+                  side: srcSide,
+                  available,
+                  hoardCards: gatherHoardCardsForOwner('opponent'),
+              });
+              if (!paid) { setDragIdx(null); return; }
 
-      clearBattleFlagsIfSource(srcKey);
+              const paidSpend = (paid && typeof paid === 'object' && paid.spend) ? paid.spend : paid;
+              const paidHoards = (paid && typeof paid === 'object' && Array.isArray(paid.hoards)) ? paid.hoards : [];
 
-        if (prevInTarget) {
-            if (/^o/.test(String(dstKey))) {
-                setOHand(p => ([...(p || []), prevInTarget]));
-            } else {
-                setHand(prev => [...prev, prevInTarget]);
-            }
-        }
-      return;
-    }
+              if (typeof spendOpponentElements === 'function') {
+                  spendOpponentElements(paidSpend);
+              }
+
+              // Spend selected hoard counters (each selected card contributes exactly 1)
+              if (paidHoards.length && typeof setSlotResources === 'function') {
+                  setSlotResources((prev) => {
+                      const next = { ...(prev || {}) };
+                      for (const it of paidHoards) {
+                          const slotKey = String(it.slotKey || '').trim();
+                          const internal = String(it.internal || '').trim();
+                          if (!slotKey || !internal) continue;
+
+                          const cur = { ...(next[slotKey] || {}) };
+                          const now = Math.max(0, (Number(cur[internal]) || 0) - 1);
+
+                          if (now <= 0) delete cur[internal];
+                          else cur[internal] = now;
+
+                          if (Object.keys(cur).length) next[slotKey] = cur;
+                          else delete next[slotKey];
+                      }
+                      return next;
+                  });
+              }
+          }
+
+          setBoardSlots(prev => {
+              const up = { ...(prev || {}) };
+              delete up[srcKey];
+              up[dstKey] = moved;
+              return up;
+          });
+          setSlotSides(prev => {
+              const next = { ...(prev || {}) };
+              const side = prev?.[srcKey] === 'b' ? 'b' : 'a';
+              delete next[srcKey];
+              next[dstKey] = side;
+              return next;
+          });
+
+          // counters mirror
+          setSlotCounters(prev => {
+              const next = { ...(prev || {}) };
+              const srcCounters = next[srcKey];
+              const tracked = (slot) => /^(?:ou|u)\d+$|^(?:os|s)\d+$|^(?:ob|b)\d+$/.test(slot);
+              if (prevInTarget) delete next[dstKey];
+              if (srcCounters && tracked(srcKey) && tracked(dstKey)) next[dstKey] = srcCounters;
+              delete next[srcKey];
+              return next;
+          });
+
+          // labels mirror
+          setSlotLabels(prev => {
+              const next = { ...(prev || {}) };
+              const srcLabels = next[srcKey];
+              const tracked = (slot) => /^(?:ou|u)\d+$|^(?:os|s)\d+$|^(?:ob|b)\d+$/.test(slot);
+              if (prevInTarget) delete next[dstKey];
+              if (srcLabels && tracked(srcKey) && tracked(dstKey)) next[dstKey] = srcLabels;
+              delete next[srcKey];
+              return next;
+          });
+
+          setSlotResources?.((prev) => {
+              if (!prev || !prev[srcKey]) return prev;
+              const up = { ...prev };
+              up[key] = { ...(prev[srcKey] || {}) };
+              delete up[srcKey];
+              return up;
+          });
+
+          clearBattleFlagsIfSource(srcKey);
+
+          if (prevInTarget) {
+              if (/^o/.test(String(dstKey))) {
+                  setOHand(p => ([...(p || []), prevInTarget]));
+              } else {
+                  setHand(prev => [...prev, prevInTarget]);
+              }
+          }
+          return;
+      }
 
     // Shield/Banish/Grave/Deck → Slot
       // Shield/Banish/Grave/Deck → Slot
@@ -1016,9 +1171,34 @@ export function usePlaytestBoardDragNDown(ctx) {
               const isOpp = /^o/.test(String(key || ''));
               const owner = isOpp ? 'opponent' : 'player';
               const available = getAvailableElements(owner);
-              const paid = await openPlayCostModal({ owner, cardId: id, side: 'b', available });
+              const paid = await openPlayCostModal({ owner, cardId: id, side: 'b', available, hoardCards: gatherHoardCardsForOwner(owner) });
               if (!paid) { return; }
-              spendElements(paid, owner);
+
+              const paidSpend = (paid && typeof paid === 'object' && paid.spend) ? paid.spend : paid;
+              const paidHoards = (paid && typeof paid === 'object' && Array.isArray(paid.hoards)) ? paid.hoards : [];
+
+              spendElements(paidSpend, owner);
+
+              // Spend selected hoard counters
+              if (paidHoards.length && typeof setSlotResources === 'function') {
+                  setSlotResources((prev) => {
+                      const next = { ...(prev || {}) };
+                      for (const it of paidHoards) {
+                          const slotKey = String(it.slotKey || '').trim();
+                          const internal = String(it.internal || '').trim();
+                          if (!slotKey || !internal) continue;
+
+                          const cur = { ...(next[slotKey] || {}) };
+                          const now = Math.max(0, (Number(cur[internal]) || 0) - 1);
+                          if (now <= 0) delete cur[internal];
+                          else cur[internal] = now;
+
+                          if (Object.keys(cur).length) next[slotKey] = cur;
+                          else delete next[slotKey];
+                      }
+                      return next;
+                  });
+              }
           }
 
           setBoardSlots(prev => {

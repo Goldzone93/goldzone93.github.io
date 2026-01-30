@@ -18,6 +18,8 @@ import { RemoveLabelModal } from './playtest-board-modules.jsx';
 import { AddLabelModal } from './playtest-board-modules.jsx';
 import { EncounterModal } from './playtest-board-modules.jsx';
 import { GalleryModal } from './playtest-board-modules.jsx';
+import { RoilModal } from './playtest-board-modules.jsx';
+import { ResourceCountersModal } from './playtest-board-modules.jsx';
 import { OpponentBoard } from './playtest-board-opponent-board.jsx';
 
 // Runtime data (loaded via fetch from /public)
@@ -407,6 +409,27 @@ function ElementResourceTrackers({ visibleNames = null, engineMode = true, owner
             window.removeEventListener('pb:elements:inc-strict', onIncStrict);
         };
     }, [engineMode, strictInc]);
+
+    // Opponent: allow external increment events (Produce Step, etc.)
+    React.useEffect(() => {
+        if (owner !== 'opponent') return;
+
+        const onInc = (e) => {
+            const name = e?.detail?.name;
+            if (name) inc(name);
+        };
+        const onIncStrict = (e) => {
+            const name = e?.detail?.name;
+            if (name) strictInc(name);
+        };
+
+        window.addEventListener('pb:o-elements:inc', onInc);
+        window.addEventListener('pb:o-elements:inc-strict', onIncStrict);
+        return () => {
+            window.removeEventListener('pb:o-elements:inc', onInc);
+            window.removeEventListener('pb:o-elements:inc-strict', onIncStrict);
+        };
+    }, [owner, strictInc]);
 
     React.useEffect(() => {
         if (!engineMode) return;
@@ -1946,6 +1969,8 @@ export function PlaytestBoard() {
     // NEW: per-slot counters (future-proof for rules applying to counters)
     const [slotCounters, setSlotCounters] = React.useState({}); // { [slotKey]: { [counterId]: number } }
     const [slotLabels, setSlotLabels] = React.useState({}); // { [slotKey]: string[] }
+    // NEW: per-slot resource hoards (element InternalName -> number)
+    const [slotResources, setSlotResources] = React.useState({}); // { [slotKey]: { [internalName]: number } }
     // Live ref so step/phase listeners can read latest counters without stale closures
     const slotCountersRef = React.useRef(slotCounters);
     React.useEffect(() => { slotCountersRef.current = slotCounters; }, [slotCounters]);
@@ -1953,6 +1978,8 @@ export function PlaytestBoard() {
     const [counterDefs, setCounterDefs] = React.useState([]);   // [{ id, name, isStatus }]
     // NEW: modal state for editing a slot's counters
     const [counterPrompt, setCounterPrompt] = React.useState(null); // { slotKey, counts: {id: n} } | null
+    // NEW: modal state for editing a slot's hoards
+    const [resourcePrompt, setResourcePrompt] = React.useState(null); // { slotKey, counts: {internalName: n} } | null
     const [healPrompt, setHealPrompt] = React.useState(null); // { slotKey, x, damage, statuses } | null
     // Opens the Modify Stat modal when context menu fires 'modify_stat'
     const [statPrompt, setStatPrompt] = React.useState(null); // { slotKey, stat, op, amount } | null
@@ -2055,6 +2082,12 @@ export function PlaytestBoard() {
         return () => window.removeEventListener('pb:new-game', clear);
     }, []);
 
+    React.useEffect(() => {
+        const clear = () => setSlotResources({});
+        window.addEventListener('pb:new-game', clear);
+        return () => window.removeEventListener('pb:new-game', clear);
+    }, []);
+
     // Helper: render visible badges for a slot's counters
     const renderCounterBadges = (countsObj) => {
         const entries = Object.entries(countsObj || {}).filter(([, n]) => (n || 0) > 0);
@@ -2076,6 +2109,25 @@ export function PlaytestBoard() {
                         </span>
                     );
                 })}
+            </div>
+        );
+    };
+
+    const hoardsTotal = (obj) =>
+        Object.values(obj || {}).reduce((a, b) => a + (Number(b) || 0), 0);
+
+    const renderResourceBadges = (resObj) => {
+        const entries = Object.entries(resObj || {}).filter(([, n]) => (Number(n) || 0) > 0);
+        if (!entries.length) return null;
+
+        return (
+            <div className="pb-resource-badges" aria-label="Hoards">
+                {entries.map(([internal, n]) => (
+                    <span key={internal} className="pb-resource-badge" title={internal}>
+                        <img src={`/images/${internal}.png`} alt={internal} draggable="false" />
+                        <span className="pb-resource-qty">{`x ${n}`}</span>
+                    </span>
+                ))}
             </div>
         );
     };
@@ -2307,6 +2359,7 @@ export function PlaytestBoard() {
     // NEW: Foresee modal (Deck-only)
     const [foresee, setForesee] = React.useState(null); // { ids: string[], mid: string[], top: string[], bottom: string[] }
     const [foreseeDrag, setForeseeDrag] = React.useState(null); // { zone: 'mid'|'top'|'bottom', index: number }
+    const [roil, setRoil] = React.useState(null); // { owner, n, ids, grave, toDeck }
 
     // ADD THIS near other useState declarations (top-level in PlaytestBoard)
     const [partnerInArea, setPartnerInArea] = React.useState(!!partnerId);
@@ -2340,18 +2393,22 @@ export function PlaytestBoard() {
         return next;
     };
 
-    const reorderStack = React.useCallback((stack, from, to) => {
+    const reorderStack = React.useCallback((stack, from, to, owner = 'player') => {
         if (!Number.isFinite(from) || !Number.isFinite(to) || from === to) return;
 
+        const isOpp = String(owner || 'player').toLowerCase() === 'opponent';
         const apply = (setter) => setter(prev => moveItem(prev, from, to));
-        if (stack === 'deck') apply(setDeckPile);
-        else if (stack === 'shield') apply(setShieldPile);
-        else if (stack === 'grave') apply(setGravePile);
-        else if (stack === 'banish') apply(setBanishPile);
 
-        // Keep the open modal in sync when it's a full-stack view
+        if (stack === 'deck') apply(isOpp ? setODeckPile : setDeckPile);
+        else if (stack === 'shield') apply(isOpp ? setOShieldPile : setShieldPile);
+        else if (stack === 'grave') apply(isOpp ? setOGravePile : setGravePile);
+        else if (stack === 'banish') apply(isOpp ? setOBanishPile : setBanishPile);
+
+        // Keep the open modal in sync when it's a full-stack view (same owner)
         setPeekCard(prev => {
             if (!prev || !prev.all || prev.from !== stack || !Array.isArray(prev.ids)) return prev;
+            const prevOwner = String(prev.owner || 'player').toLowerCase();
+            if (prevOwner !== (isOpp ? 'opponent' : 'player')) return prev;
             return { ...prev, ids: moveItem(prev.ids, from, to) };
         });
     }, []);
@@ -2380,7 +2437,7 @@ export function PlaytestBoard() {
         const from = src.index;
         if (from < to) to--; // account for removal shifting indices
 
-        reorderStack(src.stack, from, to);
+        reorderStack(src.stack, from, to, peekCard.owner || 'player');
         setPeekDrag(null);
     };
 
@@ -2391,7 +2448,7 @@ export function PlaytestBoard() {
         const src = getDragSource(e);
         if (!src || src.kind !== 'peek' || src.stack !== peekCard.from) return;
         const to = Array.isArray(peekCard.ids) ? peekCard.ids.length : 0; // drop to end
-        reorderStack(src.stack, src.index, to);
+        reorderStack(src.stack, src.index, to, peekCard.owner || 'player');
         setPeekDrag(null);
     };
 
@@ -2484,6 +2541,53 @@ export function PlaytestBoard() {
         setForesee(null);
     };
 
+    // ===== Roil (Grave -> Deck) =====
+    const onRoilClose = () => {
+        if (!roil) return;
+        const dirty = (roil.toDeck?.length || 0) > 0 || (roil.grave?.length || 0) !== (roil.ids?.length || 0);
+        if (!dirty || window.confirm('Close Roil without applying?')) setRoil(null);
+    };
+
+    const onRoilConfirm = () => {
+        if (!roil) return;
+        const n = Number(roil.n) || 0;
+        const selected = (roil.toDeck || []).slice(0);
+        if (selected.length !== n) return;
+
+        const isOpp = String(roil.owner || 'player') === 'opponent';
+        const setDeckPileX = isOpp ? setODeckPile : setDeckPile;
+        const setGravePileX = isOpp ? setOGravePile : setGravePile;
+
+        const removeSelected = (pile, picked) => {
+            const counts = new Map();
+            for (const id of picked) counts.set(id, (counts.get(id) || 0) + 1);
+            const out = [];
+            for (const id of (pile || [])) {
+                const c = counts.get(id) || 0;
+                if (c > 0) { counts.set(id, c - 1); continue; }
+                out.push(id);
+            }
+            return out;
+        };
+
+        const shuffle = (arr) => {
+            const next = [...arr];
+            for (let i = next.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [next[i], next[j]] = [next[j], next[i]];
+            }
+            return next;
+        };
+
+        setGravePileX((prev) => removeSelected(prev, selected));
+        setDeckPileX((prev) => shuffle([...(prev || []), ...selected]));
+
+        window.dispatchEvent(
+            new CustomEvent(isOpp ? 'pb:o-elements:inc' : 'pb:elements:inc', { detail: { name: 'Neutral' } })
+        );
+        setRoil(null);
+    };
+
     // Close peek on Escape
     React.useEffect(() => {
         if (!peekCard) return;
@@ -2545,6 +2649,7 @@ export function PlaytestBoard() {
         slotSides, setSlotSides,
         slotCounters, setSlotCounters,
         slotLabels, setSlotLabels,
+        slotResources, setSlotResources,
         hand, setHand,
         oHand, setOHand,
         deckPile, setDeckPile,
@@ -2681,25 +2786,33 @@ export function PlaytestBoard() {
 
             // Produce Step: open a modal to select one of partner's elements (respect cap)
             if (phaseKey === 'start' && stepLabel === 'Produce Step') {
-                // NEW: Skip Produce modal on Turn 1 if we’re going first
+                const owner = (opponentBoard === 'yes' && !yturn) ? 'opponent' : 'player';
+
                 const isFirstTurn = (window.__PB_TURN_COUNT || 1) === 1;
-                if (goingFirst === 'yes' && isFirstTurn) {
-                    // Disabled per request: no element selection on Turn 1 when going first
-                    return;
+                if (isFirstTurn) {
+                    // Player behavior: if we're going first, skip Turn 1 Produce selection (unchanged)
+                    if (owner === 'player' && goingFirst === 'yes') return;
+
+                    // Opponent behavior: if we're going second, skip Opponent Turn 1 Produce selection
+                    if (owner === 'opponent' && goingFirst === 'no') return;
                 }
 
                 try {
+                    const pid = owner === 'opponent' ? oPartnerId : partnerId;
+                    if (!pid) return;
+
                     const partner =
-                        dataMaps?.partnersById?.get?.(partnerId) ||
-                        (dataMaps?.partnersById && dataMaps.partnersById[partnerId]) ||
+                        dataMaps?.partnersById?.get?.(pid) ||
+                        (dataMaps?.partnersById && dataMaps.partnersById[pid]) ||
                         null;
 
                     const elems = [partner?.ElementType1, partner?.ElementType2, partner?.ElementType3]
                         .filter(Boolean);
                     if (!elems || elems.length === 0) return;
 
-                    // current values + cap + overrides to determine allowed picks
-                    const er = window.__PB_ELEMENTS_STATE || {};
+                    const er = owner === 'opponent'
+                        ? (window.__PB_O_ELEMENTS_STATE || {})
+                        : (window.__PB_ELEMENTS_STATE || {});
                     const cap = Number(er?.cap) || 10;
                     const vals = er?.values || {};
                     const ov = er?.overrides || {};
@@ -2710,14 +2823,16 @@ export function PlaytestBoard() {
                         return { name, atCap, override };
                     });
 
-                    // If *all* are at cap *and* none have override, nothing to pick
                     if (options.every(o => o.atCap && !o.override)) {
-                        window.alert('Produce Step: All of your partner’s element resources are already at cap.');
+                        window.alert(
+                            owner === 'opponent'
+                                ? 'Produce Step: All of the opponent’s partner element resources are already at cap.'
+                                : 'Produce Step: All of your partner’s element resources are already at cap.'
+                        );
                         return;
                     }
 
-                    // Open modal with options (we’ll dispatch non-strict inc so override can apply)
-                    setProducePrompt({ options, cap });
+                    setProducePrompt({ options, cap, owner });
                 } catch (err) {
                     console.warn('[Produce Step] failed to prepare modal:', err);
                 }
@@ -2726,7 +2841,7 @@ export function PlaytestBoard() {
 
         window.addEventListener('pb:turn:entered', onEntered);
         return () => window.removeEventListener('pb:turn:entered', onEntered);
-    }, [partnerId, dataMaps, hasImportedDeck, goingFirst, opponentBoard]);
+    }, [partnerId, oPartnerId, dataMaps, hasImportedDeck, goingFirst, opponentBoard]);
 
     // Slot/Partner/Stack DnD handlers now provided by usePlaytestBoardDragNDown(...)
 
@@ -2902,6 +3017,9 @@ export function PlaytestBoard() {
         const cleanup = installPBActionHandlers({
             // ids / simple values
             partnerId,
+            partnerSide,
+            boardSlots,
+            slotSides,
 
             // current values needed for the counters modal
             counterDefs,
@@ -2913,6 +3031,9 @@ export function PlaytestBoard() {
             setHealPrompt,
             slotLabels,             // NEW
             setSlotLabels,          // NEW
+            slotResources,
+            setSlotResources,
+            setResourcePrompt,
             setAddLabelPrompt,      // NEW
             setRemoveLabelPrompt,   // NEW
             setDamagePrompt,        // NEW (opens Inflict/Damage X modal)
@@ -2940,6 +3061,7 @@ export function PlaytestBoard() {
             setGravePile,
             setPeekCard,
             setForesee,
+            setRoil,
             setPendingPlace,
             setCounterPrompt, // <-- needed to open the modal
             setODeckPile,
@@ -3180,8 +3302,10 @@ export function PlaytestBoard() {
                               // NEW: show counters on opponent slots
                               slotCounters={slotCounters}
                               slotLabels={slotLabels}
+                              slotResources={slotResources}
                               renderCounterBadges={renderCounterBadges}
                               renderLabelBadges={renderLabelBadges}
+                              renderResourceBadges={renderResourceBadges}
                               renderUnitStats={renderUnitStats}
                               /* NEW: opponent stack drop + drag handlers */
                               onOShieldDragOver={onOShieldDragOver}
@@ -3261,6 +3385,7 @@ export function PlaytestBoard() {
                                                   data-card-id={placed}
                                                   data-slot-key={key}
                                                   data-side={side}
+                                                  data-hoards-total={hoardsTotal(slotResources[key])}
                                                   title="Drag to another slot or back to your hand"
                                               >
                                                   <div className="pb-card-frame">
@@ -3274,6 +3399,7 @@ export function PlaytestBoard() {
                                                       />
                                                       {renderLabelBadges(slotLabels[key])}     {/* NEW */}
                                                       {renderCounterBadges(slotCounters[key])}
+                                                      {renderResourceBadges(slotResources[key])}
                                                       {renderUnitStats(key, placed)}
                                                       {/* ADD — attacker badge only while in a battle slot */}
                                                       {/^b\d+$/.test(key) && battleRole[key] === 'attacker' && (
@@ -3360,6 +3486,7 @@ export function PlaytestBoard() {
                                           data-card-id={partnerId}
                                           data-slot-key="partner"
                                           data-side={partnerSide}
+                                          data-hoards-total={hoardsTotal(slotResources['partner'])}
                                       >
                                           <div className="pb-card-frame">
                                               <CardZoom id={ensureFrontId(partnerId)} name={partnerId} />
@@ -3372,6 +3499,7 @@ export function PlaytestBoard() {
                                               />
                                               {renderLabelBadges(slotLabels['partner'])}
                                               {renderCounterBadges(slotCounters['partner'])}
+                                              {renderResourceBadges(slotResources['partner'])}
                                               {renderUnitStats('partner', partnerId)}
                                           </div>
                                       </div>
@@ -3412,6 +3540,7 @@ export function PlaytestBoard() {
                                               data-slot-key={key}
                                               data-side={(slotSides[key] || 'a')}           // NEW — used by menu label
                                               data-no-block={slotCounters[key]?.terrify_k > 0 ? '1' : undefined}
+                                              data-hoards-total={hoardsTotal(slotResources[key])}
                                           >
                                               <div className="pb-card-frame">
                                                   <CardZoom id={ensureFrontId(placed)} name={placed} />
@@ -3424,6 +3553,7 @@ export function PlaytestBoard() {
                                                   />
                                                   {renderLabelBadges(slotLabels[key])}     {/* NEW */}
                                                   {renderCounterBadges(slotCounters[key])}
+                                                  {renderResourceBadges(slotResources[key])}
                                                   {renderUnitStats(key, placed)}
                                               </div>
                                           </div>
@@ -3490,6 +3620,7 @@ export function PlaytestBoard() {
                                               data-card-id={placed}
                                               data-slot-key={key}
                                               data-side={(slotSides[key] || 'a')}           // NEW — used by menu label
+                                              data-hoards-total={hoardsTotal(slotResources[key])}
                                           >
                                               <div className="pb-card-frame">
                                                   <CardZoom id={ensureFrontId(placed)} name={placed} />
@@ -3502,6 +3633,7 @@ export function PlaytestBoard() {
                                                   />
                                                   {renderLabelBadges(slotLabels[key])}     {/* NEW */}
                                                   {renderCounterBadges(slotCounters[key])}
+                                                  {renderResourceBadges(slotResources[key])}
                                               </div>
                                           </div>
                                       )}
@@ -3908,7 +4040,7 @@ export function PlaytestBoard() {
               >
                   <div className="pb-modal-content">
                       <div className="pb-modal-header">
-                          <div className="title">Produce Step</div>
+                          <div className="title">Produce Step{producePrompt?.owner === 'opponent' ? ' (Opponent)' : ''}</div>
                           <div className="actions">
                               <button className="tips-btn" onClick={() => setProducePrompt(null)}>Cancel</button>
                           </div>
@@ -3924,7 +4056,10 @@ export function PlaytestBoard() {
                                           if (opt.atCap && !opt.override) return;
                                           // Use non-strict inc so the element's Override toggle can allow producing past cap
                                           window.dispatchEvent(
-                                              new CustomEvent('pb:elements:inc', { detail: { name: opt.name } })
+                                              new CustomEvent(
+                                                  (producePrompt?.owner === 'opponent') ? 'pb:o-elements:inc' : 'pb:elements:inc',
+                                                  { detail: { name: opt.name } }
+                                              )
                                           );
                                           setProducePrompt(null);
                                       }}
@@ -4054,6 +4189,25 @@ export function PlaytestBoard() {
                       </div>
                   </div>
               </div>
+          )}
+
+          {resourcePrompt && (
+              <ResourceCountersModal
+                  prompt={resourcePrompt}
+                  setPrompt={setResourcePrompt}
+                  onClose={() => setResourcePrompt(null)}
+                  resources={slotResources}
+                  setResources={setSlotResources}
+              />
+          )}
+
+          {roil && (
+              <RoilModal
+                  roil={roil}
+                  setRoil={setRoil}
+                  onClose={onRoilClose}
+                  onConfirm={onRoilConfirm}
+              />
           )}
 
           {foresee && (

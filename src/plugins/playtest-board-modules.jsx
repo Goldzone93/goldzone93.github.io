@@ -1510,3 +1510,355 @@ export function GalleryModal({ title, items, onClose }) {
         </div>
     );
 }
+/**
+ * ResourceCountersModal
+ * Adds per-card "resource hoard" counters keyed by element InternalName (from /elements.json)
+ * Props:
+ *  - prompt: { slotKey, counts: { [internalName]: number } }
+ *  - setPrompt(fn)
+ *  - onClose()
+ *  - resources: object map of slotKey -> { [internalName]: number }
+ *  - setResources(fn)
+ */
+export function ResourceCountersModal({
+    prompt,
+    setPrompt,
+    onClose,
+    resources = {},
+    setResources,
+}) {
+    const slotKey = prompt?.slotKey || '';
+    const counts = prompt?.counts || {};
+
+    const [elements, setElements] = React.useState([]);
+
+    React.useEffect(() => {
+        let alive = true;
+        fetch('/elements.json', { cache: 'no-store' })
+            .then(r => r.json())
+            .then(json => { if (alive) setElements(Array.isArray(json) ? json : []); })
+            .catch(() => { if (alive) setElements([]); });
+        return () => { alive = false; };
+    }, []);
+
+    const clamp = (v) => {
+        const n = Math.floor(Number(v));
+        return Number.isFinite(n) && n >= 0 ? n : 0;
+    };
+
+    const setCount = (internal, nextVal) => {
+        const n = clamp(nextVal);
+        setPrompt?.((prev) => {
+            if (!prev) return prev;
+            const cur = prev.counts || {};
+            return { ...prev, counts: { ...cur, [internal]: n } };
+        });
+    };
+
+    const total = Object.values(counts || {}).reduce((a, b) => a + (Number(b) || 0), 0);
+
+    const onConfirm = () => {
+        const cleaned = Object.fromEntries(
+            Object.entries(counts || {}).filter(([, n]) => (Number(n) || 0) > 0)
+        );
+
+        setResources?.((prev) => {
+            const base = prev || {};
+            const up = { ...base };
+            if (Object.keys(cleaned).length) up[slotKey] = cleaned;
+            else delete up[slotKey];
+            return up;
+        });
+
+        onClose?.();
+    };
+
+    const onReset = () => {
+        const existing = (resources && resources[slotKey]) || {};
+        setPrompt?.((prev) => prev ? ({ ...prev, counts: { ...existing } }) : prev);
+    };
+
+    const onClearAll = () => {
+        setPrompt?.((prev) => prev ? ({ ...prev, counts: {} }) : prev);
+        setResources?.((prev) => {
+            if (!prev?.[slotKey]) return prev;
+            const up = { ...(prev || {}) };
+            delete up[slotKey];
+            return up;
+        });
+    };
+
+    const titleSuffix = /^o/.test(String(slotKey)) ? ' (Opponent)' : '';
+
+    return (
+        <div className="pb-modal pb-counters pb-resource-counters" role="dialog" aria-modal="true" aria-label="Add Resource Counters">
+            <div className="pb-modal-content">
+                <div className="pb-modal-header">
+                    <div className="pb-modal-title">Add Resource Counters{titleSuffix}</div>
+                    <button className="tips-btn" onClick={onClose}>Cancel</button>
+                </div>
+
+                <div className="pb-modal-body">
+                    <div className="pb-counters-list">
+                        {(elements || []).map((el) => {
+                            const internal = String(el?.InternalName || '').trim();
+                            if (!internal) return null;
+
+                            const displayName = String(el?.DisplayName || internal);
+
+                            const n = clamp(counts?.[internal] || 0);
+                            const img = `/images/${internal}.png`;
+
+                            return (
+                                <div key={internal} className="pb-counter-row pb-resource-row">
+                                    <div className="pb-resource-left">
+                                        <img className="pb-resource-row-icon" src={img} alt={displayName} draggable="false" />
+                                        <div className="pb-counter-name" title={internal}>{displayName}</div>
+                                    </div>
+
+                                    <div className="pb-mini-counter" role="group" aria-label={`${displayName} counter`}>
+                                        <button
+                                            className="pb-btn"
+                                            onClick={() => setCount(internal, Math.max(0, n - 1))}
+                                            title="Decrease"
+                                        >−</button>
+                                        <output className="hp-display" aria-live="polite">{n}</output>
+                                        <button
+                                            className="pb-btn"
+                                            onClick={() => setCount(internal, n + 1)}
+                                            title="Increase"
+                                        >+</button>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                <div className="pb-encounter-actions">
+                    <button className="tips-btn pb-encounter-generate" onClick={onConfirm}>Confirm</button>
+
+                    <span className="pb-encounter-count">{total} total</span>
+
+                    <button
+                        className="tips-btn"
+                        title="Reset to the card's current hoards"
+                        onClick={() => {
+                            if (!window.confirm('Reset all resource values to the card’s current hoards?')) return;
+                            onReset();
+                        }}
+                    >
+                        Reset
+                    </button>
+
+                    <button
+                        className="tips-btn"
+                        title="Clear all resource hoards from this card"
+                        onClick={() => {
+                            if (!window.confirm('Clear all resource hoards from this card?')) return;
+                            onClearAll();
+                            onClose?.();
+                        }}
+                    >
+                        Clear All Counters
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ===== Roil modal (Grave -> Deck) =====
+// Mirrors the Foresee layout, but with a single "To Deck" area.
+export function RoilModal({ roil, setRoil, onClose, onConfirm }) {
+    if (!roil) return null;
+
+    // local copy of image helpers to avoid coupling to playtest-board.jsx
+    const IMG = {
+        frontOf: (internal) => `/images/${String(internal || '').replace(/_(a|b)$/i, '')}_a.png`,
+        fallbackFront: '/images/card0000_a.png',
+    };
+    const ensureFrontId = (id) => `${String(id || '').replace(/_(a|b)$/i, '')}_a`;
+    function onImgError(type, internalName) {
+        return (e) => {
+            e.currentTarget.onerror = null;
+            console.warn('[playtest-board] Missing image → using fallback', { type, internalName, missing: e.currentTarget.src });
+            e.currentTarget.src = IMG.fallbackFront;
+        };
+    }
+
+    const move = (fromZone, fromIdx, toZone, toIdx = null) => {
+        setRoil?.((prev) => {
+            if (!prev) return prev;
+
+            const zones = {
+                grave: [...(prev.grave || [])],
+                deck: [...(prev.toDeck || [])],
+            };
+            const srcArr = zones[fromZone];
+            const dstArr = zones[toZone];
+            if (!srcArr || !dstArr) return prev;
+            if (!Number.isFinite(fromIdx) || fromIdx < 0 || fromIdx >= srcArr.length) return prev;
+
+            // Prevent adding beyond the target roil number
+            if (toZone === 'deck' && fromZone !== 'deck' && dstArr.length >= (Number(prev.n) || 0)) return prev;
+
+            const [moved] = srcArr.splice(fromIdx, 1);
+            const insertAt = Number.isFinite(toIdx) ? Math.max(0, Math.min(toIdx, dstArr.length)) : dstArr.length;
+            dstArr.splice(insertAt, 0, moved);
+
+            return {
+                ...prev,
+                grave: zones.grave,
+                toDeck: zones.deck,
+            };
+        });
+    };
+
+    const parseRZ = (e) => {
+        const t = (e?.dataTransfer?.getData('text/pb') || '').split(':');
+        if (t.length === 3 && t[0] === 'rz') {
+            const [_tag, zone, idxStr] = t;
+            const index = Number.parseInt(idxStr, 10);
+            if (['grave', 'deck'].includes(zone) && Number.isFinite(index)) {
+                return { zone, index };
+            }
+        }
+        return null;
+    };
+
+    const onDragStart = (zone, idx) => (e) => {
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/pb', `rz:${zone}:${idx}`);
+    };
+
+    const onDragOver = (e) => { e.preventDefault(); };
+
+    const onDropOnTile = (zone, overIdx) => (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const src = parseRZ(e);
+        if (!src) return;
+        let insertAt = overIdx;
+        if (src.zone === zone && src.index < insertAt) insertAt -= 1;
+        move(src.zone, src.index, zone, insertAt);
+    };
+
+    const onDropOnZone = (zone) => (e) => {
+        e.preventDefault();
+        const src = parseRZ(e);
+        if (!src) return;
+        move(src.zone, src.index, zone, null);
+    };
+
+    const canConfirm = (roil?.toDeck?.length || 0) === (Number(roil?.n) || 0);
+
+    return (
+        <div
+            className="pb-modal pb-foresee pb-roil"
+            role="dialog"
+            aria-modal="true"
+            onMouseDown={(e) => {
+                if (e.target.classList?.contains('pb-modal')) onClose?.();
+            }}
+        >
+            <div className="pb-modal-content">
+                <div className="pb-modal-header">
+                    <div className="pb-modal-title">Roil</div>
+                    <button className="tips-btn" onClick={onClose} title="Close">Close</button>
+                </div>
+
+                <div className="pb-foresee-body">
+                    {/* Grave (unassigned) */}
+                    <div
+                        className="pb-foresee-zone pb-foresee-reveal"
+                        onDragOver={onDragOver}
+                        onDrop={onDropOnZone('grave')}
+                    >
+                        {(roil.grave?.length || 0) === 0 && (
+                            <div className="pb-foresee-placeholder">Grave Area</div>
+                        )}
+                        <div className="pb-foresee-cards">
+                            {(roil.grave || []).map((id, i) => (
+                                <figure
+                                    key={`g-${id}-${i}`}
+                                    className="pb-gallery-card pb-foresee-card"
+                                    draggable
+                                    onDragStart={onDragStart('grave', i)}
+                                    onDragOver={onDragOver}
+                                    onDrop={onDropOnTile('grave', i)}
+                                >
+                                    <CardZoom id={ensureFrontId(id)} name={id} />
+                                    <img
+                                        className="pb-card-img"
+                                        src={IMG.frontOf(id)}
+                                        alt={`roil:grave:${id}:a`}
+                                        onError={onImgError('card', id)}
+                                        draggable="false"
+                                    />
+                                </figure>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Action row */}
+                    <div className="pb-foresee-bar">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <button
+                                className="tips-btn"
+                                disabled={!canConfirm}
+                                onClick={onConfirm}
+                                title={canConfirm ? 'Confirm' : 'Move the required number of cards first'}
+                            >
+                                Confirm
+                            </button>
+                            <div style={{ fontSize: 12, color: 'var(--muted)' }}>
+                                {(roil.toDeck?.length || 0)}/{Number(roil.n) || 0}
+                            </div>
+                        </div>
+                        <div className="pb-foresee-instructions">Click and Drag Cards to Area</div>
+                        <button
+                            className="tips-btn"
+                            onClick={() => setRoil?.((prev) => prev ? ({ ...prev, grave: prev.ids?.slice?.() || [], toDeck: [] }) : prev)}
+                            title="Reset"
+                        >
+                            Reset
+                        </button>
+                    </div>
+
+                    {/* To Deck */}
+                    <div
+                        className="pb-foresee-zone"
+                        onDragOver={onDragOver}
+                        onDrop={onDropOnZone('deck')}
+                    >
+                        {(roil.toDeck?.length || 0) === 0 && (
+                            <div className="pb-foresee-placeholder">Deck Area</div>
+                        )}
+                        <div className="pb-foresee-cards">
+                            {(roil.toDeck || []).map((id, i) => (
+                                <figure
+                                    key={`d-${id}-${i}`}
+                                    className="pb-gallery-card pb-foresee-card"
+                                    draggable
+                                    onDragStart={onDragStart('deck', i)}
+                                    onDragOver={onDragOver}
+                                    onDrop={onDropOnTile('deck', i)}
+                                >
+                                    <CardZoom id={ensureFrontId(id)} name={id} />
+                                    <img
+                                        className="pb-card-img"
+                                        src={IMG.frontOf(id)}
+                                        alt={`roil:deck:${id}:a`}
+                                        onError={onImgError('card', id)}
+                                        draggable="false"
+                                    />
+                                </figure>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}

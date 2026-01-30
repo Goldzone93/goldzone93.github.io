@@ -2071,6 +2071,73 @@
 .pb-slot.battle:has(.pb-unit-stats) .pb-counter-badges {
     bottom: 25px;
 }
+
+/* --- Resource (Hoard) badges (always visible on card image) --- */
+.pb-resource-badges {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  z-index: 2;
+  pointer-events: auto;
+}
+
+.pb-slot.unit:has(.pb-unit-stats) .pb-resource-badges {
+  bottom: 25px;
+}
+
+.pb-resource-badge {
+  background: rgba(0,0,0,0.65);
+  border: 1px solid #263143;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 11px;
+  line-height: 1.1;
+  color: #fff;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pb-resource-badge img {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+}
+
+/* Opponent board: keep hoards upright and positioned to visual bottom-right */
+.pb-board.pb-opponent .pb-slot .pb-slot-card .pb-card-frame .pb-resource-badges {
+  transform: rotate(180deg); /* cancel board rotation so "x #" reads upright */
+  right: auto;
+  bottom: auto;
+  left: 6px;
+  top: 6px;
+  align-items: flex-start;
+}
+
+.pb-board.pb-opponent .pb-slot.unit:has(.pb-unit-stats) .pb-resource-badges,
+.pb-board.pb-opponent .pb-slot.battle:has(.pb-unit-stats) .pb-resource-badges {
+  top: 25px;
+}
+
+/* --- Resource modal row icon alignment --- */
+.pb-resource-row .pb-resource-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pb-resource-row-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
 /* NEW — battle badge that sits on the card (rotates with the card) */
 .pb-slot .pb-slot-card .pb-card-frame .pb-battle-badge {
   position: absolute;
@@ -2498,6 +2565,45 @@
   max-width: 100%;
   margin: 0 auto;                     /* keep the whole group centered */
 }
+/* Cost modal: Hoard Counters section (resource counters on cards) */
+.pb-cost-hoards {
+    margin-top: 18px;
+    display: grid;
+    justify-items: center;
+    row-gap: 12px;
+}
+
+.pb-cost-hoards-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 0 12px 12px;
+}
+
+.pb-cost-hoard-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 200px;
+}
+
+.pb-cost-hoard-img {
+    width: 180px;
+    max-width: 42vw;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+}
+
+.pb-cost-hoard-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
 /* A touch of breathing room before the Confirm bar (Cost modal only) */
 .pb-cost-content .pb-encounter-actions {
     margin-top: 12px;
@@ -2521,6 +2627,18 @@
 .pb-encounter-actions .pb-check,
 .pb-encounter-actions .pb-check span {
     white-space: nowrap;
+}
+/* Cost modal: Override Cost input in the footer bar */
+.pb-cost-override-input {
+  width: 140px;
+  height: 28px;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+
+.pb-cost-override-input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 /* ===== Inflict Damage modal (mockup layout) ===== */
 .pb-modal.pb-damage .pb-modal-content {

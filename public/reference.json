@@ -4,7 +4,7 @@
   "SubType": ["Reaction", "Augment"],
   "Rarity": ["Basic", "Common", "Uncommon", "Rare", "Ultra Rare"],
   "Element": ["Neutral", "Earth", "Fire", "Nature", "Storm", "Water", "Toxic", "Void", "Ice", "Synthetic"],
-  "Set": ["CS1","CS2"],
+  "Set": ["CS1","CS2","S4","S5","S6"],
   "Format": ["Freeform", "Story 1", "Story 2", "Example"],
   "Packs": ["Freeform", "CS1", "CS2", "Example"],
   "RarityColors": {

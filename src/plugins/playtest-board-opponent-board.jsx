@@ -55,8 +55,10 @@ export function OpponentBoard({
     // NEW: counters + labels on opponent cards
     slotCounters,
     slotLabels,
+    slotResources,
     renderCounterBadges,
     renderLabelBadges,
+    renderResourceBadges,
     renderUnitStats,
 
     // click handler for placement mode
@@ -86,7 +88,8 @@ export function OpponentBoard({
         const side = (slotSides && slotSides[k]) || 'a';
         const isExhausted = exhaustedSlots?.has?.(k);
         const isHover = hoverSlot === k;
-
+        const hoardsTotal = (obj) =>
+            Object.values(obj || {}).reduce((a, b) => a + (Number(b) || 0), 0);
         return (
             <div
                 className={className}
@@ -104,7 +107,9 @@ export function OpponentBoard({
                 role="gridcell"
             >
                 {cardId ? (
-                    <div className={`pb-slot-card${isExhausted ? ' is-exhausted' : ''}`}>
+                    <div className={`pb-slot-card${isExhausted ? ' is-exhausted' : ''}`}
+                        data-hoards-total={hoardsTotal(slotResources?.[k])}
+                    >
                         <div className="pb-card-frame">
                             <CardZoom id={ensureFrontId(cardId)} name={cardId} />
                             <img
@@ -122,6 +127,7 @@ export function OpponentBoard({
                             />
                             {renderCounterBadges?.(slotCounters?.[k])}
                             {renderLabelBadges?.(slotLabels?.[k])}
+                            {renderResourceBadges?.(slotResources?.[k])}
                             {/^(?:ou|ob)\d+$/.test(k) && renderUnitStats?.(k, cardId)}
                             {/* Battle role badges on opponent battle slots */}
                             {/^ob\d+$/.test(k) && battleRole?.[k] === 'attacker' && (
@@ -239,6 +245,7 @@ export function OpponentBoard({
                                         data-card-id={cardId}
                                         data-slot-key={key}
                                         data-side={side}
+                                        data-hoards-total={Object.values(slotResources?.[key] || {}).reduce((a, b) => a + (Number(b) || 0), 0)}
                                         title="Drag to another slot or back to opponent hand"
                                     >
                                         <div className="pb-card-frame">
@@ -252,6 +259,7 @@ export function OpponentBoard({
                                             />
                                             {renderLabelBadges?.(slotLabels?.[key])}
                                             {renderCounterBadges?.(slotCounters?.[key])}
+                                            {renderResourceBadges?.(slotResources?.[key])}
                                             {renderUnitStats?.(key, cardId)}
                                             {/^ob\d+$/.test(key) && battleRole?.[key] === 'attacker' && (
                                                 <div className="pb-battle-badge attacker">ATTACKER</div>

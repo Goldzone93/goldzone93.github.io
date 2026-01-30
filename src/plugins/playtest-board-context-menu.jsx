@@ -71,6 +71,7 @@ import { openPlayCostModal, getAvailableElements, spendElements } from './playte
           const canDeclare = /^(?:ou|u)\d+$/.test(slotKey || '');
           const canRemoveBattle = /^(?:ob|b)\d+$/.test(slotKey || '');
           const isFirstTurn = (window.__PB_TURN_COUNT || 1) === 1;
+          const hoardsTotal = Number(hostCard?.dataset?.hoardsTotal || 0);
 
           const items = [
               { id: 'inspect', label: 'Inspect (Zoom)' },
@@ -78,6 +79,7 @@ import { openPlayCostModal, getAvailableElements, spendElements } from './playte
               { id: 'exhaust_toggle', label, disabled: isPartner },
               { separator: true },
               { id: 'add_counters', label: 'Add Counters…' },
+              { id: 'hoards', label: `Hoards X…` },
               { id: 'heal_x', label: 'Heal X…' },
               { id: 'inflict_damage', label: 'Inflict/Damage X…' }, // NEW
               { id: 'modify_stat', label: 'Modify Stat…', disabled: !hasUnitStats },
@@ -134,14 +136,27 @@ import { openPlayCostModal, getAvailableElements, spendElements } from './playte
           
         ];
       }
-      // banish / grave
-      return [
-        { id: `${t}_open_view`, label: 'Open Stack View' },         // NEW
-        { separator: true },
-        { id: `${t}_take_top_to_hand`, label: 'Take Top to Hand' },
-        { id: `${t}_to_deck_top`, label: 'Put Top on Deck' },
-        { id: `${t}_to_deck_bottom`, label: 'Put Top on Bottom of Deck' }, // NEW
-      ];
+      // grave
+        if (t === 'grave') {
+            return [
+                { id: 'grave_open_view', label: 'Open Stack View' },
+                { separator: true },
+                { id: 'grave_roil_x', label: 'Roil X' },
+                { separator: true },
+                { id: 'grave_take_top_to_hand', label: 'Take Top to Hand' },
+                { id: 'grave_to_deck_top', label: 'Put Top on Deck' },
+                { id: 'grave_to_deck_bottom', label: 'Put Top on Bottom of Deck' },
+            ];
+        }
+
+        // banish
+        return [
+            { id: `${t}_open_view`, label: 'Open Stack View' },         // NEW
+            { separator: true },
+            { id: `${t}_take_top_to_hand`, label: 'Take Top to Hand' },
+            { id: `${t}_to_deck_top`, label: 'Put Top on Deck' },
+            { id: `${t}_to_deck_bottom`, label: 'Put Top on Bottom of Deck' }, // NEW
+        ];
     },
       'viewer-card': (ctx) => {
           const base = [
@@ -224,9 +239,10 @@ import { openPlayCostModal, getAvailableElements, spendElements } from './playte
             console.warn('[PB CTX] builder error for', area, e);
         }
 
-        // NEW: If we’re on a stack-slot, disable any “Open Stack View” item when the pile is empty.
+        // NEW: If we’re on a stack-slot, disable “Open Stack View” (and Grave Roil) when the pile is empty.
         if (ctx?.area === 'stack-slot') {
-            const countEl = ctx?.target?.querySelector?.('.pb-pile-count');
+            const slotEl = ctx?.target?.closest?.('.pb-slot') || ctx?.target;
+            const countEl = slotEl?.querySelector?.('.pb-pile-count');
             const pileCount = Number.parseInt(countEl?.textContent || '0', 10) || 0;
             const isEmpty = pileCount <= 0;
 
@@ -234,9 +250,9 @@ import { openPlayCostModal, getAvailableElements, spendElements } from './playte
                 items = items.map((it) => {
                     if (!it || it.separator) return it;
                     const id = String(it.id || '');
-                    // matches: deck_open_view, shield_open_view, grave_open_view, banish_open_view, etc.
                     const isOpenView = /(^|_)open_view$/.test(id);
-                    return isOpenView ? { ...it, disabled: true } : it;
+                    const isRoil = id === 'grave_roil_x';
+                    return (isOpenView || isRoil) ? { ...it, disabled: true } : it;
                 });
             }
         }
@@ -623,6 +639,12 @@ export function installPBActionHandlers(host) {
             delete next[slotKey];
             return next;
         });
+        host.setSlotResources?.((prev) => {
+            if (!prev?.[slotKey]) return prev;
+            const next = { ...(prev || {}) };
+            delete next[slotKey];
+            return next;
+        });
         // NEW — if removing from a battle slot, clear battle role & origin
         if (/^(?:ob|b)\d+$/.test(String(slotKey)) && host.setBattleRole) {
             host.setBattleRole(prev => {
@@ -722,6 +744,50 @@ export function installPBActionHandlers(host) {
         const ctx = detail.context || {};
         const data = ctx.data || {};
         const target = ctx.target || null;
+        const gatherHoardCardsForOwner = (payOwner) => {
+            const who = String(payOwner || 'player').toLowerCase();
+            const wantOpp = who === 'opponent';
+
+            const boardSlots = host.boardSlots || {};
+            const slotResources = host.slotResources || {};
+            const slotSides = host.slotSides || {};
+
+            const out = [];
+
+            // All placed slots for that owner that have hoards
+            for (const [slotKeyRaw, cid] of Object.entries(boardSlots)) {
+                const slotKey = String(slotKeyRaw || '').trim();
+                if (!slotKey || !cid) continue;
+
+                const isOppSlot = /^o/i.test(slotKey);
+                if (wantOpp !== isOppSlot) continue;
+
+                const counts = slotResources[slotKey];
+                if (!counts) continue;
+
+                const total = Object.values(counts).reduce((a, b) => a + (Number(b) || 0), 0);
+                if (total <= 0) continue;
+
+                const side = slotSides[slotKey] || (/_b$/i.test(String(cid)) ? 'b' : 'a');
+                out.push({ slotKey, cardId: cid, side, counts: { ...counts } });
+            }
+
+            // Player partner is not in boardSlots; include it explicitly
+            if (!wantOpp && host.partnerId) {
+                const counts = slotResources.partner;
+                const total = counts ? Object.values(counts).reduce((a, b) => a + (Number(b) || 0), 0) : 0;
+                if (total > 0) {
+                    out.push({
+                        slotKey: 'partner',
+                        cardId: host.partnerId,
+                        side: host.partnerSide || 'a',
+                        counts: { ...(counts || {}) },
+                    });
+                }
+            }
+
+            return out;
+        };
 
         if (area === 'hand-card') {
             const idx = Number.parseInt(data.index, 10);
@@ -874,22 +940,54 @@ export function installPBActionHandlers(host) {
             }
             else if (action === 'move_to_unit') {
                 const mode = (typeof window !== 'undefined' && window.__PB_COST_MODULE_MODE) || 'on';
+                const payingOwner = isOppHand ? 'opponent' : 'player';
+
                 if (mode === 'on') {
-                    const available = getAvailableElements(isOppHand ? 'opponent' : 'player');
+                    const available = getAvailableElements(payingOwner);
                     const sideFromId = /_(b)$/i.test(String(cardId)) ? 'b' : 'a';
+
                     const paid = await openPlayCostModal({
                         cardId,
                         side: sideFromId,
                         available,
-                        owner: isOppHand ? 'opponent' : 'player',
+                        owner: payingOwner,
+                        hoardCards: gatherHoardCardsForOwner(payingOwner),
                     });
+
                     if (!paid) return; // cancelled
-                    // Deduct the resources now (context-menu path)
-                    spendElements(paid, isOppHand ? 'opponent' : 'player');
+
+                    const paidSpend = (paid && typeof paid === 'object' && paid.spend) ? paid.spend : paid;
+                    const paidHoards = (paid && typeof paid === 'object' && Array.isArray(paid.hoards)) ? paid.hoards : [];
+
+                    // Deduct tracker resources
+                    spendElements(paidSpend, payingOwner);
+
+                    // Spend selected hoard counters (each selected card contributes exactly 1)
+                    if (paidHoards.length && host.setSlotResources) {
+                        host.setSlotResources((prev) => {
+                            const next = { ...(prev || {}) };
+                            for (const it of paidHoards) {
+                                const slotKey = String(it.slotKey || '').trim();
+                                const internal = String(it.internal || '').trim();
+                                if (!slotKey || !internal) continue;
+
+                                const cur = { ...(next[slotKey] || {}) };
+                                const now = Math.max(0, (Number(cur[internal]) || 0) - 1);
+
+                                if (now <= 0) delete cur[internal];
+                                else cur[internal] = now;
+
+                                if (Object.keys(cur).length) next[slotKey] = cur;
+                                else delete next[slotKey];
+                            }
+                            return next;
+                        });
+                    }
                 }
+
                 host.setPendingPlace({
                     source: isOppHand ? 'oHand' : 'hand',
-                    owner: isOppHand ? 'opponent' : 'player',
+                    owner: payingOwner,
                     index: idx,
                     cardId,
                     target: 'unit',
@@ -897,22 +995,54 @@ export function installPBActionHandlers(host) {
             }
             else if (action === 'move_to_support') {
                 const mode = (typeof window !== 'undefined' && window.__PB_COST_MODULE_MODE) || 'on';
+                const payingOwner = isOppHand ? 'opponent' : 'player';
+
                 if (mode === 'on') {
-                    const available = getAvailableElements(isOppHand ? 'opponent' : 'player');
+                    const available = getAvailableElements(payingOwner);
                     const sideFromId = /_(b)$/i.test(String(cardId)) ? 'b' : 'a';
+
                     const paid = await openPlayCostModal({
                         cardId,
                         side: sideFromId,
                         available,
-                        owner: isOppHand ? 'opponent' : 'player',
+                        owner: payingOwner,
+                        hoardCards: gatherHoardCardsForOwner(payingOwner),
                     });
+
                     if (!paid) return; // cancelled
-                    // Deduct the resources now (context-menu path)
-                    spendElements(paid, isOppHand ? 'opponent' : 'player');
+
+                    const paidSpend = (paid && typeof paid === 'object' && paid.spend) ? paid.spend : paid;
+                    const paidHoards = (paid && typeof paid === 'object' && Array.isArray(paid.hoards)) ? paid.hoards : [];
+
+                    // Deduct tracker resources
+                    spendElements(paidSpend, payingOwner);
+
+                    // Spend selected hoard counters
+                    if (paidHoards.length && host.setSlotResources) {
+                        host.setSlotResources((prev) => {
+                            const next = { ...(prev || {}) };
+                            for (const it of paidHoards) {
+                                const slotKey = String(it.slotKey || '').trim();
+                                const internal = String(it.internal || '').trim();
+                                if (!slotKey || !internal) continue;
+
+                                const cur = { ...(next[slotKey] || {}) };
+                                const now = Math.max(0, (Number(cur[internal]) || 0) - 1);
+
+                                if (now <= 0) delete cur[internal];
+                                else cur[internal] = now;
+
+                                if (Object.keys(cur).length) next[slotKey] = cur;
+                                else delete next[slotKey];
+                            }
+                            return next;
+                        });
+                    }
                 }
+
                 host.setPendingPlace({
                     source: isOppHand ? 'oHand' : 'hand',
-                    owner: isOppHand ? 'opponent' : 'player',
+                    owner: payingOwner,
                     index: idx,
                     cardId,
                     target: 'support',
@@ -945,6 +1075,9 @@ export function installPBActionHandlers(host) {
                         // Fallback: at least ensure the entry exists
                         host.setSlotCounters((prev) => ({ ...prev, partner: { ...(prev?.partner || {}) } }));
                     }
+                } else if (action === 'hoards') {
+                    const existing = host.slotResources?.partner || {};
+                    host.setResourcePrompt?.({ slotKey: 'partner', counts: { ...existing } });
                 } else if (action === 'modify_stat') {
                     // Opens the React modal from Step 1 (statPrompt)
                     host.setStatPrompt?.({ slotKey: 'partner', stat: 'ATK', op: '+', amount: 1 });
@@ -1035,6 +1168,9 @@ export function installPBActionHandlers(host) {
                     // Fallback: at least ensure the entry exists
                     host.setSlotCounters((prev) => ({ ...prev, [slotKey]: { ...(prev?.[slotKey] || {}) } }));
                 }
+            } else if (action === 'hoards') {
+                const existing = host.slotResources?.[slotKey] || {};
+                host.setResourcePrompt?.({ slotKey, counts: { ...existing } });
             } else if (action === 'modify_stat') {
                 // Opens the React modal from Step 1 (statPrompt)
                 host.setStatPrompt?.({ slotKey, stat: 'ATK', op: '+', amount: 1 });
@@ -1160,6 +1296,16 @@ export function installPBActionHandlers(host) {
                     return next;
                 });
 
+                // NEW — move hoards/resources with the card (keeps Hoards badges in battle)
+                host.setSlotResources?.((prev) => {
+                    const next = { ...(prev || {}) };
+                    if (next[fromKey]) {
+                        next[toKey] = { ...(next[fromKey] || {}) };
+                        delete next[fromKey];
+                    }
+                    return next;
+                });
+
                 // Enter battle exhausted
                 host.setExhaustedSlots((prev) => {
                     const next = new Set(prev || []);
@@ -1200,6 +1346,7 @@ export function installPBActionHandlers(host) {
                 host.setSlotSides((prev) => {
                     const next = { ...(prev || {}) };
                     if (next[fromKey]) next[toKey] = next[fromKey];
+                    delete next[fromKey];
                     return next;
                 });
 
@@ -1207,6 +1354,26 @@ export function installPBActionHandlers(host) {
                     const next = { ...(prev || {}) };
                     if (next[fromKey]) {
                         next[toKey] = { ...next[fromKey] };
+                        delete next[fromKey];
+                    }
+                    return next;
+                });
+
+                // NEW — move labels with the card (parity with attacker)
+                host.setSlotLabels?.((prev) => {
+                    const next = { ...(prev || {}) };
+                    if (next[fromKey]) {
+                        next[toKey] = Array.isArray(next[fromKey]) ? [...next[fromKey]] : [];
+                        delete next[fromKey];
+                    }
+                    return next;
+                });
+
+                // NEW — move hoards/resources with the card (fixes missing hoards in opponent battle zone)
+                host.setSlotResources?.((prev) => {
+                    const next = { ...(prev || {}) };
+                    if (next[fromKey]) {
+                        next[toKey] = { ...(next[fromKey] || {}) };
                         delete next[fromKey];
                     }
                     return next;
@@ -1302,6 +1469,16 @@ export function installPBActionHandlers(host) {
                         next[toKey] = Array.isArray(next[fromKey])
                             ? [...next[fromKey]]
                             : { ...next[fromKey] };
+                        delete next[fromKey];
+                    }
+                    return next;
+                });
+
+                // NEW — move hoards/resources back with the card
+                host.setSlotResources?.((prev) => {
+                    const next = { ...(prev || {}) };
+                    if (next[fromKey]) {
+                        next[toKey] = { ...(next[fromKey] || {}) };
                         delete next[fromKey];
                     }
                     return next;
@@ -1510,6 +1687,52 @@ export function installPBActionHandlers(host) {
                 if (action === 'grave_open_view') {
                     const ids = (graveRef.current || []).slice(0);
                     host.setPeekCard({ ids, from: 'grave', all: true, owner: isOpp ? 'opponent' : 'player' });
+                } else if (action === 'grave_roil_x') {
+                    const max = graveRef.current?.length || 0;
+                    if (!max) return;
+
+                    const raw = window.prompt('Roil how many cards from the Grave back into the Deck?', '2');
+                    if (raw == null) return;
+
+                    const requested = Number.parseInt(String(raw).trim(), 10);
+                    const nReq = Number.isFinite(requested) && requested > 0 ? requested : 2;
+
+                    const shuffle = (arr) => {
+                        const next = [...arr];
+                        for (let i = next.length - 1; i > 0; i--) {
+                            const j = Math.floor(Math.random() * (i + 1));
+                            [next[i], next[j]] = [next[j], next[i]];
+                        }
+                        return next;
+                    };
+
+                    const all = (graveRef.current || []).slice(0);
+
+                    // > grave count: shuffle everything in, NO Neutral +1
+                    if (nReq > all.length) {
+                        setGravePile([]);
+                        setDeckPile((prev) => shuffle([...(prev || []), ...all]));
+                        return;
+                    }
+
+                    // == grave count: shuffle everything in AND Neutral +1 (no modal)
+                    if (nReq === all.length) {
+                        setGravePile([]);
+                        setDeckPile((prev) => shuffle([...(prev || []), ...all]));
+                        window.dispatchEvent(
+                            new CustomEvent(isOpp ? 'pb:o-elements:inc' : 'pb:elements:inc', { detail: { name: 'Neutral' } })
+                        );
+                        return;
+                    }
+
+                    // < grave count: open Roil modal
+                    host.setRoil?.({
+                        owner: isOpp ? 'opponent' : 'player',
+                        n: nReq,
+                        ids: all,
+                        grave: all,
+                        toDeck: [],
+                    });
                 } else if (action === 'grave_take_top_to_hand') gravePopTopX(toHandX);
                 else if (action === 'grave_to_deck_top') gravePopTopX(toDeckTopX);
                 else if (action === 'grave_to_deck_bottom') gravePopTopX(toDeckBottomX);
