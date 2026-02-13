@@ -16,6 +16,7 @@ export function OpponentBoard({
 
     // NEW: opponent piles for visual parity
     oDeckPile = [],
+    oDeckDepthInfo = null,
     oShieldPile = [],
     oBanishPile = [],
     oGravePile = [],
@@ -333,7 +334,12 @@ export function OpponentBoard({
                             onError={(e) => onImgError(e, 'b')}
                         />
                     )}
-                    <div className="pb-pile-count" aria-label="Deck count">{oDeckPile.length}</div>
+                    <div className="pb-pile-meta" aria-label="Deck meta">
+                        <div className={`pb-depth-level is-${(oDeckDepthInfo?.tone || 'safe')}`} aria-label="Deck depth level">
+                            Depth Level: {oDeckDepthInfo?.level ?? '-'}
+                        </div>
+                        <div className="pb-pile-count" aria-label="Deck count">{oDeckPile.length}</div>
+                    </div>
                 </div>
 
                 {/* Row C (bottom): Supports 1..7 | SHIELD */}

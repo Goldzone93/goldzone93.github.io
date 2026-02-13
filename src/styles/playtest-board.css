@@ -1190,6 +1190,55 @@
     right: auto;
     bottom: auto;
 }
+/* Fix: when count is inside the new pb-pile-meta wrapper, don't rotate it again */
+.pb-board.pb-opponent .pb-pile-meta .pb-pile-count {
+    transform: none;
+}
+
+/* Deck "Depth Level" badge (shown next to the Deck count) */
+.pb-pile-meta {
+    position: absolute;
+    right: 6px;
+    bottom: 6px;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    pointer-events: none;
+    user-select: none;
+    z-index: 2;
+}
+.pb-pile-meta .pb-pile-count {
+    position: static;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    top: auto;
+    transform: none;
+    transform-origin: center;
+}
+.pb-depth-level {
+    padding: 2px 6px;
+    font-size: 12px;
+    line-height: 1;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    white-space: nowrap;
+}
+.pb-depth-level.is-safe { color: #c8e6c9; }
+.pb-depth-level.is-warn { color: #ffe082; }
+.pb-depth-level.is-danger { color: #ffab91; }
+.pb-depth-level.is-critical { color: #ef9a9a; }
+
+/* Opponent board: keep the depth badge upright and in the same visual corner as the count */
+.pb-board.pb-opponent .pb-pile-meta {
+    transform: rotate(180deg);
+    transform-origin: center;
+    left: 6px;
+    top: 6px;
+    right: auto;
+    bottom: auto;
+}
 
 /* ----- Hand row cards ----- */
 .pb-hand-cards {
@@ -1362,7 +1411,7 @@
     position: sticky;
     bottom: 0; /* stick to the bottom of the .pb-center scroller */
     height: var(--hand-collapsed-h, 36px);
-    z-index: 0; /* above board content inside the center */
+    z-index: 1; /* keep hand dock above placed cards */
     /* same visuals as before */
     background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.03));
     border: 1px solid rgba(255,255,255,0.08);
@@ -2862,3 +2911,119 @@
 .pb-dragging .pb-slot { transition: none !important; }
 .pb-dragging .pb-card,
 .pb-dragging .pb-slot .pb-card { filter: none !important; }
+
+/* ===== Ransack modal ===== */
+.pb-modal.pb-ransack .pb-modal-content {
+  width: min(1200px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  display: flex;
+  flex-direction: column;
+}
+
+.pb-modal.pb-ransack .pb-ransack-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 12px;
+  display: grid;
+  gap: 16px;
+  grid-auto-rows: min-content;
+}
+
+.pb-ransack-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 1100px) {
+  .pb-ransack-options {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pb-ransack-option {
+  background: var(--panel);
+  border: 1px dashed rgba(255,255,255,0.18);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.pb-ransack-option-title {
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.pb-ransack-option-text {
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.pb-ransack-option-count {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.pb-ransack-bar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+}
+
+.pb-ransack-bar > .tips-btn:first-child {
+  justify-self: start;
+}
+
+.pb-ransack-bar > .tips-btn:last-child {
+  justify-self: end;
+}
+
+.pb-ransack-center {
+  display: grid;
+  place-items: center;
+}
+
+.pb-ransack-picks {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 1100px) {
+  .pb-ransack-picks {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pb-ransack-pick {
+  background: var(--panel);
+  border: 1px dashed rgba(255,255,255,0.18);
+  border-radius: 8px;
+  min-height: 320px;
+  padding: 18px;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  text-align: center;
+}
+
+.pb-ransack-pick.is-selected {
+  border-style: solid;
+  border-color: rgba(255,255,255,0.55);
+}
+
+.pb-ransack-pick-title {
+  font-weight: 800;
+  font-size: 22px;
+}
+
+.pb-ransack-pick-text {
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  line-height: 1.35;
+}

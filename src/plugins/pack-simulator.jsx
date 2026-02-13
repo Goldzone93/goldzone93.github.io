@@ -58,9 +58,30 @@ function getElementsFromPartner(p) {
   if (!els.includes('Neutral')) els.push('Neutral'); // always allowed
   return els;
 }
-function anyElementMatch(card, allowed) {
-  const els = [card.ElementType1, card.ElementType2, card.ElementType3].filter(Boolean);
-  return els.some((e) => allowed.includes(e));
+function strictFrontElementMatch(card, allowed, cardsById) {
+    // IMPORTANT: element gating uses ONLY the _a (front) face; _b data is ignored.
+    const frontId = normalizeToFront(card?.InternalName);
+    const front = (frontId && cardsById && cardsById[frontId]) ? cardsById[frontId] : card;
+
+    const els = [front?.ElementType1, front?.ElementType2, front?.ElementType3]
+        .filter(Boolean);
+    const uniq = Array.from(new Set(els));
+    if (uniq.length === 0) return false;
+
+    const allowedSet = new Set(allowed || []);
+
+    // A selected card must NOT have any front-face elements that are not allowed.
+    for (const e of uniq) {
+        if (!allowedSet.has(e)) return false;
+    }
+
+    // Neutral-only cards are always allowed.
+    const nonNeutral = uniq.filter((e) => e !== 'Neutral');
+    if (nonNeutral.length === 0) return true;
+
+    // Otherwise, it must share at least one partner element
+    // (already guaranteed by the subset check above).
+    return true;
 }
 function groupByRarity(cards) {
   const g = { 'Ultra Rare': [], 'Rare': [], 'Uncommon': [], 'Common': [] };
@@ -196,6 +217,12 @@ export function PackSimulator() {
     // Name for the collection
     const [collectionName, setCollectionName] = useState('Collection Name');
 
+    // NEW: editing mode for manual quantity overrides
+    const [isEditingCollection, setIsEditingCollection] = useState(false);
+
+    // NEW: Newly opened cards waiting to be added to the collection
+    const [pendingAdd, setPendingAdd] = useState(null); // { counts, meta } or null
+
     // Collapse state per Set id (e.g., CS1, CS2)
     const [setCollapsed, setSetCollapsed] = useState({});
 
@@ -229,11 +256,33 @@ export function PackSimulator() {
         }
     }, [collection, pack, aggregatePackCounts]);
 
+    // NEW: Add the most recently opened cards (pendingAdd) into the collection
+    const handleAddPendingToCollection = useCallback(() => {
+        if (!collection || !pendingAdd) return;
+
+        setCollection(prev => {
+            if (!prev) return pendingAdd;
+
+            const nextCounts = new Map(prev.counts);
+            const nextMeta = new Map(prev.meta);
+
+            pendingAdd.counts.forEach((qty, key) => {
+                nextCounts.set(key, (nextCounts.get(key) || 0) + qty);
+                if (!nextMeta.has(key)) nextMeta.set(key, pendingAdd.meta.get(key));
+            });
+
+            return { counts: nextCounts, meta: nextMeta };
+        });
+
+        setPendingAdd(null);
+    }, [collection, pendingAdd, setCollection]);
+
     // Clear the current collection AND clear any opened pack (no seeding)
     const handleClearCollection = useCallback(() => {
         setCollectionName('Collection Name');                 // reset name
         setCollection({ counts: new Map(), meta: new Map() }); // empty collection
         setCollectNext(true);                                  // next Open Pack will auto-fill
+        setIsEditingCollection(false);
         setPack([]);                                           // clear pack view
     }, [setCollection, setCollectNext, setPack]);
 
@@ -258,6 +307,7 @@ export function PackSimulator() {
     const closeCollectionNow = useCallback(() => {
         setCollection(null);                 // back to "not created"
         setCollectNext(false);               // don't auto-fill on next open
+        setIsEditingCollection(false);
         setCollectionName('Collection Name');
         setSetCollapsed({});                 // reset collapses
     }, []);
@@ -440,6 +490,80 @@ export function PackSimulator() {
         return out;
     }, [collection, refLists?.Set]);
 
+    const getCapForCard = useCallback((card) => {
+        const rc = formats?.[selectedFormat]?.rarityCap ?? {};
+        const cap = rc?.[card?.Rarity];
+        const n = parseInt(cap, 10);
+        return Number.isFinite(n) && n > 0 ? n : Infinity;
+    }, [formats, selectedFormat]);
+
+    const adjustCollectionQty = useCallback((key, card, delta) => {
+        if (!key || !collection) return;
+
+        setCollection((prev) => {
+            if (!prev) return prev;
+
+            const current = prev.counts.get(key) || 0;
+            const cap = getCapForCard(card);
+
+            let nextQty = current + delta;
+
+            // clamp upward to cap
+            if (nextQty > cap) nextQty = cap;
+
+            const nextCounts = new Map(prev.counts);
+            const nextMeta = new Map(prev.meta);
+
+            // if reduced below 1, remove from collection
+            if (nextQty < 1) {
+                nextCounts.delete(key);
+                nextMeta.delete(key);
+                return { counts: nextCounts, meta: nextMeta };
+            }
+
+            nextCounts.set(key, nextQty);
+            if (!nextMeta.has(key)) nextMeta.set(key, card);
+
+            return { counts: nextCounts, meta: nextMeta };
+        });
+    }, [collection, getCapForCard, setCollection]);
+
+    // NEW: Groups for the "Pending Add" list (same shape as collectionSetGroups)
+    const pendingSetGroups = useMemo(() => {
+        if (!pendingAdd) return [];
+        const rarityOrder = ['Ultra Rare', 'Rare', 'Uncommon', 'Common'];
+
+        const bySet = new Map();
+        pendingAdd.counts.forEach((qty, key) => {
+            const card = pendingAdd.meta.get(key);
+            if (!card) return;
+            const setId = card.Set || 'Unknown';
+            const r = card.Rarity || 'Common';
+            if (!bySet.has(setId)) bySet.set(setId, new Map());
+            const rmap = bySet.get(setId);
+            if (!rmap.has(r)) rmap.set(r, []);
+            rmap.get(r).push({ card, qty });
+        });
+
+        const knownSetOrder = Array.isArray(refLists?.Set) ? refLists.Set : [];
+        const unknownSets = Array.from(bySet.keys()).filter(s => !knownSetOrder.includes(s)).sort();
+        const orderedSets = [...knownSetOrder.filter(s => bySet.has(s)), ...unknownSets];
+
+        const out = orderedSets.map((setId) => {
+            const rmap = bySet.get(setId);
+            const groups = [];
+            for (const rar of rarityOrder) {
+                const rows = (rmap?.get(rar) || []).slice().sort((a, b) =>
+                    (a.card.CardName || a.card.InternalName).localeCompare(b.card.CardName || b.card.InternalName)
+                );
+                if (rows.length) groups.push({ rarity: rar, rows });
+            }
+            return { setId, groups };
+        }).filter(sg => sg.groups.length > 0);
+
+        return out;
+    }, [pendingAdd, refLists?.Set]);
+
     // flip state for small thumbnails: key -> boolean (true = show _b)
     const [thumbFlip, setThumbFlip] = useState({});
     const longPressTimers = useRef({});
@@ -505,6 +629,13 @@ export function PackSimulator() {
             />
         ),
     });
+
+    // If the collection becomes empty (or is closed), clear any active hover preview.
+    // This prevents the preview from "sticking" when the last row is removed.
+    useEffect(() => {
+        const isEmpty = !collection || !collection.counts || collection.counts.size === 0;
+        if (isEmpty) onRowLeave();
+    }, [collection, onRowLeave]);
 
   // load data from /public
     useEffect(() => {
@@ -572,21 +703,39 @@ export function PackSimulator() {
         return Array.isArray(ap) ? ap.filter(id => all.includes(id)) : all;
     }, [refLists.Packs, formats, selectedFormat]);
 
-    // For the selected pack, which Set IDs are allowed for partners & cards?
-    const allowedSetIds = useMemo(() => {
-        const p = packs?.[selectedPack];
-        if (!selectedPack || !p) return null;                     // null = no set filter
+    // Which Set IDs are allowed for this format? (drives Partner dropdown)
+    const formatAllowedSetIds = useMemo(() => {
         const allSets = refLists.Set || [];
-        const as = p.AllowedSets;
+        const fmt = formats?.[selectedFormat];
+        if (!fmt) return allSets;
+        const as = fmt.allowedSets;
         if (!as || as === '*') return allSets;
-        return Array.isArray(as) ? as : allSets;
-    }, [packs, selectedPack, refLists.Set]);
+        return Array.isArray(as) ? as.filter(id => allSets.includes(id)) : allSets;
+    }, [refLists.Set, formats, selectedFormat]);
 
-    // Partners list filtered by the selected pack's AllowedSets (if any)
+    // For the selected pack, which Set IDs are allowed for card pulls?
+    // (pack AllowedSets intersected with format allowedSets)
+    const allowedSetIds = useMemo(() => {
+        const allSets = refLists.Set || [];
+        const fmtSets = Array.isArray(formatAllowedSetIds) ? formatAllowedSetIds : allSets;
+
+        const p = packs?.[selectedPack];
+        if (!selectedPack || !p) return fmtSets;                  // no pack picked yet → follow format
+
+        const as = p.AllowedSets;
+        const packSets =
+            (!as || as === '*') ? allSets :
+                (Array.isArray(as) ? as : allSets);
+
+        // intersection
+        return packSets.filter(id => fmtSets.includes(id));
+    }, [packs, selectedPack, refLists.Set, formatAllowedSetIds]);
+
+    // Partners list filtered by the format's allowedSets
     const partnersFiltered = useMemo(() => {
-        if (!Array.isArray(allowedSetIds)) return partners;
-        return partners.filter(pt => allowedSetIds.includes(pt.Set));
-    }, [partners, allowedSetIds]);
+        if (!Array.isArray(formatAllowedSetIds)) return partners;
+        return partners.filter(pt => formatAllowedSetIds.includes(pt.Set));
+    }, [partners, formatAllowedSetIds]);
 
     // If current selected partner falls out of the allowed sets, clear it
     useEffect(() => {
@@ -607,12 +756,19 @@ export function PackSimulator() {
         if (Number.isFinite(pm.Common)) setCommonQty(pm.Common);
     }, [packs, selectedPack, setPackSize, setRareQty, setUltraRate, setUncommonQty, setCommonQty]);
 
-  const allowedElements = useMemo(() => getElementsFromPartner(selectedPartner), [selectedPartner]);
+    const allowedElements = useMemo(() => getElementsFromPartner(selectedPartner), [selectedPartner]);
+
+    const cardsById = useMemo(() => {
+        const m = {};
+        for (const c of cards) m[c.InternalName] = c;
+        return m;
+    }, [cards]);
+
     const allowedCards = useMemo(() => {
         if (!selectedPartner) return [];
         const setOK = (c) => !Array.isArray(allowedSetIds) || allowedSetIds.includes(c.Set);
-        return cards.filter(c => setOK(c) && anyElementMatch(c, allowedElements));
-    }, [cards, allowedElements, selectedPartner, allowedSetIds]);
+        return cards.filter(c => setOK(c) && strictFrontElementMatch(c, allowedElements, cardsById));
+    }, [cards, allowedElements, selectedPartner, allowedSetIds, cardsById]);
 
   const byRarity = useMemo(() => groupByRarity(allowedCards), [allowedCards]);
   const configTotal = useMemo(() => rareQty + uncommonQty + commonQty, [rareQty, uncommonQty, commonQty]);
@@ -703,22 +859,10 @@ export function PackSimulator() {
         if (collectNext) {
             setCollection(aggregatePackCounts(all));
             setCollectNext(false);
+            setPendingAdd(null);
         } else if (collection) {
-            // If a collection already exists, MERGE the newly opened cards into it.
-            const add = aggregatePackCounts(all);
-            setCollection(prev => {
-                if (!prev) return add;
-
-                const nextCounts = new Map(prev.counts);
-                const nextMeta = new Map(prev.meta);
-
-                add.counts.forEach((qty, key) => {
-                    nextCounts.set(key, (nextCounts.get(key) || 0) + qty);
-                    if (!nextMeta.has(key)) nextMeta.set(key, add.meta.get(key));
-                });
-
-                return { counts: nextCounts, meta: nextMeta };
-            });
+            // If a collection already exists, queue these opened cards for manual adding.
+            setPendingAdd(aggregatePackCounts(all));
         }
 
         setPack(all);
@@ -735,6 +879,7 @@ export function PackSimulator() {
         aggregatePackCounts,
         collection,          // NEW: so we can merge when collection exists
         setCollection,       // (setter is stable but included for clarity)
+        setPendingAdd,
         selectedPack,
     ]);
 
@@ -923,9 +1068,17 @@ export function PackSimulator() {
                           className="ps-select"
                           value={selectedFormat}
                           onChange={(e) => {
-                              setSelectedFormat(e.target.value);
+                              const nextFmt = e.target.value;
+                              setSelectedFormat(nextFmt);
+
                               // if the current pack is no longer allowed by the new format, clear it
-                              if (selectedPack && !allowedPackIds.includes(selectedPack)) setSelectedPack('');
+                              const all = refLists.Packs || [];
+                              const fmt = formats?.[nextFmt];
+                              const ap = fmt?.AllowedPacks;
+                              const nextAllowedPackIds = (!fmt || !ap || ap === '*')
+                                  ? all
+                                  : (Array.isArray(ap) ? ap.filter(id => all.includes(id)) : all);
+                              if (selectedPack && !nextAllowedPackIds.includes(selectedPack)) setSelectedPack('');
                           }}
                       >
                           {refLists.Format.map(fmt => (
@@ -946,7 +1099,7 @@ export function PackSimulator() {
                               <option key={pid} value={pid}>{pid}</option>
                           ))}
                       </select>
-                      <div className="ps-hint">Selecting a pack filters Partners and pack contents by Allowed Sets.</div>
+                      <div className="ps-hint">Format limits available Packs and Partners. Pack Selector limits which Sets cards can be pulled from.</div>
                   </div>
           <div className="ps-group">
             <label className="ps-label">Partner</label>
@@ -1295,12 +1448,71 @@ export function PackSimulator() {
                               <button
                                   type="button"
                                   className="tips-btn"
+                                  onClick={() => setIsEditingCollection(v => !v)}
+                                  title={isEditingCollection ? 'Stop editing collection quantities' : 'Edit collection quantities'}
+                                  style={{ width: '100%' }}
+                              >
+                                  {isEditingCollection ? 'Finish Editing' : 'Edit Collection'}
+                              </button>
+                          </div>
+                      )}
+
+                      {collection && (
+                          <div className="ps-row ps-row--wide" style={{ marginTop: 8 }}>
+                              <button
+                                  type="button"
+                                  className="tips-btn"
                                   onClick={handleCloseCollectionClick}
                                   title="Close the collection (optionally export first)"
                                   style={{ width: '100%' }}
                               >
                                   Close Collection
                               </button>
+                          </div>
+                      )}
+
+                      {collection && (
+                          <div className="ps-pending" style={{ marginTop: 10 }}>
+                              <div className="ps-row ps-row--wide" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
+                                  <div className="ps-label" style={{ margin: 0 }}>Newly Opened (Pending)</div>
+                              </div>
+
+                              {!pendingAdd ? (
+                                  <div className="ps-hint" style={{ marginTop: 6 }}>
+                                      Open packs to populate this list, then click “Add to Collection”.
+                                  </div>
+                              ) : (
+                                  <div className="deck-type-cards" style={{ marginTop: 8 }}>
+                                      {pendingSetGroups.map((setGrp) => (
+                                          <div key={`pending-${setGrp.setId}`} className="deck-type-group" style={{ marginTop: 10 }}>
+                                              <div className="deck-type-header">{setGrp.setId}</div>
+
+                                              <div className="deck-type-cards">
+                                                  {setGrp.groups.map((grp) => (
+                                                      <div key={`pending-${setGrp.setId}-${grp.rarity}`} style={{ marginTop: 8 }}>
+                                                          <div className="small" style={{ color: 'var(--muted)' }}>{grp.rarity}</div>
+                                                          {grp.rows.map(({ card, qty }) => (
+                                                              <div
+                                                                  key={`pending-${card.InternalName}`}
+                                                                  className="deckRow"
+                                                                  onMouseEnter={(e) => onRowEnter(card, e)}
+                                                                  onMouseMove={onRowMove}
+                                                                  onMouseLeave={onRowLeave}
+                                                                  title={card.CardName}
+                                                              >
+                                                                  <div className="name">{card.CardName}</div>
+                                                                  <div className="qty">
+                                                                      <span className="badge">{qty}x</span>
+                                                                  </div>
+                                                              </div>
+                                                          ))}
+                                                      </div>
+                                                  ))}
+                                              </div>
+                                          </div>
+                                      ))}
+                                  </div>
+                              )}
                           </div>
                       )}
 
@@ -1319,6 +1531,23 @@ export function PackSimulator() {
                           <div className="ps-hint" style={{ marginTop: 8 }}>
                               Creates a list here using the currently opened pack(s).
                               If no packs are open, the next Open Pack will auto-fill this list.
+                          </div>
+                      )}
+
+                      {collection && (
+                          <div className="ps-pending-actions" style={{ marginTop: 10 }}>
+                              <div className="ps-row ps-row--wide" style={{ marginTop: 8 }}>
+                                  <button
+                                      type="button"
+                                      className="tips-btn"
+                                      onClick={handleAddPendingToCollection}
+                                      disabled={!pendingAdd}
+                                      title={pendingAdd ? 'Add these opened cards to the collection' : 'Open packs to queue cards for adding'}
+                                      style={{ width: '100%' }}
+                                  >
+                                      Add to Collection
+                                  </button>
+                              </div>
                           </div>
                       )}
 
@@ -1362,7 +1591,32 @@ export function PackSimulator() {
                                                               title={card.CardName}
                                                           >
                                                               <div className="name">{card.CardName}</div>
-                                                              <div className="qty"><span className="badge">{qty}x</span></div>
+                                                              <div className={`qty ${isEditingCollection ? 'qty-edit' : ''}`}>
+                                                                  {isEditingCollection && (
+                                                                      <button
+                                                                          type="button"
+                                                                          className="qty-btn"
+                                                                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); adjustCollectionQty(card.InternalName, card, -1); }}
+                                                                          title="Decrease quantity"
+                                                                      >
+                                                                          −
+                                                                      </button>
+                                                                  )}
+
+                                                                  <span className="badge">{qty}x</span>
+
+                                                                  {isEditingCollection && (
+                                                                      <button
+                                                                          type="button"
+                                                                          className="qty-btn"
+                                                                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); adjustCollectionQty(card.InternalName, card, +1); }}
+                                                                          disabled={qty >= getCapForCard(card)}
+                                                                          title={qty >= getCapForCard(card) ? 'Reached max allowed for this rarity' : 'Increase quantity'}
+                                                                      >
+                                                                          +
+                                                                      </button>
+                                                                  )}
+                                                              </div>
                                                           </div>
                                                       ))}
                                                   </div>

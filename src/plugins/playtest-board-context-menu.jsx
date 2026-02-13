@@ -70,6 +70,7 @@ import { openPlayCostModal, getAvailableElements, spendElements } from './playte
           // Always show, but disable when not applicable
           const canDeclare = /^(?:ou|u)\d+$/.test(slotKey || '');
           const canRemoveBattle = /^(?:ob|b)\d+$/.test(slotKey || '');
+          const canRansack = /^(?:ou|u|ob|b)\d+$/.test(slotKey || '');
           const isFirstTurn = (window.__PB_TURN_COUNT || 1) === 1;
           const hoardsTotal = Number(hostCard?.dataset?.hoardsTotal || 0);
 
@@ -80,6 +81,7 @@ import { openPlayCostModal, getAvailableElements, spendElements } from './playte
               { separator: true },
               { id: 'add_counters', label: 'Add Counters…' },
               { id: 'hoards', label: `Hoards X…` },
+              { id: 'ransack', label: 'Ransack', disabled: !canRansack },
               { id: 'heal_x', label: 'Heal X…' },
               { id: 'inflict_damage', label: 'Inflict/Damage X…' }, // NEW
               { id: 'modify_stat', label: 'Modify Stat…', disabled: !hasUnitStats },
@@ -103,6 +105,13 @@ import { openPlayCostModal, getAvailableElements, spendElements } from './playte
 
           return items;
       },
+
+      'empty-slot': (ctx) => {
+          return [
+              { id: 'excavate', label: 'Excavate' },
+          ];
+      },
+
     'stack-slot': (ctx) => {
       const t = ctx?.data?.stack || 'stack';
       if (t === 'deck') {
@@ -415,6 +424,30 @@ import { openPlayCostModal, getAvailableElements, spendElements } from './playte
           return { area: 'stack-slot', data: { stack: map[name], owner }, target: slot };
       }
     }
+
+      // Empty unit/support slots (right-click): allow an "empty-slot" menu on Unit/Support only.
+      // Player slots use data-name like "unit1"/"support1"; opponent slots use data-slot like "ou1"/"os1".
+      if (slot) {
+          const owner = slot.closest('.pb-opponent-wrap') ? 'opponent' : 'player';
+          const hasCard = !!slot.querySelector('.pb-slot-card');
+          if (!hasCard) {
+              const rawSlotKey = (slot.getAttribute('data-slot') || '').toLowerCase();
+              const rawName = (slot.getAttribute('data-name') || '').toLowerCase();
+
+              let slotKey = rawSlotKey;
+              if (!slotKey) {
+                  const mUnit = rawName.match(/^unit(\d+)$/i);
+                  const mSup = rawName.match(/^support(\d+)$/i);
+                  if (mUnit) slotKey = `u${mUnit[1]}`;
+                  else if (mSup) slotKey = `s${mSup[1]}`;
+              }
+
+              // Only Unit/Support keys (player + opponent)
+              if (/^(?:u|s)\d+$/.test(slotKey) || /^(?:ou|os)\d+$/.test(slotKey)) {
+                  return { area: 'empty-slot', data: { slotKey, owner }, target: slot };
+              }
+          }
+      }
 
     return { area: 'global', data: {}, target: withinBoard };
   }
@@ -1051,6 +1084,25 @@ export function installPBActionHandlers(host) {
             return;
         }
 
+        if (area === 'empty-slot') {
+            const slotKey = String(data.slotKey || '');
+            if (!slotKey) return;
+
+            if (action === 'excavate') {
+                const tokenId = 'token0096_a';
+
+                // Place the token into the empty slot and mark it exhausted.
+                host.setBoardSlots?.((prev) => ({ ...(prev || {}), [slotKey]: tokenId }));
+                host.setSlotSides?.((prev) => ({ ...(prev || {}), [slotKey]: 'a' }));
+                host.setExhaustedSlots?.((prev) => {
+                    const next = new Set(prev || []);
+                    next.add(slotKey);
+                    return next;
+                });
+            }
+            return;
+        }
+
         if (area === 'slot-card') {
             const slotKey = data.slotKey;
             const isOppSlot = /^o/.test(String(slotKey || ''));
@@ -1171,6 +1223,8 @@ export function installPBActionHandlers(host) {
             } else if (action === 'hoards') {
                 const existing = host.slotResources?.[slotKey] || {};
                 host.setResourcePrompt?.({ slotKey, counts: { ...existing } });
+            } else if (action === 'ransack') {
+                host.setRansackPrompt?.({ owner: isOppSlot ? 'opponent' : 'player', slotKey, rolls: null, pick: null });
             } else if (action === 'modify_stat') {
                 // Opens the React modal from Step 1 (statPrompt)
                 host.setStatPrompt?.({ slotKey, stat: 'ATK', op: '+', amount: 1 });

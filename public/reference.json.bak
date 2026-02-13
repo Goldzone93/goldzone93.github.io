@@ -4,9 +4,9 @@
   "SubType": ["Reaction", "Augment"],
   "Rarity": ["Basic", "Common", "Uncommon", "Rare", "Ultra Rare"],
   "Element": ["Neutral", "Earth", "Fire", "Nature", "Storm", "Water", "Toxic", "Void", "Ice", "Synthetic"],
-  "Set": ["CS1","CS2"],
-  "Format": ["Freeform", "Story 1", "Story 2", "Example"],
-  "Packs": ["Freeform", "CS1", "CS2", "Example"],
+  "Set": ["CS1","CS2","S4","S5","S6"],
+  "Format": ["Freeform", "Story 1", "Story 2", "Brinefall Block", "Brinefall Story", "Example"],
+  "Packs": ["Freeform", "CS1", "CS2", "S4", "S5", "S6", "Example"],
   "RarityColors": {
   "Basic":      "#f06292",
   "Common":     "#4dd0e1",
@@ -344,5 +344,31 @@
     "question": "What happens at the end of my turn?",
     "answer": "Resolve any 'end of turn' triggers, gain refunds from cards with refund pips, clear 'until end of turn' effects, then check your hand limit."
   }
-]
+],
+"Ransack": {
+    "Options": [
+      { "id": 1, "text": "This unit hoards 1 Neutral." },
+      { "id": 2, "text": "This unit energizes 1." },
+      { "id": 3, "text": "Your opponent scours 2." },
+      { "id": 4, "text": "Draw a card then discard a card." },
+      { "id": 5, "text": "Banish up to two cards from your opponent's grave." },
+      { "id": 6, "text": "You excavate 1." }
+    ]
+  },
+  "DepthLevels": {
+    "Ranges": [
+      { "Level": 1, "Min": 0,  "Max": 10 },
+      { "Level": 2, "Min": 11, "Max": 20 },
+      { "Level": 3, "Min": 21, "Max": 30 },
+      { "Level": 4, "Min": 31, "Max": 40 },
+      { "Level": 5, "Min": 41, "Max": 50 },
+      { "Level": 6, "Min": 51, "Max": 60 },
+      { "Level": 7, "Min": 61, "Max": 70 }
+    ],
+    "Proximity": {
+      "Warn": 5,
+      "Danger": 2,
+      "Critical": 1
+    }
+  }
 }

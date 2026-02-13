@@ -1862,3 +1862,161 @@ export function RoilModal({ roil, setRoil, onClose, onConfirm }) {
         </div>
     );
 }
+
+/**
+ * RansackModal
+ * - Shows all 6 options with per-game pick counts
+ * - Randomize -> shows 2 choices (duplicates allowed)
+ * - Select 1 -> Confirm appears
+ * - Confirm increments the selected option tracker (done in parent via onConfirm)
+ */
+export function RansackModal({
+    prompt,
+    setPrompt,
+    options = [],
+    counts = [],
+    onConfirm,
+    onClose,
+}) {
+    if (!prompt) return null;
+
+    const rolls = prompt?.rolls || null; // [idxA, idxB] or null
+    const pick = (prompt?.pick === 0 || prompt?.pick === 1) ? prompt.pick : null;
+
+    const safeOptions = Array.isArray(options) ? options : [];
+    const optText = (i) => String(safeOptions?.[i]?.text || '');
+
+    const doRandomize = () => {
+        if (safeOptions.length < 1) return;
+        const max = safeOptions.length;
+        const a = Math.floor(Math.random() * max);
+        const b = Math.floor(Math.random() * max);
+        setPrompt?.((prev) => prev ? ({ ...prev, rolls: [a, b], pick: null }) : prev);
+    };
+
+    const doReset = () => {
+        setPrompt?.((prev) => prev ? ({ ...prev, rolls: null, pick: null }) : prev);
+    };
+
+    const choose = (which) => {
+        if (!rolls) return;
+        setPrompt?.((prev) => prev ? ({ ...prev, pick: which }) : prev);
+    };
+
+    const confirm = () => {
+        if (!rolls) return;
+        if (pick === null) return;
+        const chosenIndex = rolls[pick];
+        onConfirm?.(chosenIndex);
+        // window resets (but stays open)
+        doReset();
+    };
+
+    return (
+        <div className="pb-modal pb-ransack" role="dialog" aria-modal="true" aria-label="Ransack">
+            <div className="pb-modal-content">
+                <div className="pb-modal-header">
+                    <div className="pb-modal-title">Ransack</div>
+                    <button className="tips-btn" onClick={onClose}>Close</button>
+                </div>
+
+                <div className="pb-ransack-body">
+                    {/* Top: all options + counts */}
+                    <div className="pb-ransack-options">
+                        {safeOptions.slice(0, 6).map((opt, i) => (
+                            <div key={opt?.id ?? i} className="pb-ransack-option">
+                                <div className="pb-ransack-option-title">Option {i + 1}</div>
+                                <div className="pb-ransack-option-text">{String(opt?.text || '')}</div>
+                                <div className="pb-ransack-option-count">
+                                    Times Picked: {Number(counts?.[i] || 0)}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Controls row */}
+                    <div className="pb-ransack-bar">
+                        <button className="tips-btn" onClick={doRandomize}>Randomize</button>
+
+                        <div className="pb-ransack-center">
+                            {rolls && pick !== null && (
+                                <button className="tips-btn" onClick={confirm}>Confirm</button>
+                            )}
+                        </div>
+
+                        <button className="tips-btn" onClick={doReset}>Reset</button>
+                    </div>
+
+                    {/* Bottom: two rolled options */}
+                    <div className="pb-ransack-picks">
+                        <div
+                            className={`pb-ransack-pick${pick === 0 ? ' is-selected' : ''}`}
+                            onClick={() => choose(0)}
+                            role="button"
+                            tabIndex={0}
+                        >
+                            <div className="pb-ransack-pick-title">{rolls ? 'Option 1' : 'Option 1'}</div>
+                            <div className="pb-ransack-pick-text">
+                                {rolls ? optText(rolls[0]) : ''}
+                            </div>
+                        </div>
+
+                        <div
+                            className={`pb-ransack-pick${pick === 1 ? ' is-selected' : ''}`}
+                            onClick={() => choose(1)}
+                            role="button"
+                            tabIndex={0}
+                        >
+                            <div className="pb-ransack-pick-title">{rolls ? 'Option 2' : 'Option 2'}</div>
+                            <div className="pb-ransack-pick-text">
+                                {rolls ? optText(rolls[1]) : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+/**
+ * Depth Levels (Deck)
+ * - Uses DepthLevels config from /public/reference.json so you can tune ranges later.
+ * - Returns { level, tone, count, range } where tone ∈ 'safe'|'warn'|'danger'|'critical'
+ */
+export function getDepthLevelInfo(deckCount, depthConfig) {
+    const n = Math.max(0, Math.floor(Number(deckCount) || 0));
+    const cfg = depthConfig || {};
+    const ranges = Array.isArray(cfg?.Ranges) ? cfg.Ranges : (Array.isArray(cfg?.ranges) ? cfg.ranges : []);
+    if (!ranges.length) return { level: null, tone: 'safe', count: n, range: null };
+
+    // Find the matching range (inclusive). If out of bounds, clamp to nearest edge range.
+    const normMin = (r) => Number(r?.Min ?? r?.min ?? 0);
+    const normMax = (r) => Number(r?.Max ?? r?.max ?? 0);
+    const normLvl = (r) => Number(r?.Level ?? r?.level ?? 0) || null;
+
+    const sorted = [...ranges].sort((a, b) => normMin(a) - normMin(b));
+    let hit = sorted.find(r => n >= normMin(r) && n <= normMax(r));
+    if (!hit) hit = (n < normMin(sorted[0])) ? sorted[0] : sorted[sorted.length - 1];
+
+    const min = normMin(hit);
+    const max = normMax(hit);
+    const level = normLvl(hit);
+
+    // Color should reflect how close we are to the NEXT depth threshold (the upper bound).
+    // At the start of a depth range we should be "safe" (green), and become more urgent as we approach `max`.
+    const clampedN = Math.min(Math.max(n, min), max);
+    const distToMax = max - clampedN;
+
+    const prox = cfg?.Proximity || cfg?.proximity || {};
+    const warn = Number(prox?.Warn ?? prox?.warn ?? 5);
+    const danger = Number(prox?.Danger ?? prox?.danger ?? 2);
+    const critical = Number(prox?.Critical ?? prox?.critical ?? 1);
+
+    let tone = 'safe';
+    if (distToMax <= critical) tone = 'critical';
+    else if (distToMax <= danger) tone = 'danger';
+    else if (distToMax <= warn) tone = 'warn';
+
+    return { level, tone, count: n, range: { min, max } };
+}

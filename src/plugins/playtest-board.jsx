@@ -20,6 +20,8 @@ import { EncounterModal } from './playtest-board-modules.jsx';
 import { GalleryModal } from './playtest-board-modules.jsx';
 import { RoilModal } from './playtest-board-modules.jsx';
 import { ResourceCountersModal } from './playtest-board-modules.jsx';
+import { RansackModal } from './playtest-board-modules.jsx';
+import { getDepthLevelInfo } from './playtest-board-modules.jsx';
 import { OpponentBoard } from './playtest-board-opponent-board.jsx';
 
 // Runtime data (loaded via fetch from /public)
@@ -1421,6 +1423,11 @@ export function PlaytestBoard() {
     // ADD: format selector state
     const [formats, setFormats] = React.useState([]);
     const [formatId, setFormatId] = React.useState('Freeform');
+    const [depthLevels, setDepthLevels] = React.useState(null);
+
+    // Depth baseline: deck size AFTER opening hand is drawn
+    const [openingDeckCount, setOpeningDeckCount] = React.useState(null);
+    const [openingODeckCount, setOpeningODeckCount] = React.useState(null);
     // Track whether the user has imported a deck this session
     const [hasImportedDeck, setHasImportedDeck] = React.useState(false);
 
@@ -1492,6 +1499,23 @@ export function PlaytestBoard() {
     const [pendingOMulligan, setPendingOMulligan] = React.useState(false);
     const [oDeckCounts, setODeckCounts] = React.useState(new Map());
     const oFileInputRef = React.useRef(null);
+    // Capture the "opening hand" baseline the first time a hand becomes non-empty.
+    // Depth is measured as cards drawn since that moment: (openingDeckCount - currentDeckCount).
+    const __prevHandLenRef = React.useRef(0);
+    React.useEffect(() => {
+        if (openingDeckCount == null && __prevHandLenRef.current === 0 && hand.length > 0) {
+            setOpeningDeckCount(deckPile.length);
+        }
+        __prevHandLenRef.current = hand.length;
+    }, [hand.length, deckPile.length, openingDeckCount]);
+
+    const __prevOHandLenRef = React.useRef(0);
+    React.useEffect(() => {
+        if (openingODeckCount == null && __prevOHandLenRef.current === 0 && oHand.length > 0) {
+            setOpeningODeckCount(oDeckPile.length);
+        }
+        __prevOHandLenRef.current = oHand.length;
+    }, [oHand.length, oDeckPile.length, openingODeckCount]);
 
     // Build the visible element set for the right panel (Partner's elements + Neutral)
     // When no deck has been imported, return null to show all trackers.
@@ -1849,6 +1873,9 @@ export function PlaytestBoard() {
         setShieldPile([]);
         setBanishPile([]);
         setGravePile([]);
+        // Reset Depth baselines (will be recaptured after opening hands are drawn)
+        setOpeningDeckCount(null);
+        setOpeningODeckCount(null);
         setHand([]);
 
         // Opponent piles
@@ -1898,6 +1925,9 @@ export function PlaytestBoard() {
         setBanishPile([]);
         setGravePile([]);
         setBoardSlots({});
+        // Reset Depth baselines
+        setOpeningDeckCount(null);
+        setOpeningODeckCount(null);
         setHand([]);
 
         // Clear all piles/hand — OPPONENT
@@ -1944,6 +1974,13 @@ export function PlaytestBoard() {
                 if (!alive) return;
                 const list = Array.isArray(json?.Format) ? json.Format : [];
                 setFormats(list);
+
+                const ro = Array.isArray(json?.Ransack?.Options) ? json.Ransack.Options : [];
+                setRansackOptions(ro);
+
+                const dl = json?.DepthLevels || null;
+                setDepthLevels(dl);
+
                 // Default to "Freeform" if available; otherwise first in list
                 if (!formatId) {
                     const preferred = list.includes('Freeform') ? 'Freeform' : (list[0] || '');
@@ -1981,6 +2018,11 @@ export function PlaytestBoard() {
     // NEW: modal state for editing a slot's hoards
     const [resourcePrompt, setResourcePrompt] = React.useState(null); // { slotKey, counts: {internalName: n} } | null
     const [healPrompt, setHealPrompt] = React.useState(null); // { slotKey, x, damage, statuses } | null
+    // ===== Ransack =====
+    const [ransackOptions, setRansackOptions] = React.useState([]); // from /reference.json
+    const [ransackCounts, setRansackCounts] = React.useState([0, 0, 0, 0, 0, 0]);     // player
+    const [oRansackCounts, setORansackCounts] = React.useState([0, 0, 0, 0, 0, 0]);   // opponent
+    const [ransackPrompt, setRansackPrompt] = React.useState(null); // { owner, slotKey, rolls, pick } | null
     // Opens the Modify Stat modal when context menu fires 'modify_stat'
     const [statPrompt, setStatPrompt] = React.useState(null); // { slotKey, stat, op, amount } | null
     const [damagePrompt, setDamagePrompt] = React.useState(null); // { slotKey } | null
@@ -2084,6 +2126,17 @@ export function PlaytestBoard() {
 
     React.useEffect(() => {
         const clear = () => setSlotResources({});
+        window.addEventListener('pb:new-game', clear);
+        return () => window.removeEventListener('pb:new-game', clear);
+    }, []);
+
+    // Reset Ransack trackers on "new game"
+    React.useEffect(() => {
+        const clear = () => {
+            setRansackCounts([0, 0, 0, 0, 0, 0]);
+            setORansackCounts([0, 0, 0, 0, 0, 0]);
+            setRansackPrompt(null);
+        };
         window.addEventListener('pb:new-game', clear);
         return () => window.removeEventListener('pb:new-game', clear);
     }, []);
@@ -2868,6 +2921,7 @@ export function PlaytestBoard() {
         return () => document.removeEventListener('keydown', onKey);
     }, [pendingPlace]);
 
+
     // Add target-specific body classes while placement is active
     React.useEffect(() => {
         const b = document.body;
@@ -3083,6 +3137,8 @@ export function PlaytestBoard() {
 
             // NEW for "Fetch Cards"
             setFetchPrompt,
+            // NEW for "Ransack"
+            setRansackPrompt,
 
         });
         return cleanup;
@@ -3157,6 +3213,14 @@ export function PlaytestBoard() {
             document.removeEventListener('touchend', onTouchEnd, { capture: true });
         };
     }, [pendingPlace]);
+
+    // Depth is "how many cards deep" you are AFTER the opening hand.
+    // Example: immediately after drawing opening hand → depthDrawn=0 → Depth Level 1.
+    const depthDrawn = (openingDeckCount == null) ? 0 : Math.max(0, openingDeckCount - deckPile.length);
+    const oDepthDrawn = (openingODeckCount == null) ? 0 : Math.max(0, openingODeckCount - oDeckPile.length);
+
+    const deckDepthInfo = getDepthLevelInfo(depthDrawn, depthLevels);
+    const oDeckDepthInfo = getDepthLevelInfo(oDepthDrawn, depthLevels);
 
   return (
     <div className={`pb-root ${zoomEnabled ? '' : 'zoom-off'}`}>
@@ -3295,6 +3359,7 @@ export function PlaytestBoard() {
                               onSlotCardDragStart={onSlotCardDragStart}
                               onSlotCardDragEnd={onSlotCardDragEnd}
                               oDeckPile={oDeckPile}
+                              oDeckDepthInfo={oDeckDepthInfo}
                               oShieldPile={oShieldPile}
                               oBanishPile={oBanishPile}
                               oGravePile={oGravePile}
@@ -3582,8 +3647,13 @@ export function PlaytestBoard() {
                                       onDragStart={onDeckDragStart}
                                   />
                               )}
-                              <div className="pb-pile-count" aria-label="Deck count">
-                                  {deckPile.length}
+                              <div className="pb-pile-meta" aria-label="Deck meta">
+                                  <div className={`pb-depth-level is-${deckDepthInfo.tone}`} aria-label="Deck depth level">
+                                      Depth Level: {deckDepthInfo.level ?? '-'}
+                                  </div>
+                                  <div className="pb-pile-count" aria-label="Deck count">
+                                      {deckPile.length}
+                                  </div>
                               </div>
                           </Slot>
 
@@ -4198,6 +4268,33 @@ export function PlaytestBoard() {
                   onClose={() => setResourcePrompt(null)}
                   resources={slotResources}
                   setResources={setSlotResources}
+              />
+          )}
+
+          {ransackPrompt && (
+              <RansackModal
+                  prompt={ransackPrompt}
+                  setPrompt={setRansackPrompt}
+                  options={ransackOptions}
+                  counts={String(ransackPrompt?.owner || 'player') === 'opponent' ? oRansackCounts : ransackCounts}
+                  onClose={() => setRansackPrompt(null)}
+                  onConfirm={(optIndex) => {
+                      const isOpp = String(ransackPrompt?.owner || 'player') === 'opponent';
+
+                      if (isOpp) {
+                          setORansackCounts((prev) => {
+                              const next = [...(prev || [0, 0, 0, 0, 0, 0])];
+                              next[optIndex] = (Number(next[optIndex]) || 0) + 1;
+                              return next;
+                          });
+                      } else {
+                          setRansackCounts((prev) => {
+                              const next = [...(prev || [0, 0, 0, 0, 0, 0])];
+                              next[optIndex] = (Number(next[optIndex]) || 0) + 1;
+                              return next;
+                          });
+                      }
+                  }}
               />
           )}
 
