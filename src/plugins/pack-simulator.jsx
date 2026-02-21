@@ -13,8 +13,72 @@ const defaultBack = '/images/card0000_b.png';
 // normalize any _b id to its _a front
 const normalizeToFront = (id) => (id?.endsWith('_b') ? id.slice(0, -2) + '_a' : id);
 
+// ensure an id is a FRONT face id (…_a) for image/printing purposes
+const ensureFrontId = (id) => {
+    const s = String(id || '');
+    if (!s) return s;
+    if (/_a$/i.test(s)) return s;
+    if (/_b$/i.test(s)) return s.replace(/_b$/i, '_a');
+    return `${s}_a`;
+};
+
 // compute the _b InternalName for a given id
 const backIdFor = (id) => (id?.endsWith('_a') ? id.slice(0, -2) + '_b' : id + '_b');
+
+// --- set/variant helpers ---
+// Variant IDs may insert _<SET> before _a/_b (e.g. card0001_CS2_a).
+// For rules (caps/legality), treat variants as the same base card.
+const stripSetVariantId = (id) => {
+    const s = String(id || '');
+    const m = s.match(/^(.+)_([A-Za-z0-9]+)_([ab])$/i);
+    return m ? `${m[1]}_${m[3].toLowerCase()}` : s;
+};
+const getBaseFrontId = (id) => stripSetVariantId(normalizeToFront(id));
+
+// A card/partner Set field may be a string (single set) or an array (multiple sets).
+const getSetIdsFromObj = (obj) => {
+    const v = obj?.Set ?? obj?.SetID ?? obj?.SetId ?? obj?.SetIDs ?? obj?.SetIds;
+    if (Array.isArray(v)) return v.filter(Boolean).map(String);
+    if (typeof v === 'string' && v.trim()) return [v.trim()];
+    return [];
+};
+const intersects = (a, b) => {
+    if (!Array.isArray(a) || !Array.isArray(b) || a.length === 0 || b.length === 0) return false;
+    const bs = new Set(b);
+    return a.some(x => bs.has(x));
+};
+
+// If a card belongs to multiple sets, we may want to "print" it as a specific set-variant id
+// (e.g. card0001_CS2_a) so the correct art and set grouping are used in the pack/collection UI.
+const applySetVariantToId = (id, setId, setIds) => {
+    const ids = Array.isArray(setIds) ? setIds : [];
+    if (!id || !setId || ids.length < 2) return id;
+    if (String(setId) === String(ids[0])) return id; // first set keeps base filename
+    return /_(a|b)$/i.test(id)
+        ? String(id).replace(/_(a|b)$/i, `_${setId}_$1`)
+        : `${id}_${setId}`;
+};
+
+// Determine which Set bucket a specific InternalName should appear under.
+const getPrintingSetId = (internalName, cardObj) => {
+    const s = String(internalName || '');
+    const m = s.match(/^.+_([A-Za-z0-9]+)_(a|b)$/i);
+    if (m) return m[1];
+    const sets = getSetIdsFromObj(cardObj);
+    return sets[0] || 'Unknown';
+};
+
+// When we pull a card for a pack, choose a printing id that matches the allowed set pool.
+// If only one allowed set is active, multi-set cards will be pulled as that set's variant.
+const pickPrintingIdForPull = (cardObj, allowedSetIds, faceId) => {
+    const sets = getSetIdsFromObj(cardObj);
+    if (sets.length < 2) return faceId;
+    if (Array.isArray(allowedSetIds) && allowedSetIds.length === 1) {
+        const only = allowedSetIds[0];
+        if (sets.includes(only)) return applySetVariantToId(faceId, only, sets);
+    }
+    return faceId;
+};
 
 // Robust image with graceful fallback chain
 function CardImg({ id, alt, ...imgProps }) {
@@ -190,6 +254,7 @@ export function PackSimulator() {
       'Ultra Rare': '#f57c00',
   });
     const [selectedPid, setSelectedPid] = useState('');
+    const [partnerVariantSet, setPartnerVariantSet] = useState(null);
 
     // NEW: reference lists + data for formats/packs
     const [refLists, setRefLists] = useState({ Format: [], Packs: [], Set: [] });
@@ -232,11 +297,13 @@ export function PackSimulator() {
     // Aggregate counts from a list of cards (flat array from current open)
     const aggregatePackCounts = useCallback((list) => {
         const counts = new Map();      // InternalName -> qty
-        const meta = new Map();      // InternalName -> card (for name/rarity, etc.)
+        const meta = new Map();        // InternalName -> card (for name/rarity, etc.)
         for (const c of list) {
-            const key = c.InternalName;
+            const key = normalizeToFront(c.InternalName);
             counts.set(key, (counts.get(key) || 0) + 1);
-            if (!meta.has(key)) meta.set(key, c);
+
+            // store meta under the normalized key
+            if (!meta.has(key)) meta.set(key, c.InternalName === key ? c : { ...c, InternalName: key });
         }
         return { counts, meta };
     }, []);
@@ -333,7 +400,7 @@ export function PackSimulator() {
             items.push({
                 InternalName: key,
                 Quantity: qty,
-                Set: card?.Set || 'Unknown',
+                Set: getPrintingSetId(key, card),
             });
         });
 
@@ -373,14 +440,24 @@ export function PackSimulator() {
 
         const items = Array.isArray(data?.cards) ? data.cards : [];
         for (const row of items) {
-            const key = String(row?.InternalName || '').trim();
+            const raw = String(row?.InternalName || '').trim();
+            const key = normalizeToFront(raw);
             if (!key) continue;
             const qty = Math.max(1, parseInt(row?.Quantity, 10) || 1);
 
             counts.set(key, (counts.get(key) || 0) + qty);
 
             // Try to find the full card in our dataset so grouping/badges work.
-            let card = cards.find(c => c.InternalName === key);
+            // Imported collections may contain set-variant ids (e.g. card0001_CS2_a),
+            // which won't exist in the base dataset. In that case, resolve to the base
+            // front id for metadata, but keep the printing id for art + set grouping.
+            const baseKey = getBaseFrontId(key);
+            let baseCard = cards.find(c => c.InternalName === baseKey);
+
+            let card = baseCard
+                ? { ...baseCard, InternalName: key } // keep printing id, inherit real name/rarity/etc
+                : null;
+
             if (!card) {
                 // Fallback stub (still renders in list)
                 card = {
@@ -392,6 +469,7 @@ export function PackSimulator() {
                     ElementType1: 'Neutral',
                 };
             }
+
             if (!meta.has(key)) meta.set(key, card);
         }
 
@@ -459,7 +537,7 @@ export function PackSimulator() {
         collection.counts.forEach((qty, key) => {
             const card = collection.meta.get(key);
             if (!card) return;
-            const setId = card.Set || 'Unknown';
+            const setId = getPrintingSetId(key, card);
             const r = card.Rarity || 'Common';
             if (!bySet.has(setId)) bySet.set(setId, new Map());
             const rmap = bySet.get(setId);
@@ -506,10 +584,20 @@ export function PackSimulator() {
             const current = prev.counts.get(key) || 0;
             const cap = getCapForCard(card);
 
+            // variants share the same base card cap
+            const baseFront = getBaseFrontId(key);
+            let baseTotal = 0;
+            prev.counts.forEach((q, k) => {
+                if (getBaseFrontId(k) === baseFront) baseTotal += (q || 0);
+            });
+
+            const otherQty = baseTotal - current;
+            const maxForThisPrinting = Math.max(0, cap - otherQty);
+
             let nextQty = current + delta;
 
-            // clamp upward to cap
-            if (nextQty > cap) nextQty = cap;
+            // clamp upward to remaining cap across variants
+            if (nextQty > maxForThisPrinting) nextQty = maxForThisPrinting;
 
             const nextCounts = new Map(prev.counts);
             const nextMeta = new Map(prev.meta);
@@ -537,7 +625,7 @@ export function PackSimulator() {
         pendingAdd.counts.forEach((qty, key) => {
             const card = pendingAdd.meta.get(key);
             if (!card) return;
-            const setId = card.Set || 'Unknown';
+            const setId = getPrintingSetId(key, card);
             const r = card.Rarity || 'Common';
             if (!bySet.has(setId)) bySet.set(setId, new Map());
             const rmap = bySet.get(setId);
@@ -653,8 +741,13 @@ export function PackSimulator() {
                 cRes.json(), pRes.json(), eRes.json(), rRes.json(), fRes.json(), kRes.json()
             ]);
             if (!cancelled) {
-                setCards(Array.isArray(c) ? c : []);
-                setPartners(Array.isArray(p) ? p.filter(x => x.CardType === 'Partner') : []);
+                const allCards = Array.isArray(c) ? c : [];
+                const frontCards = allCards.filter(card => !card?.InternalName?.endsWith('_b'));
+                setCards(frontCards);
+
+                const allPartners = Array.isArray(p) ? p : [];
+                setPartners(allPartners.filter(x => x.CardType === 'Partner' && !x?.InternalName?.endsWith('_b')));
+
                 setElementColors(buildElementColorMap(e));
 
                 // reference lists (Format / Packs / Set)
@@ -687,6 +780,25 @@ export function PackSimulator() {
     () => partners.find(p => p.InternalName === selectedPid) || null,
     [partners, selectedPid]
   );
+
+    // Reset variant selection whenever partner changes
+    useEffect(() => {
+        setPartnerVariantSet(null);
+    }, [selectedPid]);
+
+    const partnerSetRaw = selectedPartner?.Set ?? selectedPartner?.SetID ?? selectedPartner?.SetId ?? selectedPartner?.SetIDs ?? selectedPartner?.SetIds;
+    const partnerIsVariant = Array.isArray(partnerSetRaw);
+    const partnerSetIds = useMemo(() => getSetIdsFromObj(selectedPartner), [selectedPartner]);
+    const partnerChosenSet = (partnerIsVariant && partnerSetIds.length)
+        ? (partnerVariantSet ?? partnerSetIds[0])
+        : null;
+
+    const partnerPrintingFrontId = useMemo(() => {
+        if (!selectedPartner?.InternalName) return '';
+        const frontId = normalizeToFront(selectedPartner.InternalName);
+        if (!partnerIsVariant || !partnerChosenSet) return frontId;
+        return applySetVariantToId(frontId, partnerChosenSet, partnerSetIds);
+    }, [selectedPartner?.InternalName, partnerIsVariant, partnerChosenSet, partnerSetIds]);
 
     const partnerImgSrc = useMemo(
         () => partnerFrontImageSrc(selectedPartner?.InternalName),
@@ -734,7 +846,7 @@ export function PackSimulator() {
     // Partners list filtered by the format's allowedSets
     const partnersFiltered = useMemo(() => {
         if (!Array.isArray(formatAllowedSetIds)) return partners;
-        return partners.filter(pt => formatAllowedSetIds.includes(pt.Set));
+        return partners.filter(pt => intersects(getSetIdsFromObj(pt), formatAllowedSetIds));
     }, [partners, formatAllowedSetIds]);
 
     // If current selected partner falls out of the allowed sets, clear it
@@ -766,7 +878,7 @@ export function PackSimulator() {
 
     const allowedCards = useMemo(() => {
         if (!selectedPartner) return [];
-        const setOK = (c) => !Array.isArray(allowedSetIds) || allowedSetIds.includes(c.Set);
+        const setOK = (c) => !Array.isArray(allowedSetIds) || intersects(getSetIdsFromObj(c), allowedSetIds);
         return cards.filter(c => setOK(c) && strictFrontElementMatch(c, allowedElements, cardsById));
     }, [cards, allowedElements, selectedPartner, allowedSetIds, cardsById]);
 
@@ -783,29 +895,91 @@ export function PackSimulator() {
         if (!selectedPartner || !selectedPack) return; // require a selected pack
 
         // Track counts across THIS click (all packs)
-        const seenCounts = new Map(); // key: InternalName, val: count
+        // key: base front id (variants count together)
+        const seenCounts = new Map();
 
         // Baseline counts from the existing Collection (so collection copies count toward the cap)
         const baseCounts = new Map();
         if (collection && collection.counts) {
-            collection.counts.forEach((qty, key) => baseCounts.set(key, qty));
+            collection.counts.forEach((qty, key) => {
+                const k = getBaseFrontId(key);
+                baseCounts.set(k, (baseCounts.get(k) || 0) + (Number(qty) || 0));
+            });
         }
 
         const capOf = (rarity) => Number.isFinite(rarityCap?.[rarity]) ? rarityCap[rarity] : Infinity;
 
+        // Track 1 "bonus" pull per NEW printing id when the base card is already at cap.
+        // key: printed front id (e.g. card0001_CS2_a) -> 0/1
+        const seenVariantBonus = new Map();
+
+        const printedIdForCandidate = (card, rarity) => {
+            const baseFront = ensureFrontId(getBaseFrontId(card?.InternalName));
+            const baseKey = getBaseFrontId(baseFront);
+
+            const cap = capOf(rarity);
+            const baseTotal = (baseCounts.get(baseKey) || 0) + (seenCounts.get(baseKey) || 0);
+
+            // At/over cap: if the player doesn't own the ORIGINAL printing yet,
+            // allow exactly 1 copy of it (same unlock rule as other variants).
+            if (baseTotal >= cap) {
+                const ownedOriginal = (collection?.counts?.get(baseFront) || 0);
+                const bonusOriginalTaken = (seenVariantBonus.get(baseFront) || 0);
+                if (ownedOriginal < 1 && bonusOriginalTaken < 1) {
+                    return baseFront;
+                }
+            }
+
+            // Otherwise, use normal printing selection (set variants, etc.)
+            return pickPrintingIdForPull(card, allowedSetIds, baseFront);
+        };
+
+        const isEligibleCandidate = (card, rarity, packSeen) => {
+            const baseKey = getBaseFrontId(card.InternalName);
+            if (packSeen.has(baseKey)) return false;
+
+            const cap = capOf(rarity);
+            const baseTotal = (baseCounts.get(baseKey) || 0) + (seenCounts.get(baseKey) || 0);
+
+            // Normal behavior until the card as a whole hits cap
+            if (baseTotal < cap) return true;
+
+            // At/over cap: allow exactly 1 copy of a NEW printing (variant) you don't own yet
+            const printId = printedIdForCandidate(card, rarity);
+            const ownedPrinting = (collection?.counts?.get(printId) || 0);
+            const bonusTaken = (seenVariantBonus.get(printId) || 0);
+
+            return ownedPrinting < 1 && bonusTaken < 1;
+        };
+
         // Forbid duplicates *within a single pack* by excluding anything in packSeen.
         const pickOneWithCap = (pool, rarity, packSeen) => {
             if (!Array.isArray(pool) || pool.length === 0) return null;
-            const cap = capOf(rarity);
-            const eligible = pool.filter((c) =>
-                !packSeen.has(c.InternalName) &&
-                ((baseCounts.get(c.InternalName) || 0) + (seenCounts.get(c.InternalName) || 0)) < cap
-            );
+
+            const eligible = pool.filter((c) => isEligibleCandidate(c, rarity, packSeen));
             if (eligible.length === 0) return null;
-            const picked = eligible[Math.floor(Math.random() * eligible.length)];
-            // track click-wide counts for rarityCap, but packSeen enforces per-pack uniqueness
-            seenCounts.set(picked.InternalName, (seenCounts.get(picked.InternalName) || 0) + 1);
-            packSeen.add(picked.InternalName);
+
+            const pickedBase = eligible[Math.floor(Math.random() * eligible.length)];
+
+            const baseKey = getBaseFrontId(pickedBase.InternalName);
+            const cap = capOf(rarity);
+            const baseTotalBefore = (baseCounts.get(baseKey) || 0) + (seenCounts.get(baseKey) || 0);
+
+            // Track click-wide counts (still useful for normal pre-cap behavior)
+            seenCounts.set(baseKey, (seenCounts.get(baseKey) || 0) + 1);
+            packSeen.add(baseKey);
+
+            // Resolve to printed id (variant art)
+            const printId = printedIdForCandidate(pickedBase, rarity);
+            const picked = (printId && printId !== pickedBase.InternalName)
+                ? { ...pickedBase, InternalName: printId }
+                : pickedBase;
+
+            // If we were already at/over cap, consume the 1-time bonus for this printing
+            if (baseTotalBefore >= cap) {
+                seenVariantBonus.set(printId, 1);
+            }
+
             return picked;
         };
 
@@ -819,39 +993,75 @@ export function PackSimulator() {
             return null; // unfilled
         };
 
+        // Convert a pulled base card into the correct printing id for this open (variant art),
+        // based on the current allowedSetIds (format + pack).
+        const asPrinted = (card) => {
+            if (!card) return null;
+
+            // IMPORTANT: start from the BASE front id so we never apply set-variants twice
+            // (e.g. avoid card0001_CS2_CS2_a)
+            const baseFront = getBaseFrontId(card.InternalName);
+            const face = ensureFrontId(baseFront);
+
+            const printedId = pickPrintingIdForPull(card, allowedSetIds, face);
+            return (printedId && printedId !== card.InternalName)
+                ? { ...card, InternalName: printedId }
+                : card;
+        };
+
         const all = [];
         for (let packIdx = 0; packIdx < packCount; packIdx++) {
             const packSeen = new Set(); // NEW: per-pack uniqueness
 
-            // Decide Ultra Rare vs Rare slots
-            const urCount = Array.from({ length: rareQty }).reduce(
-                (acc) => acc + (Math.random() * 100 < ultraRate ? 1 : 0),
-                0
-            );
-            const rCount = rareQty - urCount;
+            // Decide Ultra Rare vs Rare slots, BUT never downshift if UR/Rare are still available.
+            // Also: if only Ultra Rares remain, give Ultra Rares regardless of UR%.
+            const hasEligibleWithCap = (pool, rarity, packSeen) => {
+                if (!Array.isArray(pool) || pool.length === 0) return false;
+                for (const c of pool) {
+                    if (isEligibleCandidate(c, rarity, packSeen)) return true;
+                }
+                return false;
+            };
 
-            // Ultra Rare slot fallback: UR -> Rare -> Uncommon -> Common -> unfilled
-            for (let i = 0; i < urCount; i++) {
-                const card = pickWithFallback(['Ultra Rare', 'Rare', 'Uncommon', 'Common'], packSeen);
-                if (card) all.push(card);
-            }
+            for (let i = 0; i < rareQty; i++) {
+                const urPool = byRarity['Ultra Rare'] || [];
+                const rPool = byRarity['Rare'] || [];
 
-            // Rare slot fallback: Rare -> Uncommon -> Common -> unfilled
-            for (let i = 0; i < rCount; i++) {
-                const card = pickWithFallback(['Rare', 'Uncommon', 'Common'], packSeen);
-                if (card) all.push(card);
+                const urAvail = hasEligibleWithCap(urPool, 'Ultra Rare', packSeen);
+                const rAvail = hasEligibleWithCap(rPool, 'Rare', packSeen);
+
+                let chain;
+
+                if (urAvail && rAvail) {
+                    // Both exist: honor UR% preference, but keep UR/Rare above any downshift.
+                    chain = (Math.random() * 100 < ultraRate)
+                        ? ['Ultra Rare', 'Rare', 'Uncommon', 'Common']
+                        : ['Rare', 'Ultra Rare', 'Uncommon', 'Common'];
+                } else if (urAvail) {
+                    // Only UR is available: take it (ignore UR%).
+                    chain = ['Ultra Rare', 'Rare', 'Uncommon', 'Common'];
+                } else if (rAvail) {
+                    // Only Rare is available: take it.
+                    chain = ['Rare', 'Uncommon', 'Common'];
+                } else {
+                    // Neither UR nor Rare available: now downshift.
+                    chain = ['Uncommon', 'Common'];
+                }
+
+                const card = pickWithFallback(chain, packSeen);
+                if (card) all.push(asPrinted(card));
             }
 
             // Uncommon slot fallback: Uncommon -> Common -> unfilled
             for (let i = 0; i < uncommonQty; i++) {
                 const card = pickWithFallback(['Uncommon', 'Common'], packSeen);
-                if (card) all.push(card);
+                if (card) all.push(asPrinted(card));
             }
 
             // Common slot fallback: Common -> unfilled
             for (let i = 0; i < commonQty; i++) {
                 const card = pickWithFallback(['Common'], packSeen);
-                if (card) all.push(card);
+                if (card) all.push(asPrinted(card));
             }
         }
 
@@ -1107,10 +1317,10 @@ export function PackSimulator() {
                       <div className="ps-partner-art">
                           {selectedPartner && (
                               <>
-                                  <CardZoom id={selectedPartner.InternalName} name={selectedPartner.CardName} />
+                                  <CardZoom id={partnerPrintingFrontId || selectedPartner.InternalName} name={selectedPartner.CardName} />
                                   {(() => {
                                       const key = 'partner';
-                                      const frontId = normalizeToFront(selectedPartner.InternalName);
+                                      const frontId = partnerPrintingFrontId || normalizeToFront(selectedPartner.InternalName);
                                       const displayId = thumbFlip[key] ? backIdFor(frontId) : frontId;
                                       return (
                                           <CardImg
@@ -1133,6 +1343,27 @@ export function PackSimulator() {
                               />
                           )}
                       </div>
+                      {/* Partner variant buttons (shown only when Partner has Set as an array) */}
+                      {selectedPartner && partnerIsVariant && partnerSetIds.length > 1 && (
+                          <div className="ps-partner-variants" onMouseDown={(e) => e.stopPropagation()}>
+                              {partnerSetIds.map((sid, idx) => {
+                                  const isActive =
+                                      (partnerChosenSet ? String(partnerChosenSet) : String(partnerSetIds[0])) === String(sid);
+
+                                  return (
+                                      <button
+                                          key={sid}
+                                          type="button"
+                                          className={`ps-variant-btn${isActive ? ' active' : ''}`}
+                                          onClick={(e) => { e.stopPropagation(); setPartnerVariantSet(sid); }}
+                                          title={idx === 0 ? `Use ${sid} (original)` : `Use ${sid} variant`}
+                                      >
+                                          {sid}
+                                      </button>
+                                  );
+                              })}
+                          </div>
+                      )}
             <select className="ps-select" value={selectedPid} onChange={(e) => setSelectedPid(e.target.value)}>
               <option value="">— Select Partner —</option>
                           {partnersFiltered.map(p => (
@@ -1605,17 +1836,27 @@ export function PackSimulator() {
 
                                                                   <span className="badge">{qty}x</span>
 
-                                                                  {isEditingCollection && (
-                                                                      <button
-                                                                          type="button"
-                                                                          className="qty-btn"
-                                                                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); adjustCollectionQty(card.InternalName, card, +1); }}
-                                                                          disabled={qty >= getCapForCard(card)}
-                                                                          title={qty >= getCapForCard(card) ? 'Reached max allowed for this rarity' : 'Increase quantity'}
-                                                                      >
-                                                                          +
-                                                                      </button>
-                                                                  )}
+                                                                  {isEditingCollection && (() => {
+                                                                      const cap = getCapForCard(card);
+                                                                      const baseFront = getBaseFrontId(card.InternalName);
+                                                                      let baseTotal = 0;
+                                                                      collection?.counts?.forEach((q, k) => {
+                                                                          if (getBaseFrontId(k) === baseFront) baseTotal += (q || 0);
+                                                                      });
+                                                                      const atCap = baseTotal >= cap;
+
+                                                                      return (
+                                                                          <button
+                                                                              type="button"
+                                                                              className="qty-btn"
+                                                                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); adjustCollectionQty(card.InternalName, card, +1); }}
+                                                                              disabled={atCap}
+                                                                              title={atCap ? 'Reached max allowed (combined across variants)' : 'Increase quantity'}
+                                                                          >
+                                                                              +
+                                                                          </button>
+                                                                      );
+                                                                  })()}
                                                               </div>
                                                           </div>
                                                       ))}

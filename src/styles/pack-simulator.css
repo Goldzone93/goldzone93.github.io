@@ -233,6 +233,35 @@
   border: 1px solid rgba(255,255,255,0.08);
   box-shadow: 0 4px 16px rgba(0,0,0,0.45);
 }
+
+/* Partner variant selector (shown when Partner has Set as an array) */
+.ps-partner-variants {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin: 0 0 10px;
+}
+
+.ps-variant-btn {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.04);
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ps-variant-btn:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+.ps-variant-btn.active {
+  border-color: rgba(255,255,255,0.32);
+  background: rgba(255,255,255,0.12);
+}
 /* Quantity badge on first instance of duplicates */
 .ps-card .ps-qty-badge {
     position: absolute;

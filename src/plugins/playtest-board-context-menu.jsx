@@ -845,10 +845,10 @@ export function installPBActionHandlers(host) {
             if (fromPeek && cardId) {
                 const route = (fn) => removeFromStackInPeek(pStack, pIdx, cardId, fn, pOwner);
 
-                if (action === 'add_to_hand') route(toHand);
-                else if (action === 'to_grave') route(toGraveTop);
-                else if (action === 'to_banish') route(toBanishTop);
-                else if (action === 'to_shield') route(shieldShuffleIn);
+                if (action === 'add_to_hand') route(isOppPeek ? toHandOpp : toHand);
+                else if (action === 'to_grave') route(isOppPeek ? toOGraveTop : toGraveTop);
+                else if (action === 'to_banish') route(isOppPeek ? toOBanishTop : toBanishTop);
+                else if (action === 'to_shield') route(isOppPeek ? oShieldShuffleIn : shieldShuffleIn);
                 else if (action === 'to_deck_top') {
                     if (pStack === 'deck') {
                         (isOppPeek ? host.setODeckPile : host.setDeckPile)((prev) => {
@@ -904,8 +904,13 @@ export function installPBActionHandlers(host) {
                     }
                 }
                 else if (action === 'move_to_unit' || action === 'move_to_support') {
-                    removeFromStackInPeek(pStack, pIdx, cardId, () => { });
-                    host.setPendingPlace({ source: 'viewer', cardId, target: action === 'move_to_unit' ? 'unit' : 'support' });
+                    removeFromStackInPeek(pStack, pIdx, cardId, () => { }, pOwner);
+                    host.setPendingPlace({
+                        source: 'viewer',
+                        cardId,
+                        target: action === 'move_to_unit' ? 'unit' : 'support',
+                        owner: pOwner
+                    });
                     const modal = target?.closest?.('.pb-modal');
                     if (modal) {
                         modal.classList.add('is-hidden');

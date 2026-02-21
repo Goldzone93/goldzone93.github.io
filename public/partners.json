@@ -17,7 +17,7 @@
     "ATK": "",
     "DEF": "",
     "HP": "",
-    "Set": "CS1"
+    "Set": ["CS1", "CS2", "S4"]
   },
   {
     "InternalName": "partner0001_b",
@@ -37,7 +37,7 @@
     "ATK": 6,
     "DEF": 1,
     "HP": 6,
-    "Set": "CS1"
+    "Set": ["CS1", "CS2", "S4"]
   },
   {
     "InternalName": "partner0002_a",

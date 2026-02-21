@@ -1580,6 +1580,14 @@ export function PlaytestBoard() {
     // Build image src
     const imgSrc = (id, side = 'a') => getImagePath(id, side);
 
+    // Variant IDs may insert _<SET> before _a/_b (e.g. card0001_CS2_a).
+    // For importer validation/lookup we treat these as the same base card.
+    const stripSetVariantId = (id) => {
+        const s = String(id || '');
+        const m = s.match(/^(.+)_([A-Za-z0-9]+)_([ab])$/i);
+        return m ? `${m[1]}_${m[3].toLowerCase()}` : s;
+    };
+
     // File input change -> parse + map schema
     const onFileChosen = async (e) => {
         const file = e.target.files?.[0];
@@ -1632,7 +1640,7 @@ export function PlaytestBoard() {
 
         // Detect partners present among keys
         const keys = Object.keys(list);
-        const partnerCandidates = keys.filter(k => partnersById.has(k));
+        const partnerCandidates = keys.filter(k => partnersById.has(k) || partnersById.has(stripSetVariantId(k)));
 
         if (partnerCandidates.length === 0) {
             alert('Deck requires a partner.');
@@ -1643,6 +1651,14 @@ export function PlaytestBoard() {
             alert(`Multiple partners found; using ${partnerCandidates[0]}`);
         }
         const chosenPartner = partnerCandidates[0];
+
+        // If the partner is a set-variant id, alias it to the base partner entry so lookups work everywhere.
+        if (!partnersById.has(chosenPartner)) {
+            const basePartner = stripSetVariantId(chosenPartner);
+            if (partnersById.has(basePartner)) {
+                partnersById.set(chosenPartner, partnersById.get(basePartner));
+            }
+        }
 
         // Build deck pile (expand counts), skipping:
         // - partner itself (and toast if it appears in main list)
@@ -1663,12 +1679,12 @@ export function PlaytestBoard() {
             }
 
             // Skip tokens
-            if (tokensById.has(id)) {
+            if (tokensById.has(id) || tokensById.has(stripSetVariantId(id))) {
                 continue;
             }
 
             // Only include IDs that resolve in cards.json
-            if (!cardsById.has(id)) {
+            if (!cardsById.has(id) && !cardsById.has(stripSetVariantId(id))) {
                 skippedUnknown += count;
                 continue;
             }
@@ -1764,7 +1780,7 @@ export function PlaytestBoard() {
 
         // Detect partner
         const keys = Object.keys(list);
-        const partnerCandidates = keys.filter((k) => partnersById.has(k));
+        const partnerCandidates = keys.filter((k) => partnersById.has(k) || partnersById.has(stripSetVariantId(k)));
         if (partnerCandidates.length === 0) {
             alert('Deck requires a partner.');
             e.target.value = '';
@@ -1774,6 +1790,14 @@ export function PlaytestBoard() {
             alert(`Multiple partners found; using ${partnerCandidates[0]}`);
         }
         const chosenPartner = partnerCandidates[0];
+
+        // If partner is a set-variant id, alias it to the base partner entry so lookups work everywhere.
+        if (!partnersById.has(chosenPartner)) {
+            const basePartner = stripSetVariantId(chosenPartner);
+            if (partnersById.has(basePartner)) {
+                partnersById.set(chosenPartner, partnersById.get(basePartner));
+            }
+        }
 
         // Build expanded deck for opponent (skip partner/tokens/unknown like user import)
         let skippedUnknown = 0;
@@ -1788,11 +1812,18 @@ export function PlaytestBoard() {
                 skippedPartnerCount += count;
                 continue;
             }
-            if (tokensById.has(id)) continue;
 
-            if (!cardsById.has(id) && !tokensById.has(id) && !partnersById.has(id)) {
-                skippedUnknown += count;
-                continue;
+            // Skip tokens (also recognize token variants)
+            if (tokensById.has(id) || tokensById.has(stripSetVariantId(id))) continue;
+
+            // Accept card variants if the base card exists
+            if (!cardsById.has(id) && !cardsById.has(stripSetVariantId(id))) {
+                // Still allow partners (including partner variants) to pass validation,
+                // though we already stripped the chosenPartner above.
+                if (!partnersById.has(id) && !partnersById.has(stripSetVariantId(id))) {
+                    skippedUnknown += count;
+                    continue;
+                }
             }
 
             for (let i = 0; i < count; i++) expanded.push(id);
@@ -3742,27 +3773,25 @@ export function PlaytestBoard() {
                       </div>
                       {/* Fixed Hand Dock (pinned between left/right panels at bottom) */}
                       <div
-                          className={`pb-hand-dock${opponentBoard === 'yes' ? ' has-opponent' : ''}${handCollapsed ? ' is-collapsed' : ''}`}
+                          className={`pb-hand-dock${handCollapsed ? ' is-collapsed' : ''}`}
                           role="region"
                           aria-label="Hand"
                           /* When collapsed, allow dropping anywhere on the dock */
                           onDragOver={handCollapsed ? onHandContainerDragOver : undefined}
                           onDrop={handCollapsed ? onHandContainerDrop : undefined}
                       >
-                          {/* Collapse/Expand control only when Opponent Board is ON */}
-                          {opponentBoard === 'yes' && (
-                              <div className="pb-hand-toggle">
-                                  <button
-                                      type="button"
-                                      className="pb-fold-btn"
-                                      aria-expanded={!handCollapsed}
-                                      onClick={() => setHandCollapsed(v => !v)}
-                                      title={handCollapsed ? 'Expand Hand' : 'Collapse Hand'}
-                                  >
-                                      {handCollapsed ? 'Expand ▲' : 'Collapse ▼'}
-                                  </button>
-                              </div>
-                          )}
+                          {/* Collapse/Expand control (always available) */}
+                          <div className="pb-hand-toggle">
+                              <button
+                                  type="button"
+                                  className="pb-fold-btn"
+                                  aria-expanded={!handCollapsed}
+                                  onClick={() => setHandCollapsed(v => !v)}
+                                  title={handCollapsed ? 'Expand Hand' : 'Collapse Hand'}
+                              >
+                                  {handCollapsed ? 'Expand ▲' : 'Collapse ▼'}
+                              </button>
+                          </div>
 
                           <div
                               className="pb-hand-cards"
@@ -4037,6 +4066,7 @@ export function PlaytestBoard() {
                                           data-menu-area={peekCard.readonly ? 'viewer-card' : 'hand-card'}
                                           data-card-id={cid}
                                           data-stack={peekCard.from}
+                                          data-owner={peekCard.owner || 'player'}
                                           data-peek-index={i}
                                           data-peek-size={Array.isArray(peekCard.ids) ? peekCard.ids.length : 1}
                                           data-peek-total={Array.isArray(peekCard.ids) ? peekCard.ids.length : 1}
@@ -4076,6 +4106,7 @@ export function PlaytestBoard() {
                                       data-menu-area={peekCard.readonly ? 'viewer-card' : 'hand-card'}
                                       data-card-id={peekCard.id}
                                       data-stack={peekCard.from}   /* 'deck' | 'shield' | 'grave' (readonly) */
+                                      data-owner={peekCard.owner || 'player'}
                                       data-peek-index={0}
                                       data-peek-size={Array.isArray(peekCard.ids) ? peekCard.ids.length : 1}
                                       data-peek-total={Array.isArray(peekCard.ids) ? peekCard.ids.length : 1}

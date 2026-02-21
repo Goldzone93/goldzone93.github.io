@@ -1141,6 +1141,8 @@ export function EncounterModal({ onClose, tokens }) {
     const [elements, setElements] = React.useState([]); // [{ id, label, color }]
     const [activeEls, setActiveEls] = React.useState([]);
     const [costActive, setCostActive] = React.useState(() => new Set(['0', '1', '2', '3', '4', '5', '6', '7', '8+']));
+    const [setIds, setSetIds] = React.useState([]);
+    const [activeSets, setActiveSets] = React.useState(() => new Set(['CS1']));
     const [generated, setGenerated] = React.useState([]);
     const [cardTypes, setCardTypes] = React.useState([]);
     const [activeTypes, setActiveTypes] = React.useState(['Unit']);
@@ -1162,6 +1164,42 @@ export function EncounterModal({ onClose, tokens }) {
     };
     const frontOf = (internal) => `/images/${String(internal || '').replace(/_(a|b)$/i, '')}_a.png`;
 
+    // If the token comes from a non-CS1 set, prefer the variant image: token0001_S4_a.png
+    // If multiple sets are active, prefer one that matches activeSets.
+    const frontOfToken = (internal, tokenSet) => {
+        const stem = String(internal || '').replace(/_(a|b)$/i, '');
+
+        // IMPORTANT: if Set is NOT an array, it is "original art" and has NO _[SetID] suffix
+        const isVariant = Array.isArray(tokenSet);
+        if (!isVariant) return `/images/${stem}_a.png`;
+
+        const tokenSets = tokenSet.filter(Boolean).map(String);
+
+        // Right-most active set pill (based on setIds order)
+        const activeOrdered = (Array.isArray(setIds) ? setIds : []).filter((sid) => activeSets.has(String(sid)));
+        const rightMostActive = activeOrdered.length ? String(activeOrdered[activeOrdered.length - 1]) : null;
+
+        // Choose the right-most active set that this token actually belongs to
+        let chosen = null;
+
+        if (rightMostActive && tokenSets.includes(rightMostActive)) {
+            chosen = rightMostActive;
+        } else if (activeOrdered.length) {
+            for (let i = activeOrdered.length - 1; i >= 0; i--) {
+                const sid = String(activeOrdered[i]);
+                if (tokenSets.includes(sid)) { chosen = sid; break; }
+            }
+        }
+
+        // If still nothing, default to the token's first set
+        if (!chosen) chosen = tokenSets[0];
+
+        // IMPORTANT: for variant arrays, the FIRST set is the original art (no suffix)
+        if (!chosen || chosen === tokenSets[0]) return `/images/${stem}_a.png`;
+
+        return `/images/${stem}_${chosen}_a.png`;
+    };
+
     // Load CardTypes + Elements (IDs) and colors
     React.useEffect(() => {
         let alive = true;
@@ -1172,6 +1210,9 @@ export function EncounterModal({ onClose, tokens }) {
             if (!alive) return;
             const ct = Array.isArray(ref?.CardType) ? ref.CardType : [];
             setCardTypes(ct.filter((t) => t !== 'Partner'));
+
+            const sids = Array.isArray(ref?.Set) ? ref.Set : [];
+            setSetIds(sids);
 
             const ids = Array.isArray(ref?.Element) ? ref.Element : [];
             const colorByName = new Map(
@@ -1195,6 +1236,14 @@ export function EncounterModal({ onClose, tokens }) {
         });
     };
 
+    const toggleSet = (sid) => {
+        setActiveSets(prev => {
+            const next = new Set(prev);
+            if (next.has(sid)) next.delete(sid); else next.add(sid);
+            return next.size ? next : new Set(['CS1']);
+        });
+    };
+
     const toggleType = (id) => {
         setActiveTypes(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]));
     };
@@ -1213,12 +1262,19 @@ export function EncounterModal({ onClose, tokens }) {
         return (cc >= 0 && cc <= 7 && costActive.has(String(cc))) || (cc >= 8 && costActive.has('8+'));
     };
 
+    const passSet = (t) => {
+        if (!activeSets || activeSets.size === 0) return true;
+        const s = t?.Set;
+        const arr = Array.isArray(s) ? s.filter(Boolean) : (s ? [s] : []);
+        return arr.some(x => activeSets.has(String(x)));
+    };
+
     const filtered = React.useMemo(() => {
         const pool = (Array.isArray(tokens) ? tokens : []).filter(
             (t) => String(t?.Encounter ?? '').toLowerCase() === 'yes'
         );
-        return pool.filter((t) => passType(t) && passElement(t) && passCost(t));
-    }, [tokens, activeTypes, activeEls, costActive]);
+        return pool.filter((t) => passType(t) && passElement(t) && passCost(t) && passSet(t));
+    }, [tokens, activeTypes, activeEls, costActive, activeSets]);
 
     const generate = () => {
         const pool = [...filtered];
@@ -1228,6 +1284,36 @@ export function EncounterModal({ onClose, tokens }) {
         }
         setGenerated(pool.slice(0, 3));
     };
+
+    const tokenFrontIdForSet = (baseInternal, tokenSet, desiredSet) => {
+        const baseStem = String(baseInternal || '').replace(/_(a|b)$/i, '');
+
+        // If the token "Set" field is NOT an array, it's the original art and does NOT use _[SetID]
+        if (!Array.isArray(tokenSet)) {
+            return `${baseStem}_a`;
+        }
+
+        const sets = tokenSet.filter(Boolean).map(String);
+        if (!sets.length) return `${baseStem}_a`;
+
+        const want = desiredSet ? String(desiredSet) : sets[0];
+
+        // First set in the array is the original art (no _[SetID])
+        if (want === sets[0]) return `${baseStem}_a`;
+
+        // Any other set uses _[SetID]
+        if (sets.includes(want)) return `${baseStem}_${want}_a`;
+
+        return `${baseStem}_a`;
+    };
+
+    const rightMostActiveSet =
+        (typeof setIds !== 'undefined' &&
+            typeof activeSets !== 'undefined' &&
+            activeSets &&
+            typeof activeSets.has === 'function')
+            ? setIds.filter(s => activeSets.has(s)).slice(-1)[0]
+            : null;
 
     return (
         <div className="pb-modal" role="dialog" aria-modal="true" aria-label="Encounter Generator">
@@ -1292,6 +1378,21 @@ export function EncounterModal({ onClose, tokens }) {
                             </button>
                         ))}
                     </div>
+                    {/* Set toggles (OR) */}
+                    <div className="pb-eg-sectionlabel">Sets</div>
+                    <div className="pb-filter-group">
+                        {setIds.map((sid) => (
+                            <button
+                                key={sid}
+                                type="button"
+                                className={`pb-filter-chip${activeSets.has(sid) ? ' active' : ''}`}
+                                onClick={() => toggleSet(sid)}
+                                title={activeSets.has(sid) ? 'Click to turn off' : 'Click to turn on'}
+                            >
+                                {sid}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
                 {/* Generate action */}
@@ -1307,20 +1408,25 @@ export function EncounterModal({ onClose, tokens }) {
                     {generated.map((it) => {
                         const internal = it.InternalName || it.internalName || it.id || '';
                         const name = it.CardName ?? it.TokenName ?? it.Name ?? internal;
-                        const src = frontOf(internal);
-                        const alt = imgAlt('token', internal, 'a');
+
+                        // IMPORTANT: match the displayed art id (variant) to the id used by the context menu
+                        const displayId = tokenFrontIdForSet(internal, it.Set, rightMostActiveSet);
+
+                        const src = frontOf(displayId);
+                        const alt = imgAlt('token', displayId, 'a');
+
                         return (
                             <figure
-                                key={internal}
+                                key={displayId}
                                 className="pb-gallery-card"
                                 data-menu-area="viewer-card"
-                                data-card-id={internal}
+                                data-card-id={displayId}
                             >
-                                <CardZoom id={ensureFrontId(internal)} name={name} />
+                                <CardZoom id={ensureFrontId(displayId)} name={name} />
                                 <img
                                     src={src}
                                     alt={alt}
-                                    onError={onImgError('token', internal, 'a')}
+                                    onError={onImgError('token', displayId, 'a')}
                                     draggable="false"
                                     loading="lazy"
                                 />
@@ -1341,6 +1447,7 @@ export function GalleryModal({ title, items, onClose }) {
     const [query, setQuery] = React.useState('');
     const [elements, setElements] = React.useState([]); // [{name, color}]
     const [activeEls, setActiveEls] = React.useState([]);
+    const [variantByBase, setVariantByBase] = React.useState({}); // { [baseId]: setCode }
 
     // local copy of image helpers to avoid coupling to playtest-board.jsx
     const IMG = {
@@ -1350,6 +1457,14 @@ export function GalleryModal({ title, items, onClose }) {
         fallbackBack: '/images/card0000_b.png',
     };
     const ensureFrontId = (id) => `${String(id || '').replace(/_(a|b)$/i, '')}_a`;
+    // If id is like card0001_CS2_a, convert to base card0001_a (used as a stable key)
+    const stripSetVariantId = (id) => {
+        const s = String(id || '');
+        const m = s.match(/^(.+)_([A-Za-z0-9]+)_([ab])$/i);
+        return m ? `${m[1]}_${m[3].toLowerCase()}` : s;
+    };
+    const baseStem = (id) => String(stripSetVariantId(id) || '').replace(/_(a|b)$/i, '');
+    const buildVariantId = (id, setCode) => `${baseStem(id)}_${setCode}_a`;
     function onImgError(type, internalName, side = 'a') {
         return (e) => {
             e.currentTarget.onerror = null;
@@ -1482,23 +1597,56 @@ export function GalleryModal({ title, items, onClose }) {
                             ?? it.Name
                             ?? internal;
 
-                        const src = IMG.frontOf(internal);
-                        const alt = imgAlt(title?.toLowerCase().includes('token') ? 'token' : 'card', internal, 'a');
+                        const setsRaw = it.Set;
+                        const isVariantCard = Array.isArray(setsRaw); // IMPORTANT: only arrays are treated as variants
+                        const sets = isVariantCard ? setsRaw.filter(Boolean) : [];
+
+                        const baseKey = stripSetVariantId(internal);
+                        const selectedSet = (sets.length ? (variantByBase[baseKey] ?? sets[0]) : null);
+
+                        // Default (non-variant) = use internal as-is (no _[SetID] image)
+                        // Variant = first Set is the "original art" (no suffix); other Sets use _[SetID]
+                        const activeId = (isVariantCard && selectedSet)
+                            ? (selectedSet === sets[0] ? baseKey : buildVariantId(internal, selectedSet))
+                            : internal;
+
+                        const src = IMG.frontOf(activeId);
+                        const alt = imgAlt(title?.toLowerCase().includes('token') ? 'token' : 'card', activeId, 'a');
                         const errType = title?.toLowerCase().includes('token') ? 'token' : 'card';
+
+                        const onPickSet = (setCode) => {
+                            setVariantByBase((prev) => ({ ...prev, [baseKey]: setCode }));
+                        };
 
                         return (
                             <figure
                                 key={internal}
                                 className="pb-gallery-card"
-                                data-menu-area="viewer-card"   // NEW
-                                data-card-id={internal}        // NEW
+                                data-menu-area="viewer-card"
+                                data-card-id={activeId}
                             >
-                                <CardZoom id={ensureFrontId(internal)} name={name} />
+                                <CardZoom id={ensureFrontId(activeId)} name={name} />
                                 <img
                                     src={src}
                                     alt={alt}
-                                    onError={onImgError(errType, internal, 'a')}
+                                    onError={onImgError(errType, activeId, 'a')}
                                 />
+
+                                {isVariantCard && sets.length > 1 && (
+                                    <div className="pb-gallery-variants" onMouseDown={(e) => e.stopPropagation()}>
+                                        {sets.map((sc) => (
+                                            <button
+                                                key={sc}
+                                                type="button"
+                                                className={`pb-variant-btn${sc === selectedSet ? ' active' : ''}`}
+                                                onClick={(e) => { e.stopPropagation(); onPickSet(sc); }}
+                                                title={`Use ${sc} variant`}
+                                            >
+                                                {sc}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
                             </figure>
                         );
                     })}

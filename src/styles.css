@@ -1882,3 +1882,31 @@ img.cardart {
      Now subtract the header height too */
     max-height: calc(100vh - var(--db-header-offset, 44px) - 16px);
 }
+
+/* --- Gallery: per-Set alt-art buttons --- */
+.alt-set-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.alt-set-btn {
+    padding: 4px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.06);
+    color: inherit;
+    font-size: 12px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+    .alt-set-btn:hover {
+        background: rgba(255,255,255,0.10);
+    }
+
+    .alt-set-btn.is-active {
+        border-color: rgba(255,255,255,0.28);
+        background: rgba(255,255,255,0.14);
+    }

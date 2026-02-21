@@ -441,6 +441,70 @@ const makeImgErrorHandler = (id) => (e) => {
   }
 }
 
+// --- Set-based alt-art helpers ---
+// A card's Set field can be a string (single set) or an array (multiple sets).
+// Only when there is more than one set do we enable per-set art switching.
+// Naming:
+// - First set uses the normal filename/id (e.g. card0010_a.png)
+// - Additional sets insert _<SET> before _a/_b (e.g. card0010_CS2_a.png)
+const getSetIdsFromCard = (card) => {
+    const v = card?.Set ?? card?.SetID ?? card?.SetId ?? card?.SetIDs ?? card?.SetIds
+    if (Array.isArray(v)) return v.filter(Boolean).map(String)
+    if (typeof v === 'string' && v.trim()) return [v.trim()]
+    return []
+}
+const baseKeyForId = (id) => String(id || '').replace(/_(a|b)$/i, '')
+const applySetVariantToId = (id, setId, setIds) => {
+    const ids = Array.isArray(setIds) ? setIds : []
+    if (!id || !setId || ids.length < 2) return id
+    if (String(setId) === String(ids[0])) return id
+    // insert _<setId> before _a/_b if present
+    return /_(a|b)$/i.test(id)
+        ? String(id).replace(/_(a|b)$/i, `_${setId}_$1`)
+        : `${id}_${setId}`
+}
+const getBaseFrontId = (id) => {
+    const s = String(id || '');
+    const front = s.replace(/_b$/i, '_a');
+    // If this is a set-variant id like card0001_CS2_a, strip the set segment to get canonical base front.
+    const m = front.match(/^(.+)_([A-Za-z0-9]+)_a$/i);
+    if (m) return `${m[1]}_a`;
+    return front;
+}
+// Like makeImgErrorHandler, but if the set-variant id can't be found, fall back to the base id.
+const makeSetAwareImgErrorHandler = (displayId, fallbackId) => (e) => {
+    const img = e.currentTarget
+    const tried = img.dataset.tried || '' // '', 'a', 'b', 'fallback', 'fallback_a', 'fallback_b', 'default'
+    if (tried === '') {
+        img.dataset.tried = 'a'
+        img.src = aImg(displayId)
+    } else if (tried === 'a') {
+        img.dataset.tried = 'b'
+        img.src = bImg(displayId)
+    } else if (tried === 'b') {
+        if (fallbackId && fallbackId !== displayId) {
+            img.dataset.tried = 'fallback'
+            img.src = primaryImg(fallbackId)
+        } else {
+            img.dataset.tried = 'default'
+            img.src = defaultBack
+        }
+    } else if (tried === 'fallback') {
+        img.dataset.tried = 'fallback_a'
+        img.src = aImg(fallbackId)
+    } else if (tried === 'fallback_a') {
+        img.dataset.tried = 'fallback_b'
+        img.src = bImg(fallbackId)
+    } else if (tried === 'fallback_b') {
+        img.dataset.tried = 'default'
+        img.src = defaultBack
+    }
+}
+
+// Alias used by the deck/maybe hover preview (keeps the change minimal)
+const makeDisplayFallbackImgErrorHandler = (displayId, fallbackId) =>
+    makeSetAwareImgErrorHandler(displayId, fallbackId)
+
 // compute the _b InternalName for a given id
 const backIdFor = (id) => (id.endsWith('_a') ? id.slice(0, -2) + '_b' : id + '_b')
 
@@ -769,7 +833,11 @@ export default function App() {
         if (!card) return true;
         const allowedSets = getAllowedSetsForFormat(); // null => all sets allowed
         if (!allowedSets) return true;
-        return allowedSets.includes(card.Set);
+
+        // Card may belong to multiple sets (string or array). Any matching set makes it legal.
+        const cardSets = getSetIdsFromCard(card);
+        if (!cardSets || cardSets.length === 0) return false;
+        return cardSets.some(s => allowedSets.includes(s));
     }, [getAllowedSetsForFormat]);
 
     // NEW: ban list helpers
@@ -871,6 +939,25 @@ export default function App() {
     const isPartner = (c) =>
         String(c?.CardType || '').trim().toLowerCase() === 'partner'
 
+    // Collection-owned quantity across ALL printings of the same base card.
+    // Example: card0001_a + card0001_CS2_a + card0001_S4_a -> summed.
+    // NOTE: We keep this local name to avoid clashes with the later hook getBaseFrontId.
+    const getCollectionOwnedForBase = (internalName) => {
+        if (!collectionFilter?.quantities) return null;
+
+        const rawFront = String(internalName || '').replace(/_b$/i, '_a');
+        const baseFront = rawFront.replace(/^(.+)_([A-Za-z0-9]+)_a$/i, '$1_a');
+
+        let sum = 0;
+        collectionFilter.quantities.forEach((q, k) => {
+            const kFront = String(k || '').replace(/_b$/i, '_a');
+            const kBase = kFront.replace(/^(.+)_([A-Za-z0-9]+)_a$/i, '$1_a');
+            if (kBase === baseFront) sum += (Number(q) || 0);
+        });
+
+        return sum;
+    };
+
     // Return the per-card cap from its rarity (format-aware)
     const cardCap = (card) => {
         const rc = getRarityCapMap();
@@ -883,13 +970,11 @@ export default function App() {
         const r = (card?.Rarity || '').trim();
         let cap = (!r || r === 'Basic') ? Infinity : (Number.isFinite(rc?.[r]) ? rc[r] : Infinity);
 
-        // If a collection is active, also cap by owned Quantity for this front side (_a)
+        // If a collection is active, cap by owned Quantity across ALL variants of this base card.
         if (collectionFilter?.quantities) {
-            // normalize InternalName to its _a front
-            const frontId = String(card?.InternalName || '').replace(/_b$/, '_a');
-            const owned = collectionFilter.quantities.get(frontId);
-            if (Number.isFinite(owned)) {
-                cap = Math.min(cap, Math.max(0, owned));
+            const ownedSum = getCollectionOwnedForBase(card?.InternalName);
+            if (Number.isFinite(ownedSum)) {
+                cap = Math.min(cap, Math.max(0, ownedSum));
             }
         }
 
@@ -1073,10 +1158,14 @@ export default function App() {
   // which cards are flipped (by front id)
   const [flipped, setFlipped] = useState({})   // { [frontId]: true|false }
 
+    // Selected set-art per card base (e.g. { card0010: 'CS2' })
+    const [artSetByBase, setArtSetByBase] = useState({})
+
   // Zoomed art modal
-    const [zoom, setZoom] = useState({ show: false, src: null, alt: '', id: null })
-    const openZoom = (src, alt = 'Card art', id = null) => setZoom({ show: true, src, alt, id })
-    const closeZoom = () => setZoom({ show: false, src: null, alt: '', id: null })
+    const [zoom, setZoom] = useState({ show: false, src: null, alt: '', id: null, fallbackId: null })
+    const openZoom = (src, alt = 'Card art', id = null, fallbackId = null) =>
+        setZoom({ show: true, src, alt, id, fallbackId })
+    const closeZoom = () => setZoom({ show: false, src: null, alt: '', id: null, fallbackId: null })
 
   // Floating deck preview (follows cursor)
   const [deckPreview, setDeckPreview] = useState({ id: null, x: 0, y: 0, show: false })
@@ -1186,6 +1275,13 @@ export default function App() {
         (id) => (id?.endsWith('_b') ? id.slice(0, -2) + '_a' : id),
         []
     )
+    // Treat set variants as the same base card for deck limits/caps.
+    // Example: card0001_CS2_a -> base front card0001_a
+    const getBaseFrontId = useCallback((id) => {
+        const front = String(normalizeToFront(id) || '')
+        const m = front.match(/^(.+)_([A-Za-z0-9]+)_a$/i)
+        return m ? `${m[1]}_a` : front
+    }, [normalizeToFront])
 
     useEffect(() => {
         (async () => {
@@ -1356,9 +1452,9 @@ export default function App() {
                     cards;
 
         // If a collection is active and we're browsing Cards, limit to that collection.
-        if (activeDataset === DATASETS.CARDS && collectionFilter?.ids) {
-            const allowed = collectionFilter.ids;
-            src = src.filter(c => allowed.has(String(c?.InternalName || '').replace(/_b$/, '_a')));
+        // IMPORTANT: allow cards if ANY printing/variant of the base card is owned.
+        if (activeDataset === DATASETS.CARDS && collectionFilter?.quantities) {
+            src = src.filter(c => (getCollectionOwnedForBase(c?.InternalName) || 0) > 0);
         }
 
         return src;
@@ -1372,7 +1468,28 @@ export default function App() {
         return m
     }, [cards, partners, tokens])
 
-    const getById = useCallback((id) => allById.get(id) ?? null, [allById])
+    // --- Set-based alt-art selection (per card base) ---
+    const getSelectedSetForCard = useCallback((cardOrId) => {
+        const card = typeof cardOrId === 'string' ? allById.get(cardOrId) : cardOrId;
+        const setIds = getSetIdsFromCard(card);
+        if (setIds.length < 2) return null;
+
+        const baseKey = baseKeyForId(card?.InternalName || cardOrId);
+        const chosen = artSetByBase?.[baseKey];
+        return setIds.includes(chosen) ? chosen : setIds[0];
+    }, [allById, artSetByBase]);
+
+    const getDisplayIdForInternal = useCallback((id) => {
+        const card = allById.get(id);
+        const setIds = getSetIdsFromCard(card);
+        const chosen = getSelectedSetForCard(card || id);
+        return chosen ? applySetVariantToId(id, chosen, setIds) : id;
+    }, [allById, getSelectedSetForCard]);
+
+    const getById = useCallback(
+        (id) => allById.get(id) ?? allById.get(getBaseFrontId(id)) ?? null,
+        [allById, getBaseFrontId]
+    )
 
     // Deck Metrics quick count (search ANY field on the card, similar to gallery search)
     const [statsSearchText, setStatsSearchText] = useState('');
@@ -1486,12 +1603,18 @@ export default function App() {
 
                 // Enforce format-allowed sets first
                 {
-                    const allowedSets = getAllowedSetsForFormat();
-                    if (allowedSets && !allowedSets.includes(c.Set)) return false;
+                    const allowedSets = getAllowedSetsForFormat(); // null => all
+                    if (allowedSets) {
+                        const cardSets = getSetIdsFromCard(c);
+                        if (!cardSets.length || !cardSets.some(s => allowedSets.includes(s))) return false;
+                    }
                 }
 
-                // Then apply the user's Set filter within the allowed pool
-                if (setFilter !== 'Any Set' && c.Set !== setFilter) return false
+                // Then apply the user's Set filter within the allowed pool (multi-set aware)
+                if (setFilter !== 'Any Set') {
+                    const cardSets = getSetIdsFromCard(c);
+                    if (!cardSets.includes(setFilter)) return false;
+                }
 
                 // ----- NEW multi-family rule checks -----
                 const els = [c.ElementType1, c.ElementType2, c.ElementType3]
@@ -1626,8 +1749,9 @@ export default function App() {
             openZoomForCard: (id) => {
                 const frontId = normalizeToFront(id);
                 const name = allById.get(frontId)?.CardName || 'Card art';
-                const src = primaryImg(frontId);
-                openZoom(src, name, frontId);
+                const displayFrontId = (typeof getDisplayIdForInternal === 'function') ? getDisplayIdForInternal(frontId) : frontId;
+                const src = primaryImg(displayFrontId);
+                openZoom(src, name, displayFrontId, frontId);
             },
         });
         // Run once; values are live via refs.
@@ -1667,8 +1791,12 @@ export default function App() {
 
   // ---- Add/remove to deck ----
     const add = useCallback((id, delta = 1) => {
+        // frontId may be a set-variant id (e.g. card0001_CS2_a)
         const frontId = normalizeToFront(id);
-        const card = getById(frontId);
+        const baseFrontId = getBaseFrontId(frontId);
+
+        // Always look up rules/caps/banlist against the base card data
+        const card = getById(baseFrontId);
         if (isToken(card)) return;
 
         // 🚫 Banlist still enforced in both boards
@@ -1736,34 +1864,44 @@ export default function App() {
         setMap(prev => {
             const next = { ...prev };
 
-            // migrate any legacy _b count into the front
+            // migrate any legacy _b count into this exact key’s front
             const backId = frontId.replace(/_a$/, '_b');
             if (next[backId]) {
                 next[frontId] = (next[frontId] ?? 0) + next[backId];
                 delete next[backId];
             }
 
+            // Sum total copies across ALL variants of the same base card
+            const baseTotal = Object.entries(next).reduce((sum, [k, q]) => {
+                const kFront = normalizeToFront(k);
+                return (getBaseFrontId(kFront) === baseFrontId) ? (sum + (q || 0)) : sum;
+            }, 0);
+
             const cur = next[frontId] ?? 0;
-            // For Maybe board, ignore per-card cap? Keep existing per-card cap for consistency.
-            const newCount = Math.max(0, Math.min(cur + delta, cap));
+
+            // Remaining allowed copies for THIS variant key, given other variants already in deck/maybe
+            const other = Math.max(0, baseTotal - cur);
+            const allowedForKey = Number.isFinite(cap) ? Math.max(0, cap - other) : Infinity;
+
+            const newCount = Math.max(0, Math.min(cur + delta, allowedForKey));
 
             if (newCount <= 0) {
                 delete next[frontId];
                 removedId = frontId;
             } else {
-                // Extra safety: main deck size limit check is already handled above
                 next[frontId] = newCount;
             }
             return next;
         });
 
         if (removedId) clearPreviewIf(h => h?.id === removedId);
-    }, [activeBoard, normalizeToFront, getById, showNameInput, deck, getDeckSizeLimit, getDeckCount, setShowNameInput, setDeckName, clearPreviewIf, getRarityCapMap, allowOnly]);
+    }, [activeBoard, normalizeToFront, getBaseFrontId, getById, showNameInput, deck, getDeckSizeLimit, getDeckCount, setShowNameInput, setDeckName, clearPreviewIf, getRarityCapMap, allowOnly]);
 
     // NEW: When viewing Maybe list, move all copies of a card into the Deck (up to limits)
     const moveAllToDeck = useCallback((id) => {
-        const frontId = normalizeToFront(id);
-        const card = getById(frontId);
+        const frontId = normalizeToFront(id); // may be a set-variant id
+        const baseFrontId = getBaseFrontId(frontId);
+        const card = getById(baseFrontId);
         if (!card) return;
         if (isToken(card)) return;
 
@@ -1797,9 +1935,11 @@ export default function App() {
         }
         const slotsLeft = Number.isFinite(deckLimit) ? Math.max(0, deckLimit - mainCount) : Infinity;
 
-        // Per-card cap left in the Deck for this specific card
+        // Per-card cap left in the Deck for this card (across ALL set variants)
         const cap = cardCap(card);
-        const already = Math.max(0, Number(deckMap[frontId] || 0));
+        const already = Object.entries(deckMap).reduce((sum, [k, q]) => {
+            return (getBaseFrontId(normalizeToFront(k)) === baseFrontId) ? (sum + (Number(q) || 0)) : sum;
+        }, 0);
         const perCardLeft = Number.isFinite(cap) ? Math.max(0, cap - already) : Infinity;
 
         // Also must be allowed by Format (set whitelist)
@@ -1847,6 +1987,7 @@ export default function App() {
         }
     }, [
         normalizeToFront,
+        getBaseFrontId,
         getById,
         isToken,
         isPartner,
@@ -1938,7 +2079,12 @@ export default function App() {
             const typeIndexA = typeOrder.indexOf(typeA)
             const typeIndexB = typeOrder.indexOf(typeB)
             if (typeIndexA !== typeIndexB) return typeIndexA - typeIndexB
-            return (a.c?.CardName || '').localeCompare(b.c?.CardName || '')
+
+            const nameCmp = (a.c?.CardName || '').localeCompare(b.c?.CardName || '')
+            if (nameCmp !== 0) return nameCmp
+
+            // Keep set-variants adjacent under the same name
+            return String(a.id).localeCompare(String(b.id))
         })
     }, [deck, maybe, activeBoard, typeOrder, getById])
 
@@ -2010,6 +2156,65 @@ export default function App() {
         a.download = `${(safeName || 'deck').replace(/[^\w\-]+/g, '_')}.csv`;
         a.click();
         URL.revokeObjectURL(url);
+    };
+
+    // --- Clipboard helpers (Deck Builder) ---
+    const writeClipboardText = async (text) => {
+        if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(text);
+            return;
+        }
+        // fallback
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+            document.execCommand('copy');
+        } finally {
+            document.body.removeChild(ta);
+        }
+    };
+
+    const readClipboardText = async () => {
+        if (navigator.clipboard?.readText) {
+            return await navigator.clipboard.readText();
+        }
+        // fallback: user paste
+        return window.prompt('Paste deck text here:') || '';
+    };
+
+    const copyDeckToClipboard = async () => {
+        try {
+            const payload = { name: deckName || 'New Deck', formatId, list: deck, maybe };
+            await writeClipboardText(JSON.stringify(payload, null, 2));
+            pushToast('Copied deck to clipboard.', { type: 'success' });
+        } catch (e) {
+            pushToast('Copy failed: ' + (e?.message || String(e)), { type: 'error' });
+        }
+    };
+
+    const importDeckFromClipboard = async () => {
+        try {
+            const text = await readClipboardText();
+            const trimmed = String(text || '').trim();
+            if (!trimmed) return;
+
+            // Reuse your EXISTING handleImport logic (keeps prior JSON import behavior)
+            const looksJson = trimmed.startsWith('{') || trimmed.startsWith('[');
+            const fileName = looksJson ? 'clipboard.json' : 'clipboard.csv';
+            const fileType = looksJson ? 'application/json' : 'text/csv';
+
+            const fauxFile = new File([trimmed], fileName, { type: fileType });
+            await handleImport(fauxFile);
+
+            pushToast('Imported deck from clipboard.', { type: 'success' });
+        } catch (e) {
+            pushToast('Import failed: ' + (e?.message || String(e)), { type: 'error' });
+        }
     };
 
     // ADD BELOW exportCSV and ABOVE handleImport
@@ -2910,10 +3115,7 @@ export default function App() {
               <div style={{ height: galleryVirt.padTop, gridColumn: '1 / -1' }} />
               {sortedGallery.slice(galleryVirt.start, galleryVirt.end).map(c => {
                   const id = c.InternalName
-                  const qty = (getActiveMap()[id] ?? 0)
                   const cap = cardCap(c)
-                  const atCap = Number.isFinite(cap) && qty >= cap
-                  const inDeck = qty > 0
                   const isTokenCard = isToken(c) // ⬅ NEW
                   const isPartnerCard = isPartner(c)
                   const offElement = isOffElementForPartner(c); // NEW
@@ -2925,7 +3127,8 @@ export default function App() {
                       : 0;
                   const partnerCapReached = isPartnerCard && partnerTotal >= partnerCap;
                   // Collection-owned quantity for this card (front id), for the blue badge
-                  const collQty = (collectionFilter?.quantities?.get(String(id).replace(/_b$/, '_a')) || 0);
+                  const collQty = collectionFilter ? Math.max(0, (getCollectionOwnedForBase(id) || 0)) : 0;
+                  const collUsableQty = collectionFilter ? Math.min(collQty, cardCap(c)) : 0;
 
                   // back side lookup within the current dataset pool (not filtered)
                   const backId = backIdFor(id)
@@ -2935,17 +3138,65 @@ export default function App() {
                   const showingBack = !!flipped[id]
                   const displayCard = showingBack && backCard ? backCard : c
 
-                  // pick the image src + error handler
+                  // --- set-based alt art selection for this base card ---
+                  const setIds = getSetIdsFromCard(c)
+
+                  // When a collection is imported, only allow selecting printings that are actually owned.
+                  // Also, if the base/original isn't owned, default to an owned variant.
+                  const baseFront = String(id).replace(/_b$/i, '_a')
+                  const baseOwned = (collectionFilter?.quantities?.get(baseFront) || 0) > 0
+
+                  const ownedSetIds = collectionFilter?.quantities
+                      ? setIds.filter((sid) => {
+                          const pid = applySetVariantToId(id, sid, setIds)
+                          return (collectionFilter.quantities.get(String(pid).replace(/_b$/i, '_a')) || 0) > 0
+                      })
+                      : setIds
+
+                  const preferredSet = (setIds.length > 1)
+                      ? (() => {
+                          const saved = artSetByBase?.[baseKeyForId(id)];
+
+                          // 1) If user has a saved selection AND it's owned, always respect it
+                          if (saved && ownedSetIds.includes(saved)) return saved;
+
+                          // 2) Otherwise, if base/original isn't owned, default to the first owned variant
+                          if (!baseOwned && ownedSetIds.length > 0) return ownedSetIds[0];
+
+                          // 3) Fallbacks
+                          return ownedSetIds[0] || setIds[0];
+                      })()
+                      : null;
+
+                  const selectedSet = (setIds.length > 1) ? preferredSet : null
+
+                  const displayFrontId = selectedSet ? applySetVariantToId(id, selectedSet, setIds) : id
+                  const displayBackId = selectedSet ? applySetVariantToId(backId, selectedSet, setIds) : backId
+
+                  // Use the selected set-art variant as the actual deck/maybe key
+                  const keyId = displayFrontId
+                  const qty = (getActiveMap()[keyId] ?? 0)
+
+                  // Cap applies across ALL variants of the same base card
+                  const baseFrontId = getBaseFrontId(keyId)
+                  const baseTotal = Object.entries(getActiveMap()).reduce((s, [k, q]) => {
+                      return (getBaseFrontId(k) === baseFrontId) ? (s + (Number(q) || 0)) : s
+                  }, 0)
+
+                  const atCap = Number.isFinite(cap) && baseTotal >= cap
+                  const inDeck = qty > 0
+
+                  // pick the image src + error handler (set-aware with fallback to base id)
                   const imgProps = showingBack
                       ? (backCard
-                          ? { src: primaryImg(backId), onError: makeImgErrorHandler(backId) } // real back
-                          : { src: defaultBack }                                              // fake back
+                          ? { src: primaryImg(displayBackId), onError: makeSetAwareImgErrorHandler(displayBackId, backId) } // real back
+                          : { src: defaultBack }                                                                        // fake back
                       )
-                      : { src: primaryImg(id), onError: makeImgErrorHandler(id) }             // front
+                      : { src: primaryImg(displayFrontId), onError: makeSetAwareImgErrorHandler(displayFrontId, id) }    // front
 
                   const currentImgSrc = showingBack
-                      ? (backCard ? primaryImg(backId) : defaultBack)
-                      : primaryImg(id)
+                      ? (backCard ? primaryImg(displayBackId) : defaultBack)
+                      : primaryImg(displayFrontId)
 
 
                   return (
@@ -2954,11 +3205,11 @@ export default function App() {
                               <div
                                   className="deck-badge"
                                   title="Click to remove 1 from deck"
-                                  onClick={(e) => { e.stopPropagation(); add(id, -1) }}
+                                  onClick={(e) => { e.stopPropagation(); add(keyId, -1) }}
                                   role="button"
                                   tabIndex={0}
                                   onKeyDown={(e) => {
-                                      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); add(id, -1) }
+                                      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); add(keyId, -1) }
                                   }}
                               >
                                   {qty}
@@ -2971,7 +3222,7 @@ export default function App() {
                               title="Zoom card art"
                               onClick={(e) => {
                                   e.stopPropagation()
-                                  openZoom(currentImgSrc, displayCard.CardName, id)
+                                  openZoom(currentImgSrc, displayCard.CardName, displayFrontId, id)
                               }}
                               onPointerDown={(e) => e.stopPropagation()} // don’t trigger flip long-press
                           >
@@ -3010,7 +3261,7 @@ export default function App() {
                                           pushToast(`Deck is full (${deckSizeLimit} cards). Remove a card before adding more.`, { type: 'warn' })
                                           return
                                       }
-                                      add(id, +1)
+                                      add(keyId, +1)
                                   }}
 
                                   // right-click to flip (desktop)
@@ -3050,9 +3301,9 @@ export default function App() {
 
                           <div className="card-title-row">
                               <h4 style={{ margin: 0 }}>{displayCard.CardName}</h4>
-                              {collectionFilter && collQty > 0 && (
-                                  <div className="collection-badge in-row" title={`In collection: ${collQty}`}>
-                                      {collQty}
+                              {collectionFilter && collUsableQty > 0 && (
+                                  <div className="collection-badge in-row" title={`Usable from collection: ${collUsableQty}`}>
+                                      {collUsableQty}
                                   </div>
                               )}
                           </div>
@@ -3125,7 +3376,7 @@ export default function App() {
                                   </button>
                                   
                                   <button
-                                      onClick={() => add(id, +1)}
+                                      onClick={() => add(keyId, +1)}
                                       disabled={partnerCapReached || atCap || (isDeckFull && !isPartnerCard) || offElement}
                                       title={
                                           partnerCapReached
@@ -3140,10 +3391,27 @@ export default function App() {
                                       + Add
                                   </button>
                                                                     
-                                  <button onClick={() => add(id, -1)} disabled={qty === 0}>-1</button>
+                                  <button onClick={() => add(keyId, -1)} disabled={qty === 0}>-1</button>
                                   <span className="small">
-                                      In deck: {qty}{Number.isFinite(cap) ? ` / ${cap}` : ''}
+                                      In deck: {baseTotal}{Number.isFinite(cap) ? ` / ${cap}` : ''}
                                   </span>
+                              </div>
+                          )}
+                          {setIds.length > 1 && (!collectionFilter?.quantities || ownedSetIds.length > 0) && (
+                              <div className="alt-set-row" onClick={(e) => e.stopPropagation()}>
+                                  {(collectionFilter?.quantities ? ownedSetIds : setIds).map((sid) => (
+                                      <button
+                                          key={sid}
+                                          type="button"
+                                          className={`alt-set-btn ${sid === selectedSet ? 'is-active' : ''}`}
+                                          onClick={(e) => {
+                                              e.stopPropagation()
+                                              setArtSetByBase(prev => ({ ...prev, [baseKeyForId(id)]: sid }))
+                                          }}
+                                      >
+                                          {sid}
+                                      </button>
+                                  ))}
                               </div>
                           )}
                       </div>
@@ -3305,7 +3573,13 @@ export default function App() {
                                   <div className="deck-type-cards">
                                       {cardsOfTypeSorted.map(row => {
                                           const cap = cardCap(row.c);
-                                          const atCap = Number.isFinite(cap) && row.qty >= cap;
+                                          // Cap applies across ALL set variants of the same base card on the active board
+                                          const activeMap = activeBoard === 'DECK' ? (deckRef.current || {}) : (maybeRef.current || {});
+                                          const baseFrontId = getBaseFrontId(normalizeToFront(row.id));
+                                          const baseTotal = Object.entries(activeMap).reduce((sum, [k, q]) => {
+                                              return (getBaseFrontId(normalizeToFront(k)) === baseFrontId) ? (sum + (Number(q) || 0)) : sum;
+                                          }, 0);
+                                          const atCap = Number.isFinite(cap) && baseTotal >= cap;
                                           // Format legality + off-element (front-only) highlight
                                           const notAllowed = !isCardAllowedInFormat(row.c);
                                           const offElement = isOffElementForPartner(row.c);
@@ -3513,7 +3787,18 @@ export default function App() {
                                   className="zoom-img"
                                   src={zoom.src || defaultBack}
                                   alt={zoom.alt || 'Card art'}
-                                  onError={(e) => { e.currentTarget.src = defaultBack }}
+                                  onError={(e) => {
+                                      const img = e.currentTarget;
+                                      const tried = img.dataset.tried || '';
+                                      const fallbackId = zoom?.fallbackId;
+                                      if (tried === '' && fallbackId && zoom?.src && primaryImg(fallbackId) !== zoom.src) {
+                                          img.dataset.tried = 'fallback';
+                                          img.src = primaryImg(fallbackId);
+                                          return;
+                                      }
+                                      img.src = defaultBack;
+                                  }}
+                                  data-tried=""
                                   draggable={false}
                                   onContextMenu={(e) => {
                                       e.preventDefault();
@@ -4030,7 +4315,7 @@ export default function App() {
                                                                                   <div
                                                                                       className="deck-badge"
                                                                                       title="Click to remove 1 from deck"
-                                                                                      onClick={(e) => { e.stopPropagation(); add(id, -1); }}
+                                                                                      onClick={(e) => { e.stopPropagation(); add(keyId, -1); }}
                                                                                   >
                                                                                       {qty}
                                                                                   </div>
@@ -4040,7 +4325,10 @@ export default function App() {
                                                                               <button
                                                                                   className="zoom-btn"
                                                                                   title="Zoom card art"
-                                                                                  onClick={(e) => { e.stopPropagation(); openZoom(currentImgSrc, displayName, id); }}
+                                                                                  onClick={(e) => {
+                                                                                      e.stopPropagation();
+                                                                                      openZoom(currentImgSrc, displayName, normalizeToFront(id), getBaseFrontId(id));
+                                                                                  }}
                                                                                   onPointerDown={(e) => e.stopPropagation()}
                                                                               >
                                                                                   <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
@@ -4138,43 +4426,59 @@ export default function App() {
                   ) : null}
               </div>
 
-        <div style={{marginTop:12}} className="row">
-                  <button className="deck-action-btn" onClick={exportJSON}>Export JSON</button>
-        </div>
+                  <div style={{ marginTop: 12 }} className="row">
+                      <button className="deck-action-btn" onClick={exportJSON}>Export JSON</button>
+                  </div>
+
+                  <div style={{ marginTop: 8 }} className="row">
+                      <button className="deck-action-btn" onClick={copyDeckToClipboard}>Copy To Clipboard</button>
+                      <button className="deck-action-btn" onClick={importDeckFromClipboard}>Import from Clipboard</button>
+                  </div>
 
               {/* Floating deck preview tooltip (rendered to <body>) */}
-              {deckPreview.show && deckPreview.id && createPortal((() => {
-                  const pc = allById.get(deckPreview.id)
-                  if (!pc) return null
-                  return (
-                      <div
-                          className="deck-preview-float"
-                          style={{ left: deckPreview.x + 'px', top: deckPreview.y + 'px', pointerEvents: 'none' }}
-                          aria-hidden="true"
-                      >
-                          <img
-                              className="deck-preview-img"
-                              src={primaryImg(pc.InternalName)}
-                              alt={pc.CardName}
-                              onError={makeImgErrorHandler(pc.InternalName)}
-                              data-tried=""
-                              draggable={false}
-                          />
-                          <div className="deck-preview-meta">
-                              <div className="name">{pc.CardName}</div>
-                              <div className="line">
-                                  <span className="badge">{pc.Rarity}</span>
-                                  <span className="badge">{pc.CardType}</span>
-                                  <span className="badge">
-                                      {[pc.ElementType1, pc.ElementType2, pc.ElementType3].filter(Boolean).join(' / ') || 'Neutral'}
-                                  </span>
-                                  <span className="badge">CC {pc.ConvertedCost}</span>
+                  {deckPreview.show && deckPreview.id && createPortal((() => {
+                      const hoveredId = deckPreview.id
+                      const pc = getById(hoveredId)
+                      if (!pc) return null
+
+                      // Always show the exact printing represented by the row id.
+                      // - If hoveredId is a variant (card0001_CS2_a), render that art.
+                      // - If hoveredId is base (card0001_a), render base art (do NOT apply current gallery-selected variant).
+                      const hoveredFrontId = normalizeToFront(hoveredId)
+                      const baseFrontId = getBaseFrontId(hoveredFrontId)
+
+                      const displayFrontId = hoveredFrontId
+                      const fallbackFrontId = (baseFrontId && baseFrontId !== hoveredFrontId) ? baseFrontId : hoveredFrontId
+
+                      return (
+                          <div
+                              className="deck-preview-float"
+                              style={{ left: deckPreview.x + 'px', top: deckPreview.y + 'px', pointerEvents: 'none' }}
+                              aria-hidden="true"
+                          >
+                              <img
+                                  className="deck-preview-img"
+                                  src={primaryImg(displayFrontId)}
+                                  alt={pc.CardName}
+                                  onError={makeSetAwareImgErrorHandler(displayFrontId, fallbackFrontId)}
+                                  data-tried=""
+                                  draggable={false}
+                              />
+                              <div className="deck-preview-meta">
+                                  <div className="name">{pc.CardName}</div>
+                                  <div className="line">
+                                      <span className="badge">{pc.Rarity}</span>
+                                      <span className="badge">{pc.CardType}</span>
+                                      <span className="badge">
+                                          {[pc.ElementType1, pc.ElementType2, pc.ElementType3].filter(Boolean).join(' / ') || 'Neutral'}
+                                      </span>
+                                      <span className="badge">CC {pc.ConvertedCost}</span>
+                                  </div>
+                                  {pc.CardText && <div className="text small">{pc.CardText}</div>}
                               </div>
-                              {pc.CardText && <div className="text small">{pc.CardText}</div>}
                           </div>
-                      </div>
-                  )
-              })(), document.body)}
+                      )
+                  })(), document.body)}
               {createPortal(
                   <div className="toast-wrap" aria-live="polite" aria-atomic="true">
                       {toasts.map(t => (

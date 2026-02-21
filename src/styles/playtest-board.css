@@ -1066,6 +1066,35 @@
     max-width: 100%;
     word-break: break-word;
 }
+/* variant selector row inside gallery cards */
+.pb-gallery-variants {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding-top: 2px;
+}
+
+.pb-variant-btn {
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.04);
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.pb-variant-btn:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+.pb-variant-btn.active {
+  border-color: rgba(255,255,255,0.32);
+  background: rgba(255,255,255,0.12);
+}
 /* search row under the modal title bar */
 .pb-modal-search {
   display: flex;
@@ -1474,8 +1503,8 @@
   transition: height 160ms ease;
 }
 
-/* Toggle only appears when opponent board is ON */
-.pb-hand-dock.has-opponent .pb-hand-toggle {
+/* Toggle always available */
+.pb-hand-dock .pb-hand-toggle {
   display: block;
 }
 

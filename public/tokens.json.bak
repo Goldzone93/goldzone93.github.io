@@ -17,7 +17,7 @@
     "ATK": 2,
     "DEF": "",
     "HP": 2,
-    "Set": ["CS1", "CS2", "S4"],
+    "Set": "CS1",
     "Encounter": "Yes"
   },
   {

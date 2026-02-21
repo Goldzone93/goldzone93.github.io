@@ -17,7 +17,7 @@
     "ATK": 2,
     "DEF": "",
     "HP": 5,
-    "Set": "CS1"
+    "Set": ["CS1", "CS2", "S4"]
   },
   {
     "InternalName": "card0002_a",
