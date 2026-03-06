@@ -1161,6 +1161,10 @@ export default function App() {
     // Selected set-art per card base (e.g. { card0010: 'CS2' })
     const [artSetByBase, setArtSetByBase] = useState({})
 
+    useEffect(() => {
+        setArtSetByBase({});
+    }, [setFilter, formatId, collectionFilter]);
+
   // Zoomed art modal
     const [zoom, setZoom] = useState({ show: false, src: null, alt: '', id: null, fallbackId: null })
     const openZoom = (src, alt = 'Card art', id = null, fallbackId = null) =>
@@ -1468,16 +1472,47 @@ export default function App() {
         return m
     }, [cards, partners, tokens])
 
-    // --- Set-based alt-art selection (per card base) ---
-    const getSelectedSetForCard = useCallback((cardOrId) => {
-        const card = typeof cardOrId === 'string' ? allById.get(cardOrId) : cardOrId;
-        const setIds = getSetIdsFromCard(card);
-        if (setIds.length < 2) return null;
+                    // --- Set-based alt-art selection (per card base) ---
+                    const getSelectedSetForCard = useCallback((cardOrId) => {
+                        const card = typeof cardOrId === 'string' ? allById.get(cardOrId) : cardOrId;
+                        const setIds = getSetIdsFromCard(card);
+                        if (setIds.length < 2) return null;
 
-        const baseKey = baseKeyForId(card?.InternalName || cardOrId);
-        const chosen = artSetByBase?.[baseKey];
-        return setIds.includes(chosen) ? chosen : setIds[0];
-    }, [allById, artSetByBase]);
+                        const baseId = String(card?.InternalName || cardOrId || '').replace(/_b$/i, '_a');
+                        const baseOwned = (collectionFilter?.quantities?.get(baseId) || 0) > 0;
+
+                        const availableSetIds = collectionFilter?.quantities
+                            ? setIds.filter((sid) => {
+                                const pid = applySetVariantToId(baseId, sid, setIds);
+                                return (collectionFilter.quantities.get(String(pid).replace(/_b$/i, '_a')) || 0) > 0;
+                            })
+                            : setIds;
+
+                        const pool = availableSetIds.length > 0 ? availableSetIds : setIds;
+
+                        // 1) If a specific Set is being filtered, show that printing when available
+                        if (setFilter !== 'Any Set' && pool.includes(setFilter)) {
+                            return setFilter;
+                        }
+
+                        // 2) Otherwise prefer the first printing legal in the selected format
+                        const allowedSets = getAllowedSetsForFormat();
+                        if (allowedSets) {
+                            const legalSet = pool.find((sid) => allowedSets.includes(sid));
+                            if (legalSet) return legalSet;
+                        }
+
+                        // 3) Otherwise respect the user's saved/manual choice
+                        const baseKey = baseKeyForId(card?.InternalName || cardOrId);
+                        const chosen = artSetByBase?.[baseKey];
+                        if (chosen && pool.includes(chosen)) return chosen;
+
+                        // 4) If original/base isn't owned, fall back to the first available owned variant
+                        if (!baseOwned && pool.length > 0) return pool[0];
+
+                        // 5) Final fallback
+                        return pool[0] || setIds[0];
+                    }, [allById, artSetByBase, collectionFilter, setFilter, getAllowedSetsForFormat]);
 
     const getDisplayIdForInternal = useCallback((id) => {
         const card = allById.get(id);
@@ -2508,46 +2543,66 @@ export default function App() {
                 }
             }
 
-            // Produce N in CardText — totals + per-element + Wild
+            // Produce <number><Letter> in CardText — totals + per-element + Wild
             {
                 const text = String(card?.CardText ?? '');
-                const re = /produce\s+(\d+)/gi;
-                const hasInstead = /\binstead\b/i.test(text); // ⬅️ new: only first Produce counts if "instead" is present
+                const hasInstead = /\binstead\b/i.test(text);
+
+                const letterToElement = {};
+                (elements || []).forEach(el => {
+                    const letter = String(el?.CostStringLetter ?? '').trim().toUpperCase();
+                    const name = String(el?.DisplayName ?? '').trim();
+                    if (letter && name) letterToElement[letter] = name;
+                });
+
+                // Matches:
+                // Produce 1N
+                // Produce 2E
+                // Produce 1A
+                // and later in same segment: "and 1W", "and 2F", etc.
+                const re = /produce\s+(\d+)\s*([A-Z])/gi;
                 let m;
+
                 while ((m = re.exec(text)) !== null) {
                     const n = Number(m[1]);
+                    const letter = String(m[2] || '').toUpperCase();
                     if (!Number.isFinite(n)) continue;
 
-                    // Always add to grand total for the primary number
                     totalProduce += n * qty;
 
-                    // Look ahead after the match until a period or line break
-                    const rest = text.slice(re.lastIndex);
-                    const seg = rest.split(/[.\n\r]/, 1)[0];
-
-                    // Wild: any "of ..." phrasing after the number
-                    if (/\bof\b/i.test(seg) && /\belement(al)?\b/i.test(seg)) {
+                    if (letter === 'A') {
                         produceByElement.Wild = (produceByElement.Wild || 0) + n * qty;
-                    }
-
-                    // Count for any named elements that appear after the number
-                    for (const name of (ELEMENT_OPTIONS || [])) {
-                        const rx = new RegExp(`\\b${name}\\b`, 'i');
-                        if (rx.test(seg)) {
-                            produceByElement[name] = (produceByElement[name] || 0) + n * qty;
+                    } else {
+                        const elName = letterToElement[letter];
+                        if (elName) {
+                            produceByElement[elName] = (produceByElement[elName] || 0) + n * qty;
                         }
                     }
 
-                    // Also count any trailing "and <num> <Element>" parts toward the total
-                    const namesAlt = (ELEMENT_OPTIONS || []).join('|');
-                    const andRe = new RegExp(`\\band\\s+(\\d+)\\s+(?:${namesAlt})\\b`, 'gi');
+                    // Look ahead after the primary Produce until a period or line break
+                    const rest = text.slice(re.lastIndex);
+                    const seg = rest.split(/[.\n\r]/, 1)[0];
+
+                    // Count trailing "and 1N", "and 2E", etc.
+                    const andRe = /\band\s+(\d+)\s*([A-Z])\b/gi;
                     let m2;
                     while ((m2 = andRe.exec(seg)) !== null) {
                         const extra = Number(m2[1]);
-                        if (Number.isFinite(extra)) totalProduce += extra * qty;
+                        const extraLetter = String(m2[2] || '').toUpperCase();
+                        if (!Number.isFinite(extra)) continue;
+
+                        totalProduce += extra * qty;
+
+                        if (extraLetter === 'A') {
+                            produceByElement.Wild = (produceByElement.Wild || 0) + extra * qty;
+                        } else {
+                            const elName = letterToElement[extraLetter];
+                            if (elName) {
+                                produceByElement[elName] = (produceByElement[elName] || 0) + extra * qty;
+                            }
+                        }
                     }
 
-                    // ⬇️ NEW: if "instead" appears anywhere in the text, only the first Produce counts
                     if (hasInstead) break;
                 }
             }
@@ -3154,21 +3209,32 @@ export default function App() {
                       : setIds
 
                   const preferredSet = (setIds.length > 1)
-                      ? (() => {
-                          const saved = artSetByBase?.[baseKeyForId(id)];
+                            ? (() => {
+                                const saved = artSetByBase?.[baseKeyForId(id)];
+                                const pool = (collectionFilter?.quantities ? ownedSetIds : setIds);
+                                const allowedSets = getAllowedSetsForFormat();
 
-                          // 1) If user has a saved selection AND it's owned, always respect it
-                          if (saved && ownedSetIds.includes(saved)) return saved;
+                                // 1) If the user manually clicked a variant button, let that win
+                                if (saved && pool.includes(saved)) return saved;
 
-                          // 2) Otherwise, if base/original isn't owned, default to the first owned variant
-                          if (!baseOwned && ownedSetIds.length > 0) return ownedSetIds[0];
+                                // 2) Otherwise, if a specific Set is being filtered, show that printing when available
+                                if (setFilter !== 'Any Set' && pool.includes(setFilter)) return setFilter;
 
-                          // 3) Fallbacks
-                          return ownedSetIds[0] || setIds[0];
-                      })()
-                      : null;
+                                // 3) Otherwise prefer the first printing legal in the selected format
+                                if (allowedSets) {
+                                    const legalSet = pool.find((sid) => allowedSets.includes(sid));
+                                    if (legalSet) return legalSet;
+                                }
 
-                  const selectedSet = (setIds.length > 1) ? preferredSet : null
+                                // 4) Otherwise, if base/original isn't owned, default to the first owned variant
+                                if (!baseOwned && pool.length > 0) return pool[0];
+
+                                // 5) Final fallback
+                                return pool[0] || setIds[0];
+                            })()
+                            : null;
+
+                        const selectedSet = (setIds.length > 1) ? preferredSet : null
 
                   const displayFrontId = selectedSet ? applySetVariantToId(id, selectedSet, setIds) : id
                   const displayBackId = selectedSet ? applySetVariantToId(backId, selectedSet, setIds) : backId
@@ -3791,9 +3857,22 @@ export default function App() {
                                       const img = e.currentTarget;
                                       const tried = img.dataset.tried || '';
                                       const fallbackId = zoom?.fallbackId;
-                                      if (tried === '' && fallbackId && zoom?.src && primaryImg(fallbackId) !== zoom.src) {
+
+                                      // If we're currently showing the back, prefer falling back to the base back image.
+                                      // Deck Builder flip state is tracked by BASE ids (zoom.fallbackId), not variant ids.
+                                      const flipKeyFront = (zoom?.fallbackId || zoom?.id)
+                                          ? normalizeToFront(zoom.fallbackId || zoom.id)
+                                          : null;
+
+                                      const wantsBack = !!(flipKeyFront && flipped[flipKeyFront]);
+
+                                      const fallbackTargetId = wantsBack && fallbackId
+                                          ? backIdFor(normalizeToFront(fallbackId))
+                                          : fallbackId;
+
+                                      if (tried === '' && fallbackTargetId && zoom?.src && primaryImg(fallbackTargetId) !== zoom.src) {
                                           img.dataset.tried = 'fallback';
-                                          img.src = primaryImg(fallbackId);
+                                          img.src = primaryImg(fallbackTargetId);
                                           return;
                                       }
                                       img.src = defaultBack;
@@ -3803,22 +3882,28 @@ export default function App() {
                                   onContextMenu={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
-                                      const frontId = zoom?.id ? normalizeToFront(zoom.id) : null;
-                                      if (!frontId) return;
 
-                                      const backId = backIdFor(frontId);
-                                      const backCard = allById.get(backId) || null;
+                                      // Flip state uses BASE ids; images use the variant id.
+                                      const flipKeyFront = (zoom?.fallbackId || zoom?.id)
+                                          ? normalizeToFront(zoom.fallbackId || zoom.id)
+                                          : null;
 
-                                      // compute next side (mirror gallery behavior) then flip global state
-                                      const nextShowingBack = !flipped[frontId];
-                                      flipCard(frontId);
+                                      const imgFrontId = zoom?.id ? normalizeToFront(zoom.id) : null;
+                                      if (!flipKeyFront || !imgFrontId) return;
 
-                                      const nextSrc = nextShowingBack
-                                          ? (backCard ? primaryImg(backId) : defaultBack)
-                                          : primaryImg(frontId);
+                                      const backId = backIdFor(imgFrontId);
+
+                                      // Variants may not exist as separate card entries in allById; prefer base back for name
+                                      const baseBackId = zoom?.fallbackId ? backIdFor(normalizeToFront(zoom.fallbackId)) : null;
+                                      const backCard = allById.get(backId) || (baseBackId ? allById.get(baseBackId) : null) || null;
+
+                                      const nextShowingBack = !flipped[flipKeyFront];
+                                      flipCard(flipKeyFront);
+
+                                      const nextSrc = nextShowingBack ? primaryImg(backId) : primaryImg(imgFrontId);
                                       const nextAlt = nextShowingBack
                                           ? (backCard?.CardName || zoom.alt || 'Card art')
-                                          : (allById.get(frontId)?.CardName || zoom.alt || 'Card art');
+                                          : (allById.get(imgFrontId)?.CardName || zoom.alt || 'Card art');
 
                                       setZoom(z => ({ ...z, src: nextSrc, alt: nextAlt }));
                                   }}
@@ -3828,25 +3913,32 @@ export default function App() {
                                   <button
                                       type="button"
                                       className="flip-btn"
-                                      aria-pressed={!!(zoom?.id && flipped[normalizeToFront(zoom.id)])}
+                                      aria-pressed={!!((zoom?.fallbackId || zoom?.id) && flipped[normalizeToFront(zoom.fallbackId || zoom.id)])}
                                       title="Flip this card"
                                       onClick={(e) => {
                                           e.stopPropagation();
-                                          const frontId = zoom?.id ? normalizeToFront(zoom.id) : null;
-                                          if (!frontId) return;
 
-                                          const backId = backIdFor(frontId);
-                                          const backCard = allById.get(backId) || null;
+                                          // Flip state uses BASE ids; images use the variant id.
+                                          const flipKeyFront = (zoom?.fallbackId || zoom?.id)
+                                              ? normalizeToFront(zoom.fallbackId || zoom.id)
+                                              : null;
 
-                                          const nextShowingBack = !flipped[frontId];
-                                          flipCard(frontId);
+                                          const imgFrontId = zoom?.id ? normalizeToFront(zoom.id) : null;
+                                          if (!flipKeyFront || !imgFrontId) return;
 
-                                          const nextSrc = nextShowingBack
-                                              ? (backCard ? primaryImg(backId) : defaultBack)
-                                              : primaryImg(frontId);
+                                          const backId = backIdFor(imgFrontId);
+
+                                          // Variants may not exist as separate card entries in allById; prefer base back for name
+                                          const baseBackId = zoom?.fallbackId ? backIdFor(normalizeToFront(zoom.fallbackId)) : null;
+                                          const backCard = allById.get(backId) || (baseBackId ? allById.get(baseBackId) : null) || null;
+
+                                          const nextShowingBack = !flipped[flipKeyFront];
+                                          flipCard(flipKeyFront);
+
+                                          const nextSrc = nextShowingBack ? primaryImg(backId) : primaryImg(imgFrontId);
                                           const nextAlt = nextShowingBack
                                               ? (backCard?.CardName || zoom.alt || 'Card art')
-                                              : (allById.get(frontId)?.CardName || zoom.alt || 'Card art');
+                                              : (allById.get(imgFrontId)?.CardName || zoom.alt || 'Card art');
 
                                           setZoom(z => ({ ...z, src: nextSrc, alt: nextAlt }));
                                       }}
