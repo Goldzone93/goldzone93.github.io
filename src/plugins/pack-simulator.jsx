@@ -877,8 +877,16 @@ export function PackSimulator() {
     }, [cards]);
 
     const allowedCards = useMemo(() => {
-        if (!selectedPartner) return [];
         const setOK = (c) => !Array.isArray(allowedSetIds) || intersects(getSetIdsFromObj(c), allowedSetIds);
+
+        // No partner selected:
+        // allow all cards that are legal for the current format + pack
+        if (!selectedPartner) {
+            return cards.filter(c => setOK(c));
+        }
+
+        // Partner selected:
+        // keep the existing element restriction
         return cards.filter(c => setOK(c) && strictFrontElementMatch(c, allowedElements, cardsById));
     }, [cards, allowedElements, selectedPartner, allowedSetIds, cardsById]);
 
@@ -892,7 +900,7 @@ export function PackSimulator() {
     );
 
     const generatePack = useCallback(() => {
-        if (!selectedPartner || !selectedPack) return; // require a selected pack
+        if (!selectedPack) return; // require a selected pack
 
         // Track counts across THIS click (all packs)
         // key: base front id (variants count together)
@@ -1469,15 +1477,13 @@ export function PackSimulator() {
                           {/* Top row: Open Pack (full width) */}
                           <button
                               className="tips-btn"
-                              disabled={!selectedPartner || !selectedPack || !configMatches}
+                              disabled={!selectedPack || !configMatches}
                               title={
-                                  !selectedPartner
-                                      ? 'Select a partner first'
-                                      : (!selectedPack
-                                          ? 'Select a pack first'
-                                          : (!configMatches
-                                              ? 'Sum must equal Pack Size'
-                                              : 'Open Pack'))
+                                  !selectedPack
+                                      ? 'Select a pack first'
+                                      : (!configMatches
+                                          ? 'Sum must equal Pack Size'
+                                          : 'Open Pack')
                               }
                               onClick={generatePack}
                           >

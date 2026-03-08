@@ -1,7 +1,7 @@
 [
     {
         "InternalName": "partner0001_a",
-        "CardName": "",
+        "CardName": "Partner Card 01 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -21,7 +21,7 @@
     },
     {
         "InternalName": "partner0001_b",
-        "CardName": "",
+        "CardName": "Partner Card 01 - Back",
         "Cost": "2E1F3A",
         "ConvertedCost": "",
         "Refund": "",
@@ -41,7 +41,7 @@
     },
     {
         "InternalName": "partner0002_a",
-        "CardName": "",
+        "CardName": "Partner Card 02 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -61,7 +61,7 @@
     },
     {
         "InternalName": "partner0002_b",
-        "CardName": "",
+        "CardName": "Partner Card 02 - Back",
         "Cost": "2F1S3A",
         "ConvertedCost": "",
         "Refund": "",
@@ -81,7 +81,7 @@
     },
     {
         "InternalName": "partner0003_a",
-        "CardName": "",
+        "CardName": "Partner Card 03 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -101,7 +101,7 @@
     },
     {
         "InternalName": "partner0003_b",
-        "CardName": "",
+        "CardName": "Partner Card 03 - Back",
         "Cost": "1E2N3A",
         "ConvertedCost": "",
         "Refund": "",
@@ -121,7 +121,7 @@
     },
     {
         "InternalName": "partner0004_a",
-        "CardName": "",
+        "CardName": "Partner Card 04 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -141,7 +141,7 @@
     },
     {
         "InternalName": "partner0004_b",
-        "CardName": "",
+        "CardName": "Partner Card 04 - Back",
         "Cost": "1N2W3A",
         "ConvertedCost": "",
         "Refund": "",
@@ -161,7 +161,7 @@
     },
     {
         "InternalName": "partner0005_a",
-        "CardName": "",
+        "CardName": "Partner Card 05 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -181,7 +181,7 @@
     },
     {
         "InternalName": "partner0005_b",
-        "CardName": "",
+        "CardName": "Partner Card 05 - Back",
         "Cost": "2S1W3A",
         "ConvertedCost": "",
         "Refund": "",
@@ -201,7 +201,7 @@
     },
     {
         "InternalName": "partner0006_a",
-        "CardName": "",
+        "CardName": "Partner Card 06 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -221,7 +221,7 @@
     },
     {
         "InternalName": "partner0006_b",
-        "CardName": "",
+        "CardName": "Partner Card 06 - Back",
         "Cost": "3F3A",
         "ConvertedCost": "",
         "Refund": "",
@@ -241,7 +241,7 @@
     },
     {
         "InternalName": "partner0007_a",
-        "CardName": "",
+        "CardName": "Partner Card 07 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -261,7 +261,7 @@
     },
     {
         "InternalName": "partner0007_b",
-        "CardName": "",
+        "CardName": "Partner Card 07 - Back",
         "Cost": "3E3A",
         "ConvertedCost": "",
         "Refund": "",
@@ -281,7 +281,7 @@
     },
     {
         "InternalName": "partner0008_a",
-        "CardName": "",
+        "CardName": "Partner Card 08 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -301,7 +301,7 @@
     },
     {
         "InternalName": "partner0008_b",
-        "CardName": "",
+        "CardName": "Partner Card 08 - Back",
         "Cost": "3N3A",
         "ConvertedCost": "",
         "Refund": "",
@@ -321,7 +321,7 @@
     },
     {
         "InternalName": "partner0009_a",
-        "CardName": "",
+        "CardName": "Partner Card 09 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -341,7 +341,7 @@
     },
     {
         "InternalName": "partner0009_b",
-        "CardName": "",
+        "CardName": "Partner Card 09 - Back",
         "Cost": "3S3A",
         "ConvertedCost": "",
         "Refund": "",
@@ -361,7 +361,7 @@
     },
     {
         "InternalName": "partner0010_a",
-        "CardName": "",
+        "CardName": "Partner Card 10 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -381,7 +381,7 @@
     },
     {
         "InternalName": "partner0010_b",
-        "CardName": "",
+        "CardName": "Partner Card 10 - Back",
         "Cost": "3W3A",
         "ConvertedCost": "",
         "Refund": "",
@@ -401,7 +401,7 @@
     },
     {
         "InternalName": "partner0011_a",
-        "CardName": "",
+        "CardName": "Partner Card 11 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -424,7 +424,7 @@
     },
     {
         "InternalName": "partner0011_b",
-        "CardName": "",
+        "CardName": "Partner Card 11 - Back",
         "Cost": "2E2F1A",
         "ConvertedCost": "",
         "Refund": "",
@@ -447,7 +447,7 @@
     },
     {
         "InternalName": "partner0012_a",
-        "CardName": "",
+        "CardName": "Partner Card 12 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -470,7 +470,7 @@
     },
     {
         "InternalName": "partner0012_b",
-        "CardName": "",
+        "CardName": "Partner Card 12 - Back",
         "Cost": "1F1S",
         "ConvertedCost": "",
         "Refund": "",
@@ -493,7 +493,7 @@
     },
     {
         "InternalName": "partner0013_a",
-        "CardName": "",
+        "CardName": "Partner Card 13 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -513,7 +513,7 @@
     },
     {
         "InternalName": "partner0013_b",
-        "CardName": "",
+        "CardName": "Partner Card 13 - Back",
         "Cost": "3E3N2A",
         "ConvertedCost": "",
         "Refund": "",
@@ -533,7 +533,7 @@
     },
     {
         "InternalName": "partner0014_a",
-        "CardName": "",
+        "CardName": "Partner Card 14 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -556,8 +556,8 @@
     },
     {
         "InternalName": "partner0014_b",
-        "CardName": "",
-        "Cost": "2N2W2W",
+        "CardName": "Partner Card 14 - Back",
+        "Cost": "2N2W2A",
         "ConvertedCost": "",
         "Refund": "",
         "Hold": 2,
@@ -579,7 +579,7 @@
     },
     {
         "InternalName": "partner0015_a",
-        "CardName": "",
+        "CardName": "Partner Card 15 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -599,7 +599,7 @@
     },
     {
         "InternalName": "partner0015_b",
-        "CardName": "",
+        "CardName": "Partner Card 15 - Back",
         "Cost": "2W2S",
         "ConvertedCost": "",
         "Refund": "",
@@ -619,7 +619,7 @@
     },
     {
         "InternalName": "partner0016_a",
-        "CardName": "",
+        "CardName": "Partner Card 16 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -639,7 +639,7 @@
     },
     {
         "InternalName": "partner0016_b",
-        "CardName": "",
+        "CardName": "Partner Card 16 - Back",
         "Cost": "2E2F2N2A",
         "ConvertedCost": "",
         "Refund": 2,
@@ -659,7 +659,7 @@
     },
     {
         "InternalName": "partner0017_a",
-        "CardName": "",
+        "CardName": "Partner Card 17 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -679,7 +679,7 @@
     },
     {
         "InternalName": "partner0017_b",
-        "CardName": "",
+        "CardName": "Partner Card 17 - Back",
         "Cost": "2E2F2S",
         "ConvertedCost": "",
         "Refund": "",
@@ -699,7 +699,7 @@
     },
     {
         "InternalName": "partner0018_a",
-        "CardName": "",
+        "CardName": "Partner Card 18 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -719,7 +719,7 @@
     },
     {
         "InternalName": "partner0018_b",
-        "CardName": "",
+        "CardName": "Partner Card 18 - Back",
         "Cost": "1E1N1W",
         "ConvertedCost": "",
         "Refund": "",
@@ -739,7 +739,7 @@
     },
     {
         "InternalName": "partner0019_a",
-        "CardName": "",
+        "CardName": "Partner Card 19 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -759,8 +759,8 @@
     },
     {
         "InternalName": "partner0019_b",
-        "CardName": "",
-        "Cost": "2E2S22A",
+        "CardName": "Partner Card 19 - Back",
+        "Cost": "2E2S2W2A",
         "ConvertedCost": "",
         "Refund": "",
         "Hold": "",
@@ -779,7 +779,7 @@
     },
     {
         "InternalName": "partner0020_a",
-        "CardName": "",
+        "CardName": "Partner Card 20 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -799,7 +799,7 @@
     },
     {
         "InternalName": "partner0020_b",
-        "CardName": "",
+        "CardName": "Partner Card 20 - Back",
         "Cost": "1E1N1S3A",
         "ConvertedCost": "",
         "Refund": "",
@@ -819,7 +819,7 @@
     },
     {
         "InternalName": "partner0021_a",
-        "CardName": "",
+        "CardName": "Partner Card 21 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -839,7 +839,7 @@
     },
     {
         "InternalName": "partner0021_b",
-        "CardName": "",
+        "CardName": "Partner Card 21 - Back",
         "Cost": "2N2S2W",
         "ConvertedCost": "",
         "Refund": "",
@@ -859,7 +859,7 @@
     },
     {
         "InternalName": "partner0022_a",
-        "CardName": "",
+        "CardName": "Partner Card 22 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -879,7 +879,7 @@
     },
     {
         "InternalName": "partner0022_b",
-        "CardName": "",
+        "CardName": "Partner Card 22 - Back",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -899,7 +899,7 @@
     },
     {
         "InternalName": "partner0023_a",
-        "CardName": "",
+        "CardName": "Partner Card 23 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -919,7 +919,7 @@
     },
     {
         "InternalName": "partner0023_b",
-        "CardName": "",
+        "CardName": "Partner Card 23 - Back",
         "Cost": "2F2N2S",
         "ConvertedCost": "",
         "Refund": "",
@@ -939,7 +939,7 @@
     },
     {
         "InternalName": "partner0024_a",
-        "CardName": "",
+        "CardName": "Partner Card 24 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -959,7 +959,7 @@
     },
     {
         "InternalName": "partner0024_b",
-        "CardName": "",
+        "CardName": "Partner Card 24 - Back",
         "Cost": "1F1N12A",
         "ConvertedCost": "",
         "Refund": "",
@@ -979,7 +979,7 @@
     },
     {
         "InternalName": "partner0025_a",
-        "CardName": "",
+        "CardName": "Partner Card 25 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -999,7 +999,7 @@
     },
     {
         "InternalName": "partner0025_b",
-        "CardName": "",
+        "CardName": "Partner Card 25 - Back",
         "Cost": "1F1S11A",
         "ConvertedCost": "",
         "Refund": "",
@@ -1019,7 +1019,7 @@
     },
     {
         "InternalName": "partner0026_a",
-        "CardName": "Partner 26 - Back",
+        "CardName": "Partner Card 26 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -1039,7 +1039,7 @@
     },
     {
         "InternalName": "partner0026_b",
-        "CardName": "Partner 26 - Front",
+        "CardName": "Partner Card 26 - Back",
         "Cost": "2I1T3A",
         "ConvertedCost": 6,
         "Refund": "",
@@ -1059,7 +1059,7 @@
     },
     {
         "InternalName": "partner0027_a",
-        "CardName": "Partner 27 - Back",
+        "CardName": "Partner Card 27 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -1079,7 +1079,7 @@
     },
     {
         "InternalName": "partner0027_b",
-        "CardName": "Partner 27 - Front",
+        "CardName": "Partner Card 27 - Back",
         "Cost": "1Y2T3A",
         "ConvertedCost": 6,
         "Refund": "",
@@ -1099,7 +1099,7 @@
     },
     {
         "InternalName": "partner0028_a",
-        "CardName": "Partner 28 - Back",
+        "CardName": "Partner Card 28 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -1119,7 +1119,7 @@
     },
     {
         "InternalName": "partner0028_b",
-        "CardName": "Partner 28 - Front",
+        "CardName": "Partner Card 28 - Back",
         "Cost": "1I2V3A",
         "ConvertedCost": 6,
         "Refund": "",
@@ -1139,7 +1139,7 @@
     },
     {
         "InternalName": "partner0029_a",
-        "CardName": "Partner 29 - Back",
+        "CardName": "Partner Card 29 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -1159,7 +1159,7 @@
     },
     {
         "InternalName": "partner0029_b",
-        "CardName": "Partner 29 - Front",
+        "CardName": "Partner Card 29 - Back",
         "Cost": "2Y1V3A",
         "ConvertedCost": 6,
         "Refund": "",
@@ -1179,7 +1179,7 @@
     },
     {
         "InternalName": "partner0030_a",
-        "CardName": "Partner 30 - Back",
+        "CardName": "Partner Card 30 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -1199,7 +1199,7 @@
     },
     {
         "InternalName": "partner0030_b",
-        "CardName": "Partner 30 - Front",
+        "CardName": "Partner Card 30 - Back",
         "Cost": "1E1Y2A",
         "ConvertedCost": 4,
         "Refund": "",
@@ -1219,7 +1219,7 @@
     },
     {
         "InternalName": "partner0031_a",
-        "CardName": "Partner 31 - Back",
+        "CardName": "Partner Card 31 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -1239,8 +1239,8 @@
     },
     {
         "InternalName": "partner0031_b",
-        "CardName": "Partner 31 - Front",
-        "Cost": "2I2W2W",
+        "CardName": "Partner Card 31 - Back",
+        "Cost": "2I2W2A",
         "ConvertedCost": 6,
         "Refund": "",
         "Hold": 2,
@@ -1259,7 +1259,7 @@
     },
     {
         "InternalName": "partner0032_a",
-        "CardName": "Partner 32 - Back",
+        "CardName": "Partner Card 32 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -1279,7 +1279,7 @@
     },
     {
         "InternalName": "partner0032_b",
-        "CardName": "Partner 32 - Front",
+        "CardName": "Partner Card 32 - Back",
         "Cost": "1F1V1A",
         "ConvertedCost": 3,
         "Refund": "",
@@ -1299,7 +1299,7 @@
     },
     {
         "InternalName": "partner0033_a",
-        "CardName": "Partner 33 - Back",
+        "CardName": "Partner Card 33 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -1319,7 +1319,7 @@
     },
     {
         "InternalName": "partner0033_b",
-        "CardName": "Partner 33 - Front",
+        "CardName": "Partner Card 33 - Back",
         "Cost": "2I1N2A",
         "ConvertedCost": 5,
         "Refund": "",
@@ -1339,7 +1339,7 @@
     },
     {
         "InternalName": "partner0034_a",
-        "CardName": "Partner 34 - Back",
+        "CardName": "Partner Card 34 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -1359,7 +1359,7 @@
     },
     {
         "InternalName": "partner0034_b",
-        "CardName": "Partner 34 - Front",
+        "CardName": "Partner Card 34 - Back",
         "Cost": "2I2Y1A",
         "ConvertedCost": 5,
         "Refund": "",
@@ -1379,7 +1379,7 @@
     },
     {
         "InternalName": "partner0035_a",
-        "CardName": "Partner 35 - Back",
+        "CardName": "Partner Card 35 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -1399,7 +1399,7 @@
     },
     {
         "InternalName": "partner0035_b",
-        "CardName": "Partner 35 - Front",
+        "CardName": "Partner Card 35 - Back",
         "Cost": "2T2V4A",
         "ConvertedCost": 8,
         "Refund": "",
@@ -1419,7 +1419,7 @@
     },
     {
         "InternalName": "partner0036_a",
-        "CardName": "Partner 36 - Back",
+        "CardName": "Partner Card 36 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -1439,8 +1439,8 @@
     },
     {
         "InternalName": "partner0036_b",
-        "CardName": "Partner 36 - Front",
-        "Cost": "2T1W3W",
+        "CardName": "Partner Card 36 - Back",
+        "Cost": "2T1W3A",
         "ConvertedCost": 6,
         "Refund": "",
         "Hold": 2,
@@ -1459,7 +1459,7 @@
     },
     {
         "InternalName": "partner0037_a",
-        "CardName": "Partner 37 - Back",
+        "CardName": "Partner Card 37 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -1479,7 +1479,7 @@
     },
     {
         "InternalName": "partner0037_b",
-        "CardName": "Partner 37 - Front",
+        "CardName": "Partner Card 37 - Back",
         "Cost": "2F2T1A",
         "ConvertedCost": 5,
         "Refund": "",
@@ -1499,7 +1499,7 @@
     },
     {
         "InternalName": "partner0038_a",
-        "CardName": "Partner 38 - Back",
+        "CardName": "Partner Card 38 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -1522,7 +1522,7 @@
     },
     {
         "InternalName": "partner0038_b",
-        "CardName": "Partner 38 - Front",
+        "CardName": "Partner Card 38 - Back",
         "Cost": "3S1Y1A",
         "ConvertedCost": 5,
         "Refund": "",
@@ -1545,7 +1545,7 @@
     },
     {
         "InternalName": "partner0039_a",
-        "CardName": "Partner 39 - Back",
+        "CardName": "Partner Card 39 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -1565,7 +1565,7 @@
     },
     {
         "InternalName": "partner0039_b",
-        "CardName": "Partner 39 - Front",
+        "CardName": "Partner Card 39 - Back",
         "Cost": "1E1V1A",
         "ConvertedCost": 3,
         "Refund": "",
@@ -1585,7 +1585,7 @@
     },
     {
         "InternalName": "partner0040_a",
-        "CardName": "Partner 40 - Back",
+        "CardName": "Partner Card 40 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -1597,7 +1597,7 @@
         "ElementType2": "Synthetic",
         "ElementType3": "Void",
         "Rarity": "Ultra Rare",
-        "CardText": "Cost - 0: Banish two cards in your grave. If you do, draw a card and reveal it. If it is a non-shield card, discard it. Activate only once per turn.\nWhen you spend 5 or more resources to play a card for the fourth time, you excavate 2 then evolve.",
+        "CardText": "Cost - 0: Banish two cards in your grave. If you do, draw a card and reveal it. If it is a non-shield card, discard it. Activate only once per turn.\nWhen you spend five or more resources to play a card for the fourth time, you excavate 2 then evolve.",
         "ATK": "",
         "DEF": "",
         "HP": "",
@@ -1605,7 +1605,7 @@
     },
     {
         "InternalName": "partner0040_b",
-        "CardName": "Partner 40 - Front",
+        "CardName": "Partner Card 40 - Back",
         "Cost": "1N1Y1V",
         "ConvertedCost": 3,
         "Refund": "",
@@ -1617,7 +1617,7 @@
         "ElementType2": "Synthetic",
         "ElementType3": "Void",
         "Rarity": "Ultra Rare",
-        "CardText": "End Turn: Produce 1U.\nWhenever you play a friendly card that you spent 5 or more resources to play for the first time each turn, salvage a card.",
+        "CardText": "End Turn: Produce 1U.\nWhenever you play a friendly card that you spent five or more resources to play for the first time each turn, salvage a card.",
         "ATK": 2,
         "DEF": 1,
         "HP": 2,
@@ -1625,7 +1625,7 @@
     },
     {
         "InternalName": "partner0041_a",
-        "CardName": "Partner 41 - Back",
+        "CardName": "Partner Card 41 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -1645,7 +1645,7 @@
     },
     {
         "InternalName": "partner0041_b",
-        "CardName": "Partner 41 - Front",
+        "CardName": "Partner Card 41 - Back",
         "Cost": "1F2I1T3A",
         "ConvertedCost": 7,
         "Refund": "",
@@ -1665,7 +1665,7 @@
     },
     {
         "InternalName": "partner0042_a",
-        "CardName": "Partner 42 - Back",
+        "CardName": "Partner Card 42 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -1685,7 +1685,7 @@
     },
     {
         "InternalName": "partner0042_b",
-        "CardName": "Partner 42 - Front",
+        "CardName": "Partner Card 42 - Back",
         "Cost": "1S1T1V3A",
         "ConvertedCost": 6,
         "Refund": "",
@@ -1705,7 +1705,7 @@
     },
     {
         "InternalName": "partner0043_a",
-        "CardName": "Partner 43 - Back",
+        "CardName": "Partner Card 43 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -1725,7 +1725,7 @@
     },
     {
         "InternalName": "partner0043_b",
-        "CardName": "Partner 43 - Front",
+        "CardName": "Partner Card 43 - Back",
         "Cost": "2E2I2Y2A",
         "ConvertedCost": 8,
         "Refund": "",
@@ -1745,7 +1745,7 @@
     },
     {
         "InternalName": "partner0044_a",
-        "CardName": "Partner 44 - Back",
+        "CardName": "Partner Card 44 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -1765,7 +1765,7 @@
     },
     {
         "InternalName": "partner0044_b",
-        "CardName": "Partner 44 - Front",
+        "CardName": "Partner Card 44 - Back",
         "Cost": "1Y1T2V4A",
         "ConvertedCost": 8,
         "Refund": "",
@@ -1785,7 +1785,7 @@
     },
     {
         "InternalName": "partner0045_a",
-        "CardName": "Partner 45 - Back",
+        "CardName": "Partner Card 45 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -1805,7 +1805,7 @@
     },
     {
         "InternalName": "partner0045_b",
-        "CardName": "Partner 45 - Front",
+        "CardName": "Partner Card 45 - Back",
         "Cost": "1I1Y1T1A",
         "ConvertedCost": 4,
         "Refund": "",
@@ -1825,7 +1825,7 @@
     },
     {
         "InternalName": "partner0046_a",
-        "CardName": "Partner 46 - Back",
+        "CardName": "Partner Card 46 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -1845,7 +1845,7 @@
     },
     {
         "InternalName": "partner0046_b",
-        "CardName": "Partner 46 - Front",
+        "CardName": "Partner Card 46 - Back",
         "Cost": "1E1F1T3A",
         "ConvertedCost": 6,
         "Refund": "",
@@ -1865,7 +1865,7 @@
     },
     {
         "InternalName": "partner0047_a",
-        "CardName": "Partner 47 - Back",
+        "CardName": "Partner Card 47 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -1885,7 +1885,7 @@
     },
     {
         "InternalName": "partner0047_b",
-        "CardName": "Partner 47 - Front",
+        "CardName": "Partner Card 47 - Back",
         "Cost": "2F2S1V1A",
         "ConvertedCost": 6,
         "Refund": "",
@@ -1905,7 +1905,7 @@
     },
     {
         "InternalName": "partner0048_a",
-        "CardName": "Partner 48 - Back",
+        "CardName": "Partner Card 48 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -1925,7 +1925,7 @@
     },
     {
         "InternalName": "partner0048_b",
-        "CardName": "Partner 48 - Front",
+        "CardName": "Partner Card 48 - Back",
         "Cost": "1E2I2N1A",
         "ConvertedCost": 6,
         "Refund": "",
@@ -1945,7 +1945,7 @@
     },
     {
         "InternalName": "partner0049_a",
-        "CardName": "Partner 49 - Back",
+        "CardName": "Partner Card 49 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -1965,8 +1965,8 @@
     },
     {
         "InternalName": "partner0049_b",
-        "CardName": "Partner 49 - Front",
-        "Cost": "2S2V24A",
+        "CardName": "Partner Card 49 - Back",
+        "Cost": "2S2V2W4A",
         "ConvertedCost": 10,
         "Refund": "",
         "Hold": 2,
@@ -1985,7 +1985,7 @@
     },
     {
         "InternalName": "partner0050_a",
-        "CardName": "Partner 50 - Back",
+        "CardName": "Partner Card 50 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -2005,7 +2005,7 @@
     },
     {
         "InternalName": "partner0050_b",
-        "CardName": "Partner 50 - Front",
+        "CardName": "Partner Card 50 - Back",
         "Cost": "1N1T13A",
         "ConvertedCost": 6,
         "Refund": "",
@@ -2025,7 +2025,7 @@
     },
     {
         "InternalName": "partner0051_a",
-        "CardName": "Partner 51 - Back",
+        "CardName": "Partner Card 51 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -2045,7 +2045,7 @@
     },
     {
         "InternalName": "partner0051_b",
-        "CardName": "Partner 51 - Front",
+        "CardName": "Partner Card 51 - Back",
         "Cost": "1I1T3A",
         "ConvertedCost": 5,
         "Refund": "",
@@ -2065,7 +2065,7 @@
     },
     {
         "InternalName": "partner0052_a",
-        "CardName": "Partner 52 - Back",
+        "CardName": "Partner Card 52 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -2085,7 +2085,7 @@
     },
     {
         "InternalName": "partner0052_b",
-        "CardName": "Partner 52 - Front",
+        "CardName": "Partner Card 52 - Back",
         "Cost": "2Y2T2A",
         "ConvertedCost": 6,
         "Refund": "",
@@ -2105,7 +2105,7 @@
     },
     {
         "InternalName": "partner0053_a",
-        "CardName": "Partner 53 - Back",
+        "CardName": "Partner Card 53 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -2128,7 +2128,7 @@
     },
     {
         "InternalName": "partner0053_b",
-        "CardName": "Partner 53 - Front",
+        "CardName": "Partner Card 53 - Back",
         "Cost": "1I1V",
         "ConvertedCost": 2,
         "Refund": "",
@@ -2151,7 +2151,7 @@
     },
     {
         "InternalName": "partner0054_a",
-        "CardName": "Partner 54 - Back",
+        "CardName": "Partner Card 54 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -2171,7 +2171,7 @@
     },
     {
         "InternalName": "partner0054_b",
-        "CardName": "Partner 54 - Front",
+        "CardName": "Partner Card 54 - Back",
         "Cost": "1Y1V2A",
         "ConvertedCost": 4,
         "Refund": "",
@@ -2191,7 +2191,7 @@
     },
     {
         "InternalName": "partner0055_a",
-        "CardName": "Partner 55 - Back",
+        "CardName": "Partner Card 55 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -2211,7 +2211,7 @@
     },
     {
         "InternalName": "partner0055_b",
-        "CardName": "Partner 55 - Front",
+        "CardName": "Partner Card 55 - Back",
         "Cost": "1I1Y1V1A",
         "ConvertedCost": 4,
         "Refund": "",
@@ -2231,7 +2231,7 @@
     },
     {
         "InternalName": "partner0056_a",
-        "CardName": "Partner 56a",
+        "CardName": "Partner Card 56 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -2251,8 +2251,8 @@
     },
     {
         "InternalName": "partner0056_b",
-        "CardName": "Partner 56b",
-        "Cost": "1F1I13A",
+        "CardName": "Partner Card 56 - Back",
+        "Cost": "1F1I1W3A",
         "ConvertedCost": 6,
         "Refund": 2,
         "Hold": 2,
@@ -2271,7 +2271,7 @@
     },
     {
         "InternalName": "partner0057_a",
-        "CardName": "Partner 57a",
+        "CardName": "Partner Card 57 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -2291,7 +2291,7 @@
     },
     {
         "InternalName": "partner0057_b",
-        "CardName": "Partner 57b",
+        "CardName": "Partner Card 57 - Back",
         "Cost": "1F1S1V1A",
         "ConvertedCost": 4,
         "Refund": "",
@@ -2311,7 +2311,7 @@
     },
     {
         "InternalName": "partner0058_a",
-        "CardName": "Partner 58a",
+        "CardName": "Partner Card 58 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -2331,7 +2331,7 @@
     },
     {
         "InternalName": "partner0058_b",
-        "CardName": "Partner 58b",
+        "CardName": "Partner Card 58 - Back",
         "Cost": "1F1T1V2A",
         "ConvertedCost": 5,
         "Refund": "",
@@ -2351,7 +2351,7 @@
     },
     {
         "InternalName": "partner0059_a",
-        "CardName": "Partner 59a",
+        "CardName": "Partner Card 59 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -2371,8 +2371,8 @@
     },
     {
         "InternalName": "partner0059_b",
-        "CardName": "Partner 59b",
-        "Cost": "IT",
+        "CardName": "Partner Card 59 - Back",
+        "Cost": "ITW",
         "ConvertedCost": 0,
         "Refund": "",
         "Hold": "",
@@ -2391,7 +2391,7 @@
     },
     {
         "InternalName": "partner0060_a",
-        "CardName": "Partner 60a",
+        "CardName": "Partner Card 60 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -2411,8 +2411,8 @@
     },
     {
         "InternalName": "partner0060_b",
-        "CardName": "Partner 60b",
-        "Cost": "1I1V11A",
+        "CardName": "Partner Card 60 - Back",
+        "Cost": "1I1V1W1A",
         "ConvertedCost": 4,
         "Refund": "",
         "Hold": 2,
@@ -2431,7 +2431,7 @@
     },
     {
         "InternalName": "partner0061_a",
-        "CardName": "Partner 61a",
+        "CardName": "Partner Card 61 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -2451,8 +2451,8 @@
     },
     {
         "InternalName": "partner0061_b",
-        "CardName": "Partner 61b",
-        "Cost": "2T2W1W",
+        "CardName": "Partner Card 61 - Back",
+        "Cost": "2T2W1A",
         "ConvertedCost": 5,
         "Refund": "",
         "Hold": 2,
@@ -2471,7 +2471,7 @@
     },
     {
         "InternalName": "partner0062_a",
-        "CardName": "Partner 62a",
+        "CardName": "Partner Card 62 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -2491,7 +2491,7 @@
     },
     {
         "InternalName": "partner0062_b",
-        "CardName": "Partner 62b",
+        "CardName": "Partner Card 62 - Back",
         "Cost": "VW",
         "ConvertedCost": 0,
         "Refund": "",
@@ -2511,7 +2511,7 @@
     },
     {
         "InternalName": "partner0063_a",
-        "CardName": "Partner 63a",
+        "CardName": "Partner Card 63 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -2531,7 +2531,7 @@
     },
     {
         "InternalName": "partner0063_b",
-        "CardName": "Partner 63b",
+        "CardName": "Partner Card 63 - Back",
         "Cost": "1S1V1A",
         "ConvertedCost": 3,
         "Refund": "",
@@ -2551,7 +2551,7 @@
     },
     {
         "InternalName": "partner0064_a",
-        "CardName": "Partner 64a",
+        "CardName": "Partner Card 64 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -2571,7 +2571,7 @@
     },
     {
         "InternalName": "partner0064_b",
-        "CardName": "Partner 64b",
+        "CardName": "Partner Card 64 - Back",
         "Cost": "FYTA",
         "ConvertedCost": 0,
         "Refund": "",
@@ -2591,7 +2591,7 @@
     },
     {
         "InternalName": "partner0065_a",
-        "CardName": "Partner 65a",
+        "CardName": "Partner Card 65 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -2611,8 +2611,8 @@
     },
     {
         "InternalName": "partner0065_b",
-        "CardName": "Partner 65b",
-        "Cost": "ST",
+        "CardName": "Partner Card 65 - Back",
+        "Cost": "STW",
         "ConvertedCost": 0,
         "Refund": "",
         "Hold": "",
@@ -2631,7 +2631,7 @@
     },
     {
         "InternalName": "partner0066_a",
-        "CardName": "Partner 66a",
+        "CardName": "Partner Card 66 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -2651,7 +2651,7 @@
     },
     {
         "InternalName": "partner0066_b",
-        "CardName": "Partner 66b",
+        "CardName": "Partner Card 66 - Back",
         "Cost": "1E1S1Y3A",
         "ConvertedCost": 6,
         "Refund": "",
@@ -2671,7 +2671,7 @@
     },
     {
         "InternalName": "partner0067_a",
-        "CardName": "Partner 67a",
+        "CardName": "Partner Card 67 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -2691,7 +2691,7 @@
     },
     {
         "InternalName": "partner0067_b",
-        "CardName": "Partner 67b",
+        "CardName": "Partner Card 67 - Back",
         "Cost": "EST",
         "ConvertedCost": 0,
         "Refund": "",
@@ -2711,7 +2711,7 @@
     },
     {
         "InternalName": "partner0068_a",
-        "CardName": "Partner 68a",
+        "CardName": "Partner Card 68 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -2731,7 +2731,7 @@
     },
     {
         "InternalName": "partner0068_b",
-        "CardName": "Partner 68b",
+        "CardName": "Partner Card 68 - Back",
         "Cost": "EYT",
         "ConvertedCost": 0,
         "Refund": "",
@@ -2751,7 +2751,7 @@
     },
     {
         "InternalName": "partner0069_a",
-        "CardName": "Partner 69a",
+        "CardName": "Partner Card 69 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -2771,7 +2771,7 @@
     },
     {
         "InternalName": "partner0069_b",
-        "CardName": "Partner 69b",
+        "CardName": "Partner Card 69 - Back",
         "Cost": "EYV",
         "ConvertedCost": 0,
         "Refund": "",
@@ -2791,7 +2791,7 @@
     },
     {
         "InternalName": "partner0070_a",
-        "CardName": "Partner 70a",
+        "CardName": "Partner Card 70 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -2811,7 +2811,7 @@
     },
     {
         "InternalName": "partner0070_b",
-        "CardName": "Partner 70b",
+        "CardName": "Partner Card 70 - Back",
         "Cost": "YTV",
         "ConvertedCost": 0,
         "Refund": "",
@@ -2831,7 +2831,7 @@
     },
     {
         "InternalName": "partner0071_a",
-        "CardName": "Partner 71a",
+        "CardName": "Partner Card 71 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -2851,7 +2851,7 @@
     },
     {
         "InternalName": "partner0071_b",
-        "CardName": "Partner 71b",
+        "CardName": "Partner Card 71 - Back",
         "Cost": "NS",
         "ConvertedCost": 0,
         "Refund": "",
@@ -2871,7 +2871,7 @@
     },
     {
         "InternalName": "partner0072_a",
-        "CardName": "Partner 72a",
+        "CardName": "Partner Card 72 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -2891,7 +2891,7 @@
     },
     {
         "InternalName": "partner0072_b",
-        "CardName": "Partner 72b",
+        "CardName": "Partner Card 72 - Back",
         "Cost": "NV",
         "ConvertedCost": 0,
         "Refund": "",
@@ -2911,7 +2911,7 @@
     },
     {
         "InternalName": "partner0073_a",
-        "CardName": "Partner 73a",
+        "CardName": "Partner Card 73 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -2931,7 +2931,7 @@
     },
     {
         "InternalName": "partner0073_b",
-        "CardName": "Partner 73b",
+        "CardName": "Partner Card 73 - Back",
         "Cost": "ST",
         "ConvertedCost": 0,
         "Refund": "",
@@ -2951,7 +2951,7 @@
     },
     {
         "InternalName": "partner0074_a",
-        "CardName": "Partner 74a",
+        "CardName": "Partner Card 74 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -2971,8 +2971,8 @@
     },
     {
         "InternalName": "partner0074_b",
-        "CardName": "Partner 74b",
-        "Cost": "NT",
+        "CardName": "Partner Card 74 - Back",
+        "Cost": "NTW",
         "ConvertedCost": 0,
         "Refund": "",
         "Hold": "",
@@ -2991,7 +2991,7 @@
     },
     {
         "InternalName": "partner0075_a",
-        "CardName": "Partner 75a",
+        "CardName": "Partner Card 75 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -3011,8 +3011,8 @@
     },
     {
         "InternalName": "partner0075_b",
-        "CardName": "Partner 75b",
-        "Cost": "YV",
+        "CardName": "Partner Card 75 - Back",
+        "Cost": "YVW",
         "ConvertedCost": 0,
         "Refund": "",
         "Hold": "",
@@ -3031,7 +3031,7 @@
     },
     {
         "InternalName": "partner0076_a",
-        "CardName": "Partner 76a",
+        "CardName": "Partner Card 76 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -3051,8 +3051,8 @@
     },
     {
         "InternalName": "partner0076_b",
-        "CardName": "Partner 76b",
-        "Cost": "EF",
+        "CardName": "Partner Card 76 - Back",
+        "Cost": "EFW",
         "ConvertedCost": 0,
         "Refund": "",
         "Hold": "",
@@ -3071,7 +3071,7 @@
     },
     {
         "InternalName": "partner0077_a",
-        "CardName": "Partner 77a",
+        "CardName": "Partner Card 77 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -3091,7 +3091,7 @@
     },
     {
         "InternalName": "partner0077_b",
-        "CardName": "Partner 77b",
+        "CardName": "Partner Card 77 - Back",
         "Cost": "ENY",
         "ConvertedCost": 0,
         "Refund": "",
@@ -3111,7 +3111,7 @@
     },
     {
         "InternalName": "partner0078_a",
-        "CardName": "Partner 78a",
+        "CardName": "Partner Card 78 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -3131,7 +3131,7 @@
     },
     {
         "InternalName": "partner0078_b",
-        "CardName": "Partner 78b",
+        "CardName": "Partner Card 78 - Back",
         "Cost": "EIY",
         "ConvertedCost": 0,
         "Refund": "",
@@ -3151,7 +3151,7 @@
     },
     {
         "InternalName": "partner0079_a",
-        "CardName": "Partner 79a",
+        "CardName": "Partner Card 79 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -3171,8 +3171,8 @@
     },
     {
         "InternalName": "partner0079_b",
-        "CardName": "Partner 79b",
-        "Cost": "EN",
+        "CardName": "Partner Card 79 - Back",
+        "Cost": "ENW",
         "ConvertedCost": 0,
         "Refund": "",
         "Hold": "",
@@ -3191,7 +3191,7 @@
     },
     {
         "InternalName": "partner0080_a",
-        "CardName": "Partner 80a",
+        "CardName": "Partner Card 80 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -3211,8 +3211,8 @@
     },
     {
         "InternalName": "partner0080_b",
-        "CardName": "Partner 80b",
-        "Cost": "IY",
+        "CardName": "Partner Card 80 - Back",
+        "Cost": "IYW",
         "ConvertedCost": 0,
         "Refund": "",
         "Hold": "",
@@ -3231,7 +3231,7 @@
     },
     {
         "InternalName": "partner0081_a",
-        "CardName": "Partner 81a",
+        "CardName": "Partner Card 81 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -3251,7 +3251,7 @@
     },
     {
         "InternalName": "partner0081_b",
-        "CardName": "Partner 81b",
+        "CardName": "Partner Card 81 - Back",
         "Cost": "EW",
         "ConvertedCost": 0,
         "Refund": "",
@@ -3271,7 +3271,7 @@
     },
     {
         "InternalName": "partner0082_a",
-        "CardName": "Partner 82a",
+        "CardName": "Partner Card 82 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -3291,7 +3291,7 @@
     },
     {
         "InternalName": "partner0082_b",
-        "CardName": "Partner 82b",
+        "CardName": "Partner Card 82 - Back",
         "Cost": "IY",
         "ConvertedCost": 0,
         "Refund": "",
@@ -3311,7 +3311,7 @@
     },
     {
         "InternalName": "partner0083_a",
-        "CardName": "Partner 83a",
+        "CardName": "Partner Card 83 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -3331,7 +3331,7 @@
     },
     {
         "InternalName": "partner0083_b",
-        "CardName": "Partner 83b",
+        "CardName": "Partner Card 83 - Back",
         "Cost": "FW",
         "ConvertedCost": 0,
         "Refund": "",
@@ -3351,7 +3351,7 @@
     },
     {
         "InternalName": "partner0084_a",
-        "CardName": "Partner 84a",
+        "CardName": "Partner Card 84 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -3371,7 +3371,7 @@
     },
     {
         "InternalName": "partner0084_b",
-        "CardName": "Partner 84b",
+        "CardName": "Partner Card 84 - Back",
         "Cost": "EIV",
         "ConvertedCost": 0,
         "Refund": "",
@@ -3391,7 +3391,7 @@
     },
     {
         "InternalName": "partner0085_a",
-        "CardName": "Partner 85a",
+        "CardName": "Partner Card 85 - Front",
         "Cost": "",
         "ConvertedCost": "",
         "Refund": "",
@@ -3411,7 +3411,7 @@
     },
     {
         "InternalName": "partner0085_b",
-        "CardName": "Partner 85b",
+        "CardName": "Partner Card 85 - Back",
         "Cost": "INS",
         "ConvertedCost": 0,
         "Refund": "",

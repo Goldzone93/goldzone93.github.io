@@ -2241,11 +2241,26 @@ export function PlaytestBoard() {
     const lookupCard = React.useCallback((id) => {
         if (!id) return null;
         const { cardsById, partnersById, tokensById } = dataMaps || {};
-        const c = (cardsById?.get?.(id) || cardsById?.[id]) || null;
+
+        const exactId = String(id || '');
+        const baseVariantId = exactId.replace(/^(.+)_([A-Za-z0-9]+)_([ab])$/i, '$1_$3');
+
+        const c =
+            (cardsById?.get?.(exactId) || cardsById?.[exactId]) ||
+            (cardsById?.get?.(baseVariantId) || cardsById?.[baseVariantId]) ||
+            null;
         if (c) return c;
-        const t = (tokensById?.get?.(id) || tokensById?.[id]) || null;
+
+        const t =
+            (tokensById?.get?.(exactId) || tokensById?.[exactId]) ||
+            (tokensById?.get?.(baseVariantId) || tokensById?.[baseVariantId]) ||
+            null;
         if (t) return t;
-        const p = (partnersById?.get?.(id) || partnersById?.[id]) || null;
+
+        const p =
+            (partnersById?.get?.(exactId) || partnersById?.[exactId]) ||
+            (partnersById?.get?.(baseVariantId) || partnersById?.[baseVariantId]) ||
+            null;
         return p || null;
     }, [dataMaps]);
 

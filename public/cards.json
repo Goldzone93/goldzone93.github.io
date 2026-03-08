@@ -1233,7 +1233,7 @@
         ]
     },
     {
-        "InternalName": "card0951_a",
+        "InternalName": "card0601_a",
         "CardName": "Earth Card 61",
         "Cost": "1E",
         "ConvertedCost": 1,
@@ -1253,7 +1253,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0952_a",
+        "InternalName": "card0602_a",
         "CardName": "Earth Card 62",
         "Cost": "1E5A",
         "ConvertedCost": 6,
@@ -1273,7 +1273,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0953_a",
+        "InternalName": "card0603_a",
         "CardName": "Earth Card 63",
         "Cost": "1E1A",
         "ConvertedCost": 2,
@@ -1293,7 +1293,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0954_a",
+        "InternalName": "card0604_a",
         "CardName": "Earth Card 64",
         "Cost": "1E6A",
         "ConvertedCost": 7,
@@ -1313,7 +1313,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0955_a",
+        "InternalName": "card0605_a",
         "CardName": "Earth Card 65",
         "Cost": "1E1A",
         "ConvertedCost": 2,
@@ -1333,7 +1333,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0956_a",
+        "InternalName": "card0606_a",
         "CardName": "Earth Card 66",
         "Cost": "1E",
         "ConvertedCost": 1,
@@ -1353,7 +1353,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0957_a",
+        "InternalName": "card0607_a",
         "CardName": "Earth Card 67",
         "Cost": "1E1A",
         "ConvertedCost": 2,
@@ -1373,7 +1373,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0958_a",
+        "InternalName": "card0608_a",
         "CardName": "Earth Card 68",
         "Cost": "1E5A",
         "ConvertedCost": 6,
@@ -1393,7 +1393,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0959_a",
+        "InternalName": "card0609_a",
         "CardName": "Earth Card 69",
         "Cost": "1E1A",
         "ConvertedCost": 2,
@@ -1413,7 +1413,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0960_a",
+        "InternalName": "card0610_a",
         "CardName": "Earth Card 70",
         "Cost": "1E2A",
         "ConvertedCost": 3,
@@ -1433,7 +1433,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0961_a",
+        "InternalName": "card0611_a",
         "CardName": "Earth Card 71",
         "Cost": "1E3A",
         "ConvertedCost": 4,
@@ -2671,7 +2671,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0962_a",
+        "InternalName": "card0612_a",
         "CardName": "Fire Card 61",
         "Cost": "1F",
         "ConvertedCost": "",
@@ -2691,7 +2691,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0963_a",
+        "InternalName": "card0613_a",
         "CardName": "Fire Card 62",
         "Cost": "1F1A",
         "ConvertedCost": "",
@@ -2711,7 +2711,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0964_a",
+        "InternalName": "card0614_a",
         "CardName": "Fire Card 63",
         "Cost": "1F6A",
         "ConvertedCost": "",
@@ -2731,7 +2731,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0965_a",
+        "InternalName": "card0615_a",
         "CardName": "Fire Card 64",
         "Cost": "1F1A",
         "ConvertedCost": "",
@@ -2751,7 +2751,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0966_a",
+        "InternalName": "card0616_a",
         "CardName": "Fire Card 65",
         "Cost": "1F5A",
         "ConvertedCost": "",
@@ -2771,7 +2771,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0967_a",
+        "InternalName": "card0617_a",
         "CardName": "Fire Card 66",
         "Cost": "1F2A",
         "ConvertedCost": "",
@@ -2791,7 +2791,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0968_a",
+        "InternalName": "card0618_a",
         "CardName": "Fire Card 67",
         "Cost": "1F3A",
         "ConvertedCost": "",
@@ -2811,7 +2811,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0969_a",
+        "InternalName": "card0619_a",
         "CardName": "Fire Card 68",
         "Cost": "1F6A",
         "ConvertedCost": "",
@@ -2831,7 +2831,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0970_a",
+        "InternalName": "card0620_a",
         "CardName": "Fire Card 69",
         "Cost": "1F4A",
         "ConvertedCost": "",
@@ -2851,7 +2851,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0971_a",
+        "InternalName": "card0621_a",
         "CardName": "Fire Card 70",
         "Cost": "1F",
         "ConvertedCost": "",
@@ -2871,7 +2871,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0972_a",
+        "InternalName": "card0622_a",
         "CardName": "Fire Card 71",
         "Cost": "1F1A",
         "ConvertedCost": "",
@@ -4124,7 +4124,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0973_a",
+        "InternalName": "card0623_a",
         "CardName": "Nature Card 61",
         "Cost": "1N1A",
         "ConvertedCost": "",
@@ -4144,7 +4144,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0974_a",
+        "InternalName": "card0624_a",
         "CardName": "Nature Card 62",
         "Cost": "1N2A",
         "ConvertedCost": "",
@@ -4164,7 +4164,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0975_a",
+        "InternalName": "card0625_a",
         "CardName": "Nature Card 63",
         "Cost": "1N4A",
         "ConvertedCost": "",
@@ -4184,7 +4184,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0976_a",
+        "InternalName": "card0626_a",
         "CardName": "Nature Card 64",
         "Cost": "1N5A",
         "ConvertedCost": "",
@@ -4204,7 +4204,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0977_a",
+        "InternalName": "card0627_a",
         "CardName": "Nature Card 65",
         "Cost": "1N4A",
         "ConvertedCost": "",
@@ -4224,7 +4224,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0978_a",
+        "InternalName": "card0628_a",
         "CardName": "Nature Card 66",
         "Cost": "1N1A",
         "ConvertedCost": "",
@@ -4244,7 +4244,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0979_a",
+        "InternalName": "card0629_a",
         "CardName": "Nature Card 67",
         "Cost": "1N",
         "ConvertedCost": "",
@@ -4264,7 +4264,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0980_a",
+        "InternalName": "card0630_a",
         "CardName": "Nature Card 68",
         "Cost": "1N3A",
         "ConvertedCost": "",
@@ -4284,7 +4284,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0981_a",
+        "InternalName": "card0631_a",
         "CardName": "Nature Card 69",
         "Cost": "1N1A",
         "ConvertedCost": "",
@@ -4304,7 +4304,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0982_a",
+        "InternalName": "card0632_a",
         "CardName": "Nature Card 70",
         "Cost": "1N1A",
         "ConvertedCost": "",
@@ -4324,7 +4324,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0983_a",
+        "InternalName": "card0633_a",
         "CardName": "Nature Card 71",
         "Cost": "1N1A",
         "ConvertedCost": "",
@@ -5562,7 +5562,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0984_a",
+        "InternalName": "card0634_a",
         "CardName": "Storm Card 61",
         "Cost": "1S",
         "ConvertedCost": "",
@@ -5582,7 +5582,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0985_a",
+        "InternalName": "card0635_a",
         "CardName": "Storm Card 62",
         "Cost": "1S1A",
         "ConvertedCost": "",
@@ -5602,7 +5602,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0986_a",
+        "InternalName": "card0636_a",
         "CardName": "Storm Card 63",
         "Cost": "1S4A",
         "ConvertedCost": "",
@@ -5622,7 +5622,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0987_a",
+        "InternalName": "card0637_a",
         "CardName": "Storm Card 64",
         "Cost": "1S5A",
         "ConvertedCost": "",
@@ -5642,7 +5642,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0988_a",
+        "InternalName": "card0638_a",
         "CardName": "Storm Card 65",
         "Cost": "1S6A",
         "ConvertedCost": "",
@@ -5662,7 +5662,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0989_a",
+        "InternalName": "card0639_a",
         "CardName": "Storm Card 66",
         "Cost": "1S1A",
         "ConvertedCost": "",
@@ -5682,7 +5682,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0990_a",
+        "InternalName": "card0640_a",
         "CardName": "Storm Card 67",
         "Cost": "1S2A",
         "ConvertedCost": "",
@@ -5702,7 +5702,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0991_a",
+        "InternalName": "card0641_a",
         "CardName": "Storm Card 68",
         "Cost": "1S4A",
         "ConvertedCost": "",
@@ -5722,7 +5722,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0992_a",
+        "InternalName": "card0642_a",
         "CardName": "Storm Card 69",
         "Cost": "1S5A",
         "ConvertedCost": "",
@@ -5742,7 +5742,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0993_a",
+        "InternalName": "card0643_a",
         "CardName": "Storm Card 70",
         "Cost": "1S1A",
         "ConvertedCost": "",
@@ -5762,7 +5762,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0994_a",
+        "InternalName": "card0644_a",
         "CardName": "Storm Card 71",
         "Cost": "1S2A",
         "ConvertedCost": "",
@@ -7000,7 +7000,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0995_a",
+        "InternalName": "card0645_a",
         "CardName": "Water Card 61",
         "Cost": "1W1A",
         "ConvertedCost": "",
@@ -7020,7 +7020,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0996_a",
+        "InternalName": "card0646_a",
         "CardName": "Water Card 62",
         "Cost": "1W3A",
         "ConvertedCost": "",
@@ -7040,7 +7040,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0997_a",
+        "InternalName": "card0647_a",
         "CardName": "Water Card 63",
         "Cost": "1W4A",
         "ConvertedCost": "",
@@ -7060,7 +7060,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0998_a",
+        "InternalName": "card0648_a",
         "CardName": "Water Card 64",
         "Cost": "1W",
         "ConvertedCost": "",
@@ -7080,7 +7080,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card0999_a",
+        "InternalName": "card0649_a",
         "CardName": "Water Card 65",
         "Cost": "1W6A",
         "ConvertedCost": "",
@@ -7100,7 +7100,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card1000_a",
+        "InternalName": "card0650_a",
         "CardName": "Water Card 66",
         "Cost": "1W1A",
         "ConvertedCost": "",
@@ -7120,7 +7120,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card1001_a",
+        "InternalName": "card0651_a",
         "CardName": "Water Card 67",
         "Cost": "1W4A",
         "ConvertedCost": "",
@@ -7140,7 +7140,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card1002_a",
+        "InternalName": "card0652_a",
         "CardName": "Water Card 68",
         "Cost": "1W5A",
         "ConvertedCost": "",
@@ -7160,7 +7160,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card1003_a",
+        "InternalName": "card0653_a",
         "CardName": "Water Card 69",
         "Cost": "1W1A",
         "ConvertedCost": "",
@@ -7180,7 +7180,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card1004_a",
+        "InternalName": "card0654_a",
         "CardName": "Water Card 70",
         "Cost": "1W2A",
         "ConvertedCost": "",
@@ -7200,7 +7200,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card1005_a",
+        "InternalName": "card0655_a",
         "CardName": "Water Card 71",
         "Cost": "1W2A",
         "ConvertedCost": "",
@@ -8468,7 +8468,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card1006_a",
+        "InternalName": "card0656_a",
         "CardName": "Neutral Card 61",
         "Cost": "2A",
         "ConvertedCost": "",
@@ -8488,7 +8488,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card1007_a",
+        "InternalName": "card0657_a",
         "CardName": "Neutral Card 62",
         "Cost": "6A",
         "ConvertedCost": "",
@@ -8508,7 +8508,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card1008_a",
+        "InternalName": "card0658_a",
         "CardName": "Neutral Card 63",
         "Cost": "7A",
         "ConvertedCost": "",
@@ -8528,7 +8528,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card1009_a",
+        "InternalName": "card0659_a",
         "CardName": "Neutral Card 64",
         "Cost": "3A",
         "ConvertedCost": "",
@@ -8548,7 +8548,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card1010_a",
+        "InternalName": "card0660_a",
         "CardName": "Neutral Card 65",
         "Cost": "2A",
         "ConvertedCost": "",
@@ -8568,7 +8568,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card1011_a",
+        "InternalName": "card0661_a",
         "CardName": "Neutral Card 66",
         "Cost": "2A",
         "ConvertedCost": "",
@@ -8588,7 +8588,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card1012_a",
+        "InternalName": "card0662_a",
         "CardName": "Neutral Card 67",
         "Cost": "3A",
         "ConvertedCost": "",
@@ -8608,7 +8608,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card1013_a",
+        "InternalName": "card0663_a",
         "CardName": "Neutral Card 68",
         "Cost": "5A",
         "ConvertedCost": "",
@@ -8628,7 +8628,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card1014_a",
+        "InternalName": "card0664_a",
         "CardName": "Neutral Card 69",
         "Cost": "3A",
         "ConvertedCost": "",
@@ -8648,7 +8648,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card1015_a",
+        "InternalName": "card0665_a",
         "CardName": "Neutral Card 70",
         "Cost": "3A",
         "ConvertedCost": "",
@@ -8668,7 +8668,7 @@
         "Set": "CS1"
     },
     {
-        "InternalName": "card1016_a",
+        "InternalName": "card0666_a",
         "CardName": "Neutral Card 71",
         "Cost": "3A",
         "ConvertedCost": "",
@@ -9906,7 +9906,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1017_a",
+        "InternalName": "card0667_a",
         "CardName": "Ice Card 61",
         "Cost": "1I1A",
         "ConvertedCost": 2,
@@ -9926,7 +9926,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1018_a",
+        "InternalName": "card0668_a",
         "CardName": "Ice Card 62",
         "Cost": "1I3A",
         "ConvertedCost": 4,
@@ -9946,7 +9946,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1019_a",
+        "InternalName": "card0669_a",
         "CardName": "Ice Card 63",
         "Cost": "1I4A",
         "ConvertedCost": 5,
@@ -9966,7 +9966,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1020_a",
+        "InternalName": "card0670_a",
         "CardName": "Ice Card 64",
         "Cost": "1I",
         "ConvertedCost": 1,
@@ -9986,7 +9986,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1021_a",
+        "InternalName": "card0671_a",
         "CardName": "Ice Card 65",
         "Cost": "1I6A",
         "ConvertedCost": 7,
@@ -10006,7 +10006,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1022_a",
+        "InternalName": "card0672_a",
         "CardName": "Ice Card 66",
         "Cost": "1I1A",
         "ConvertedCost": 2,
@@ -10026,7 +10026,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1023_a",
+        "InternalName": "card0673_a",
         "CardName": "Ice Card 67",
         "Cost": "1I2A",
         "ConvertedCost": 3,
@@ -10046,7 +10046,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1024_a",
+        "InternalName": "card0674_a",
         "CardName": "Ice Card 68",
         "Cost": "1I5A",
         "ConvertedCost": 6,
@@ -10066,7 +10066,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1025_a",
+        "InternalName": "card0675_a",
         "CardName": "Ice Card 69",
         "Cost": "1I1A",
         "ConvertedCost": 2,
@@ -10086,7 +10086,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1026_a",
+        "InternalName": "card0676_a",
         "CardName": "Ice Card 70",
         "Cost": "1I1A",
         "ConvertedCost": 2,
@@ -10106,7 +10106,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1027_a",
+        "InternalName": "card0677_a",
         "CardName": "Ice Card 71",
         "Cost": "1I1A",
         "ConvertedCost": 2,
@@ -11359,7 +11359,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1028_a",
+        "InternalName": "card0678_a",
         "CardName": "Synthetic Card 61",
         "Cost": "2Y",
         "ConvertedCost": 2,
@@ -11379,7 +11379,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1029_a",
+        "InternalName": "card0679_a",
         "CardName": "Synthetic Card 62",
         "Cost": "1Y4A",
         "ConvertedCost": 5,
@@ -11399,7 +11399,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1030_a",
+        "InternalName": "card0680_a",
         "CardName": "Synthetic Card 63",
         "Cost": "1Y5A",
         "ConvertedCost": 6,
@@ -11419,7 +11419,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1031_a",
+        "InternalName": "card0681_a",
         "CardName": "Synthetic Card 64",
         "Cost": "1Y",
         "ConvertedCost": 1,
@@ -11439,7 +11439,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1032_a",
+        "InternalName": "card0682_a",
         "CardName": "Synthetic Card 65",
         "Cost": "1Y6A",
         "ConvertedCost": 7,
@@ -11459,7 +11459,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1033_a",
+        "InternalName": "card0683_a",
         "CardName": "Synthetic Card 66",
         "Cost": "1Y1A",
         "ConvertedCost": 2,
@@ -11479,7 +11479,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1034_a",
+        "InternalName": "card0684_a",
         "CardName": "Synthetic Card 67",
         "Cost": "1Y3A",
         "ConvertedCost": 4,
@@ -11499,7 +11499,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1035_a",
+        "InternalName": "card0685_a",
         "CardName": "Synthetic Card 68",
         "Cost": "1Y4A",
         "ConvertedCost": 5,
@@ -11519,7 +11519,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1036_a",
+        "InternalName": "card0686_a",
         "CardName": "Synthetic Card 69",
         "Cost": "1Y5A",
         "ConvertedCost": 6,
@@ -11539,7 +11539,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1037_a",
+        "InternalName": "card0687_a",
         "CardName": "Synthetic Card 70",
         "Cost": "1Y2A",
         "ConvertedCost": 3,
@@ -11559,7 +11559,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1038_a",
+        "InternalName": "card0688_a",
         "CardName": "Synthetic Card 71",
         "Cost": "1Y4A",
         "ConvertedCost": 5,
@@ -12797,7 +12797,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1039_a",
+        "InternalName": "card0689_a",
         "CardName": "Toxic Card 61",
         "Cost": "1T",
         "ConvertedCost": 1,
@@ -12817,7 +12817,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1040_a",
+        "InternalName": "card0690_a",
         "CardName": "Toxic Card 62",
         "Cost": "1T1A",
         "ConvertedCost": 2,
@@ -12837,7 +12837,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1041_a",
+        "InternalName": "card0691_a",
         "CardName": "Toxic Card 63",
         "Cost": "1T4A",
         "ConvertedCost": 5,
@@ -12857,7 +12857,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1042_a",
+        "InternalName": "card0692_a",
         "CardName": "Toxic Card 64",
         "Cost": "1T6A",
         "ConvertedCost": 7,
@@ -12877,7 +12877,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1043_a",
+        "InternalName": "card0693_a",
         "CardName": "Toxic Card 65",
         "Cost": "1T5A",
         "ConvertedCost": 6,
@@ -12897,7 +12897,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1044_a",
+        "InternalName": "card0694_a",
         "CardName": "Toxic Card 66",
         "Cost": "1T1A",
         "ConvertedCost": 2,
@@ -12917,7 +12917,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1045_a",
+        "InternalName": "card0695_a",
         "CardName": "Toxic Card 67",
         "Cost": "1T4A",
         "ConvertedCost": 5,
@@ -12937,7 +12937,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1046_a",
+        "InternalName": "card0696_a",
         "CardName": "Toxic Card 68",
         "Cost": "1T",
         "ConvertedCost": 1,
@@ -12957,7 +12957,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1047_a",
+        "InternalName": "card0697_a",
         "CardName": "Toxic Card 69",
         "Cost": "1T5A",
         "ConvertedCost": 6,
@@ -12977,7 +12977,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1048_a",
+        "InternalName": "card0698_a",
         "CardName": "Toxic Card 70",
         "Cost": "1T1A",
         "ConvertedCost": 2,
@@ -12997,7 +12997,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1049_a",
+        "InternalName": "card0699_a",
         "CardName": "Toxic Card 71",
         "Cost": "1T1A",
         "ConvertedCost": 2,
@@ -14235,7 +14235,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1050_a",
+        "InternalName": "card0700_a",
         "CardName": "Void Card 61",
         "Cost": "1V",
         "ConvertedCost": 1,
@@ -14255,7 +14255,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1051_a",
+        "InternalName": "card0701_a",
         "CardName": "Void Card 62",
         "Cost": "1V3A",
         "ConvertedCost": 4,
@@ -14275,7 +14275,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1052_a",
+        "InternalName": "card0702_a",
         "CardName": "Void Card 63",
         "Cost": "1V4A",
         "ConvertedCost": 5,
@@ -14295,7 +14295,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1053_a",
+        "InternalName": "card0703_a",
         "CardName": "Void Card 64",
         "Cost": "1V6A",
         "ConvertedCost": 7,
@@ -14315,7 +14315,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1054_a",
+        "InternalName": "card0704_a",
         "CardName": "Void Card 65",
         "Cost": "1V1A",
         "ConvertedCost": 2,
@@ -14335,7 +14335,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1055_a",
+        "InternalName": "card0705_a",
         "CardName": "Void Card 66",
         "Cost": "1V4A",
         "ConvertedCost": 5,
@@ -14355,7 +14355,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1056_a",
+        "InternalName": "card0706_a",
         "CardName": "Void Card 67",
         "Cost": "1V1A",
         "ConvertedCost": 2,
@@ -14375,7 +14375,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1057_a",
+        "InternalName": "card0707_a",
         "CardName": "Void Card 68",
         "Cost": "1V5A",
         "ConvertedCost": 6,
@@ -14395,7 +14395,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1058_a",
+        "InternalName": "card0708_a",
         "CardName": "Void Card 69",
         "Cost": "1V1A",
         "ConvertedCost": 2,
@@ -14415,7 +14415,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1059_a",
+        "InternalName": "card0709_a",
         "CardName": "Void Card 70",
         "Cost": "1V1A",
         "ConvertedCost": 2,
@@ -14435,7 +14435,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card1060_a",
+        "InternalName": "card0710_a",
         "CardName": "Void Card 71",
         "Cost": "1V2A",
         "ConvertedCost": 3,
@@ -14455,7 +14455,7 @@
         "Set": "CS2"
     },
     {
-        "InternalName": "card0601_a",
+        "InternalName": "card0711_a",
         "CardName": "Fusion Fire Card 01a",
         "Cost": "1F1A",
         "ConvertedCost": 2,
@@ -14475,7 +14475,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0601_b",
+        "InternalName": "card0711_b",
         "CardName": "Fusion Fire Card 01b",
         "Cost": "2F2A",
         "ConvertedCost": 4,
@@ -14495,7 +14495,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0602_a",
+        "InternalName": "card0712_a",
         "CardName": "Fire Card 02",
         "Cost": "1F2A",
         "ConvertedCost": 3,
@@ -14515,7 +14515,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0603_a",
+        "InternalName": "card0713_a",
         "CardName": "Fire Card 03",
         "Cost": "1F3A",
         "ConvertedCost": 4,
@@ -14535,7 +14535,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0604_a",
+        "InternalName": "card0714_a",
         "CardName": "Fire Card 04",
         "Cost": "1F7A",
         "ConvertedCost": 8,
@@ -14555,7 +14555,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0605_a",
+        "InternalName": "card0715_a",
         "CardName": "Fire Card 05",
         "Cost": "1F",
         "ConvertedCost": 1,
@@ -14575,7 +14575,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0606_a",
+        "InternalName": "card0716_a",
         "CardName": "Fusion Fire Card 06a",
         "Cost": "1F1A",
         "ConvertedCost": 2,
@@ -14595,7 +14595,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0606_b",
+        "InternalName": "card0716_b",
         "CardName": "Fusion Fire Card 06b",
         "Cost": "1F1T",
         "ConvertedCost": 2,
@@ -14615,7 +14615,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0607_a",
+        "InternalName": "card0717_a",
         "CardName": "Fire Card 07",
         "Cost": "1F4A",
         "ConvertedCost": 5,
@@ -14635,7 +14635,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0608_a",
+        "InternalName": "card0718_a",
         "CardName": "Fusion Fire Card 08a",
         "Cost": "1F",
         "ConvertedCost": 1,
@@ -14655,7 +14655,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0608_b",
+        "InternalName": "card0718_b",
         "CardName": "Fusion Fire Card 08b",
         "Cost": "3F1A",
         "ConvertedCost": 4,
@@ -14675,7 +14675,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0609_a",
+        "InternalName": "card0719_a",
         "CardName": "Fire Card 09",
         "Cost": "1F2A",
         "ConvertedCost": 3,
@@ -14695,7 +14695,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0610_a",
+        "InternalName": "card0720_a",
         "CardName": "Fusion Fire Card 10a",
         "Cost": "2F4A",
         "ConvertedCost": 6,
@@ -14715,7 +14715,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0610_b",
+        "InternalName": "card0720_b",
         "CardName": "Fusion Fire Card 10b",
         "Cost": "2F2V2A",
         "ConvertedCost": 6,
@@ -14735,7 +14735,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0611_a",
+        "InternalName": "card0721_a",
         "CardName": "Fire Card 11",
         "Cost": "1F2A",
         "ConvertedCost": 3,
@@ -14755,7 +14755,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0612_a",
+        "InternalName": "card0722_a",
         "CardName": "Fire Card 12",
         "Cost": "2F",
         "ConvertedCost": 2,
@@ -14775,7 +14775,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0613_a",
+        "InternalName": "card0723_a",
         "CardName": "Fire Card 13",
         "Cost": "1F3A",
         "ConvertedCost": 4,
@@ -14795,7 +14795,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0614_a",
+        "InternalName": "card0724_a",
         "CardName": "Fusion Fire Card 14a",
         "Cost": "2F8A",
         "ConvertedCost": 10,
@@ -14815,7 +14815,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0614_b",
+        "InternalName": "card0724_b",
         "CardName": "Fusion Fire Card 14b",
         "Cost": "2F2T6A",
         "ConvertedCost": 10,
@@ -14835,7 +14835,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0615_a",
+        "InternalName": "card0725_a",
         "CardName": "Fire Card 15",
         "Cost": "2F1A",
         "ConvertedCost": 3,
@@ -14855,7 +14855,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0616_a",
+        "InternalName": "card0726_a",
         "CardName": "Fire Card 16",
         "Cost": "1F3A",
         "ConvertedCost": 4,
@@ -14875,7 +14875,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0617_a",
+        "InternalName": "card0727_a",
         "CardName": "Fusion Fire Card 17a",
         "Cost": "2F3A",
         "ConvertedCost": 5,
@@ -14895,7 +14895,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0617_b",
+        "InternalName": "card0727_b",
         "CardName": "Fusion Fire Card 17b",
         "Cost": "2F2T2A",
         "ConvertedCost": 6,
@@ -14915,7 +14915,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0618_a",
+        "InternalName": "card0728_a",
         "CardName": "Fusion Ice Card 1a",
         "Cost": "1I",
         "ConvertedCost": 1,
@@ -14935,7 +14935,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0618_b",
+        "InternalName": "card0728_b",
         "CardName": "Fusion Ice Card 1b",
         "Cost": "2I1A",
         "ConvertedCost": 3,
@@ -14955,7 +14955,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0619_a",
+        "InternalName": "card0729_a",
         "CardName": "Ice Card 2",
         "Cost": "1I2A",
         "ConvertedCost": 3,
@@ -14975,7 +14975,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0620_a",
+        "InternalName": "card0730_a",
         "CardName": "Ice Card 3",
         "Cost": "1I3A",
         "ConvertedCost": 4,
@@ -14995,7 +14995,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0621_a",
+        "InternalName": "card0731_a",
         "CardName": "Ice Card 4",
         "Cost": "1I7A",
         "ConvertedCost": 8,
@@ -15015,7 +15015,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0622_a",
+        "InternalName": "card0732_a",
         "CardName": "Ice Card 5",
         "Cost": "1I3A",
         "ConvertedCost": 4,
@@ -15035,7 +15035,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0623_a",
+        "InternalName": "card0733_a",
         "CardName": "Ice Card 6",
         "Cost": "1I1A",
         "ConvertedCost": 2,
@@ -15055,7 +15055,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0624_a",
+        "InternalName": "card0734_a",
         "CardName": "Fusion Ice Card 7a",
         "Cost": "1I1A",
         "ConvertedCost": 2,
@@ -15075,7 +15075,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0624_b",
+        "InternalName": "card0734_b",
         "CardName": "Fusion Ice Card 7b",
         "Cost": "1I1S",
         "ConvertedCost": 2,
@@ -15095,7 +15095,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0625_a",
+        "InternalName": "card0735_a",
         "CardName": "Fusion Ice Card 8a",
         "Cost": "1I1A",
         "ConvertedCost": 2,
@@ -15115,7 +15115,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0625_b",
+        "InternalName": "card0735_b",
         "CardName": "Fusion Ice Card 8b",
         "Cost": "3I2A",
         "ConvertedCost": 5,
@@ -15135,7 +15135,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0626_a",
+        "InternalName": "card0736_a",
         "CardName": "Fusion Ice Card 9a",
         "Cost": "2I2A",
         "ConvertedCost": 4,
@@ -15155,7 +15155,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0626_b",
+        "InternalName": "card0736_b",
         "CardName": "Fusion Ice Card 9b",
         "Cost": "2I1V1A",
         "ConvertedCost": 4,
@@ -15175,7 +15175,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0627_a",
+        "InternalName": "card0737_a",
         "CardName": "Ice Card 10",
         "Cost": "2I8A",
         "ConvertedCost": 10,
@@ -15195,7 +15195,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0628_a",
+        "InternalName": "card0738_a",
         "CardName": "Ice Card 11",
         "Cost": "1I4A",
         "ConvertedCost": 5,
@@ -15215,7 +15215,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0629_a",
+        "InternalName": "card0739_a",
         "CardName": "Ice Card 12",
         "Cost": "2I1A",
         "ConvertedCost": 3,
@@ -15235,7 +15235,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0630_a",
+        "InternalName": "card0740_a",
         "CardName": "Ice Card 13",
         "Cost": "2I2A",
         "ConvertedCost": 4,
@@ -15255,7 +15255,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0631_a",
+        "InternalName": "card0741_a",
         "CardName": "Fusion Ice Card 14a",
         "Cost": "2I9A",
         "ConvertedCost": 11,
@@ -15275,7 +15275,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0631_b",
+        "InternalName": "card0741_b",
         "CardName": "Fusion Ice Card 14b",
         "Cost": "2I2S8A",
         "ConvertedCost": 12,
@@ -15295,7 +15295,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0632_a",
+        "InternalName": "card0742_a",
         "CardName": "Ice Card 15",
         "Cost": "3I3A",
         "ConvertedCost": 6,
@@ -15315,7 +15315,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0633_a",
+        "InternalName": "card0743_a",
         "CardName": "Ice Card 16",
         "Cost": "2I1A",
         "ConvertedCost": 3,
@@ -15335,7 +15335,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0634_a",
+        "InternalName": "card0744_a",
         "CardName": "Fusion Ice Card 17a",
         "Cost": "5I13A",
         "ConvertedCost": 18,
@@ -15355,7 +15355,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0634_b",
+        "InternalName": "card0744_b",
         "CardName": "Fusion Ice Card 17b",
         "Cost": "2I2S2A",
         "ConvertedCost": 6,
@@ -15375,7 +15375,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0635_a",
+        "InternalName": "card0745_a",
         "CardName": "Storm Card 1",
         "Cost": "1S1A",
         "ConvertedCost": 2,
@@ -15395,7 +15395,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0636_a",
+        "InternalName": "card0746_a",
         "CardName": "Fusion Storm Card 2a",
         "Cost": "1S2A",
         "ConvertedCost": 3,
@@ -15415,7 +15415,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0636_b",
+        "InternalName": "card0746_b",
         "CardName": "Fusion Storm Card 2b",
         "Cost": "2S3A",
         "ConvertedCost": 5,
@@ -15435,7 +15435,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0637_a",
+        "InternalName": "card0747_a",
         "CardName": "Storm Card 3",
         "Cost": "1S3A",
         "ConvertedCost": 4,
@@ -15455,7 +15455,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0638_a",
+        "InternalName": "card0748_a",
         "CardName": "Storm Card 4",
         "Cost": "1S7A",
         "ConvertedCost": 8,
@@ -15475,7 +15475,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0639_a",
+        "InternalName": "card0749_a",
         "CardName": "Storm Card 5",
         "Cost": "1S1A",
         "ConvertedCost": 2,
@@ -15495,7 +15495,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0640_a",
+        "InternalName": "card0750_a",
         "CardName": "Storm Card 6",
         "Cost": "1S",
         "ConvertedCost": 1,
@@ -15515,7 +15515,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0641_a",
+        "InternalName": "card0751_a",
         "CardName": "Fusion Storm Card 7a",
         "Cost": "1S1A",
         "ConvertedCost": 2,
@@ -15535,7 +15535,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0641_b",
+        "InternalName": "card0751_b",
         "CardName": "Fusion Storm Card 7b",
         "Cost": "1F1S",
         "ConvertedCost": 2,
@@ -15555,7 +15555,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0642_a",
+        "InternalName": "card0752_a",
         "CardName": "Fusion Storm Card 8a",
         "Cost": "1S1A",
         "ConvertedCost": 2,
@@ -15575,7 +15575,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0642_b",
+        "InternalName": "card0752_b",
         "CardName": "Fusion Storm Card 8b",
         "Cost": "3S2A",
         "ConvertedCost": 5,
@@ -15595,7 +15595,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0643_a",
+        "InternalName": "card0753_a",
         "CardName": "Fusion Storm Card 9a",
         "Cost": "1S2A",
         "ConvertedCost": 3,
@@ -15615,7 +15615,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0643_b",
+        "InternalName": "card0753_b",
         "CardName": "Fusion Storm Card 9b",
         "Cost": "1I1S3A",
         "ConvertedCost": 5,
@@ -15635,7 +15635,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0644_a",
+        "InternalName": "card0754_a",
         "CardName": "Storm Card 10",
         "Cost": "2S5A",
         "ConvertedCost": 7,
@@ -15655,7 +15655,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0645_a",
+        "InternalName": "card0755_a",
         "CardName": "Storm Card 11",
         "Cost": "1S3A",
         "ConvertedCost": 4,
@@ -15675,7 +15675,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0646_a",
+        "InternalName": "card0756_a",
         "CardName": "Storm Card 12",
         "Cost": "1S4A",
         "ConvertedCost": 5,
@@ -15695,7 +15695,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0647_a",
+        "InternalName": "card0757_a",
         "CardName": "Storm Card 13",
         "Cost": "1S2A",
         "ConvertedCost": 3,
@@ -15715,7 +15715,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0648_a",
+        "InternalName": "card0758_a",
         "CardName": "Fusion Storm Card 14a",
         "Cost": "2S8A",
         "ConvertedCost": 10,
@@ -15735,7 +15735,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0648_b",
+        "InternalName": "card0758_b",
         "CardName": "Fusion Storm Card 14b",
         "Cost": "2F2S7A",
         "ConvertedCost": 11,
@@ -15755,7 +15755,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0649_a",
+        "InternalName": "card0759_a",
         "CardName": "Storm Card 15",
         "Cost": "2S2A",
         "ConvertedCost": 4,
@@ -15775,7 +15775,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0650_a",
+        "InternalName": "card0760_a",
         "CardName": "Storm Card 16",
         "Cost": "2S3A",
         "ConvertedCost": 5,
@@ -15795,7 +15795,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0651_a",
+        "InternalName": "card0761_a",
         "CardName": "Fusion Storm Card 17a",
         "Cost": "2S1A",
         "ConvertedCost": 3,
@@ -15815,7 +15815,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0651_b",
+        "InternalName": "card0761_b",
         "CardName": "Fusion Storm Card 17b",
         "Cost": "1F2S2A",
         "ConvertedCost": 5,
@@ -15835,7 +15835,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0652_a",
+        "InternalName": "card0762_a",
         "CardName": "Toxic Card 1",
         "Cost": "1T1A",
         "ConvertedCost": 2,
@@ -15855,7 +15855,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0653_a",
+        "InternalName": "card0763_a",
         "CardName": "Fusion Toxic Card 2a",
         "Cost": "1T2A",
         "ConvertedCost": 3,
@@ -15875,7 +15875,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0653_b",
+        "InternalName": "card0763_b",
         "CardName": "Fusion Toxic Card 2b",
         "Cost": "2T3A",
         "ConvertedCost": 5,
@@ -15895,7 +15895,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0654_a",
+        "InternalName": "card0764_a",
         "CardName": "Toxic Card 3",
         "Cost": "2T2A",
         "ConvertedCost": 4,
@@ -15915,7 +15915,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0655_a",
+        "InternalName": "card0765_a",
         "CardName": "Toxic Card 4",
         "Cost": "1T7A",
         "ConvertedCost": 8,
@@ -15935,7 +15935,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0656_a",
+        "InternalName": "card0766_a",
         "CardName": "Toxic Card 5",
         "Cost": "1T2A",
         "ConvertedCost": 3,
@@ -15955,7 +15955,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0657_a",
+        "InternalName": "card0767_a",
         "CardName": "Toxic Card 6",
         "Cost": "1T3A",
         "ConvertedCost": 4,
@@ -15975,7 +15975,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0658_a",
+        "InternalName": "card0768_a",
         "CardName": "Fusion Toxic Card 7a",
         "Cost": "1T1A",
         "ConvertedCost": 2,
@@ -15995,7 +15995,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0658_b",
+        "InternalName": "card0768_b",
         "CardName": "Fusion Toxic Card 7b",
         "Cost": "1T1W",
         "ConvertedCost": 2,
@@ -16015,7 +16015,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0659_a",
+        "InternalName": "card0769_a",
         "CardName": "Fusion Toxic Card 8a",
         "Cost": "1T1A",
         "ConvertedCost": 2,
@@ -16035,7 +16035,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0659_b",
+        "InternalName": "card0769_b",
         "CardName": "Fusion Toxic Card 8b",
         "Cost": "1F1T2A",
         "ConvertedCost": 4,
@@ -16055,7 +16055,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0660_a",
+        "InternalName": "card0770_a",
         "CardName": "Toxic Card 9",
         "Cost": "1T3A",
         "ConvertedCost": 4,
@@ -16075,7 +16075,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0661_a",
+        "InternalName": "card0771_a",
         "CardName": "Toxic Card 10",
         "Cost": "2T7A",
         "ConvertedCost": 9,
@@ -16095,7 +16095,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0662_a",
+        "InternalName": "card0772_a",
         "CardName": "Fusion Toxic Card 11a",
         "Cost": "2T2A",
         "ConvertedCost": 4,
@@ -16115,7 +16115,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0662_b",
+        "InternalName": "card0772_b",
         "CardName": "Fusion Toxic Card 11b",
         "Cost": "3T2A",
         "ConvertedCost": 5,
@@ -16135,7 +16135,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0663_a",
+        "InternalName": "card0773_a",
         "CardName": "Toxic Card 12",
         "Cost": "2T3A",
         "ConvertedCost": 5,
@@ -16155,7 +16155,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0664_a",
+        "InternalName": "card0774_a",
         "CardName": "Toxic Card 13",
         "Cost": "1T1A",
         "ConvertedCost": 2,
@@ -16175,7 +16175,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0665_a",
+        "InternalName": "card0775_a",
         "CardName": "Fusion Toxic Card 14a",
         "Cost": "2T11A",
         "ConvertedCost": 13,
@@ -16195,7 +16195,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0665_b",
+        "InternalName": "card0775_b",
         "CardName": "Fusion Toxic Card 14b",
         "Cost": "2T2W10A",
         "ConvertedCost": 14,
@@ -16215,7 +16215,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0666_a",
+        "InternalName": "card0776_a",
         "CardName": "Toxic Card 15",
         "Cost": "3T3A",
         "ConvertedCost": 6,
@@ -16235,7 +16235,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0667_a",
+        "InternalName": "card0777_a",
         "CardName": "Toxic Card 16",
         "Cost": "2T1A",
         "ConvertedCost": 3,
@@ -16255,7 +16255,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0668_a",
+        "InternalName": "card0778_a",
         "CardName": "Fusion Toxic Card 17a",
         "Cost": "2T1A",
         "ConvertedCost": 3,
@@ -16275,7 +16275,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0668_b",
+        "InternalName": "card0778_b",
         "CardName": "Fusion Toxic Card 17b",
         "Cost": "2T2W1A",
         "ConvertedCost": 5,
@@ -16295,7 +16295,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0669_a",
+        "InternalName": "card0779_a",
         "CardName": "Fusion Void Card 1a",
         "Cost": "1V1A",
         "ConvertedCost": 2,
@@ -16315,7 +16315,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0669_b",
+        "InternalName": "card0779_b",
         "CardName": "Fusion Void Card 1b",
         "Cost": "2V2A",
         "ConvertedCost": 4,
@@ -16335,7 +16335,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0670_a",
+        "InternalName": "card0780_a",
         "CardName": "Void Card 2",
         "Cost": "1V2A",
         "ConvertedCost": 3,
@@ -16355,7 +16355,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0671_a",
+        "InternalName": "card0781_a",
         "CardName": "Void Card 3",
         "Cost": "1V3A",
         "ConvertedCost": 4,
@@ -16375,7 +16375,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0672_a",
+        "InternalName": "card0782_a",
         "CardName": "Void Card 4",
         "Cost": "1V7A",
         "ConvertedCost": 8,
@@ -16395,7 +16395,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0673_a",
+        "InternalName": "card0783_a",
         "CardName": "Void Card 5",
         "Cost": "1V3A",
         "ConvertedCost": 4,
@@ -16415,7 +16415,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0674_a",
+        "InternalName": "card0784_a",
         "CardName": "Void Card 6",
         "Cost": "1V4A",
         "ConvertedCost": 5,
@@ -16435,7 +16435,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0675_a",
+        "InternalName": "card0785_a",
         "CardName": "Fusion Void Card 7a",
         "Cost": "1V1A",
         "ConvertedCost": 2,
@@ -16455,7 +16455,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0675_b",
+        "InternalName": "card0785_b",
         "CardName": "Fusion Void Card 7b",
         "Cost": "1I1V",
         "ConvertedCost": 2,
@@ -16475,7 +16475,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0676_a",
+        "InternalName": "card0786_a",
         "CardName": "Void Card 8",
         "Cost": "1V1A",
         "ConvertedCost": 2,
@@ -16495,7 +16495,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0677_a",
+        "InternalName": "card0787_a",
         "CardName": "Fusion Void Card 9a",
         "Cost": "2V2A",
         "ConvertedCost": 4,
@@ -16515,7 +16515,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0677_b",
+        "InternalName": "card0787_b",
         "CardName": "Fusion Void Card 9b",
         "Cost": "2V1W3A",
         "ConvertedCost": 6,
@@ -16535,7 +16535,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0678_a",
+        "InternalName": "card0788_a",
         "CardName": "Fusion Void Card 10a",
         "Cost": "1V4A",
         "ConvertedCost": 5,
@@ -16555,7 +16555,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0678_b",
+        "InternalName": "card0788_b",
         "CardName": "Fusion Void Card 10b",
         "Cost": "3V3A",
         "ConvertedCost": 6,
@@ -16575,7 +16575,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0679_a",
+        "InternalName": "card0789_a",
         "CardName": "Void Card 11",
         "Cost": "2V2A",
         "ConvertedCost": 4,
@@ -16595,7 +16595,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0680_a",
+        "InternalName": "card0790_a",
         "CardName": "Void Card 12",
         "Cost": "2V5A",
         "ConvertedCost": 7,
@@ -16615,7 +16615,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0681_a",
+        "InternalName": "card0791_a",
         "CardName": "Void Card 13",
         "Cost": "1V1A",
         "ConvertedCost": 2,
@@ -16635,7 +16635,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0682_a",
+        "InternalName": "card0792_a",
         "CardName": "Fusion Void Card 14a",
         "Cost": "2V12A",
         "ConvertedCost": 14,
@@ -16655,7 +16655,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0682_b",
+        "InternalName": "card0792_b",
         "CardName": "Fusion Void Card 14b",
         "Cost": "2I2V10A",
         "ConvertedCost": 14,
@@ -16675,7 +16675,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0683_a",
+        "InternalName": "card0793_a",
         "CardName": "Void Card 15",
         "Cost": "1V2A",
         "ConvertedCost": 3,
@@ -16695,7 +16695,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0684_a",
+        "InternalName": "card0794_a",
         "CardName": "Void Card 16",
         "Cost": "1V5A",
         "ConvertedCost": 6,
@@ -16715,7 +16715,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0685_a",
+        "InternalName": "card0795_a",
         "CardName": "Fusion Void Card 17a",
         "Cost": "2V1A",
         "ConvertedCost": 3,
@@ -16735,7 +16735,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0685_b",
+        "InternalName": "card0795_b",
         "CardName": "Fusion Void Card 17b",
         "Cost": "2I2V1A",
         "ConvertedCost": 5,
@@ -16755,7 +16755,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0686_a",
+        "InternalName": "card0796_a",
         "CardName": "Fusion Water Card 1a",
         "Cost": "1W",
         "ConvertedCost": 1,
@@ -16775,7 +16775,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0686_b",
+        "InternalName": "card0796_b",
         "CardName": "Fusion Water Card 1b",
         "Cost": "5W1A",
         "ConvertedCost": 6,
@@ -16795,7 +16795,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0687_a",
+        "InternalName": "card0797_a",
         "CardName": "Water Card 2",
         "Cost": "1W2A",
         "ConvertedCost": 3,
@@ -16815,7 +16815,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0688_a",
+        "InternalName": "card0798_a",
         "CardName": "Water Card 3",
         "Cost": "1W3A",
         "ConvertedCost": 4,
@@ -16835,7 +16835,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0689_a",
+        "InternalName": "card0799_a",
         "CardName": "Water Card 4",
         "Cost": "1W7A",
         "ConvertedCost": 8,
@@ -16855,7 +16855,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0690_a",
+        "InternalName": "card0800_a",
         "CardName": "Water Card 5",
         "Cost": "1W2A",
         "ConvertedCost": 3,
@@ -16875,7 +16875,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0691_a",
+        "InternalName": "card0801_a",
         "CardName": "Water Card 6",
         "Cost": "1W7A",
         "ConvertedCost": 8,
@@ -16895,7 +16895,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0692_a",
+        "InternalName": "card0802_a",
         "CardName": "Fusion Water Card 7a",
         "Cost": "1W1A",
         "ConvertedCost": 2,
@@ -16915,7 +16915,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0692_b",
+        "InternalName": "card0802_b",
         "CardName": "Fusion Water Card 7b",
         "Cost": "1V1W",
         "ConvertedCost": 2,
@@ -16935,7 +16935,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0693_a",
+        "InternalName": "card0803_a",
         "CardName": "Fusion Water Card 8a",
         "Cost": "1W1A",
         "ConvertedCost": 2,
@@ -16955,7 +16955,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0693_b",
+        "InternalName": "card0803_b",
         "CardName": "Fusion Water Card 8b",
         "Cost": "3W2A",
         "ConvertedCost": 5,
@@ -16975,7 +16975,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0694_a",
+        "InternalName": "card0804_a",
         "CardName": "Fusion Water Card 9a",
         "Cost": "1W3A",
         "ConvertedCost": 4,
@@ -16995,7 +16995,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0694_b",
+        "InternalName": "card0804_b",
         "CardName": "Fusion Water Card 9b",
         "Cost": "1T2W1A",
         "ConvertedCost": 4,
@@ -17015,7 +17015,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0695_a",
+        "InternalName": "card0805_a",
         "CardName": "Water Card 10",
         "Cost": "2W6A",
         "ConvertedCost": 8,
@@ -17035,7 +17035,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0696_a",
+        "InternalName": "card0806_a",
         "CardName": "Water Card 11",
         "Cost": "1W1A",
         "ConvertedCost": 2,
@@ -17055,7 +17055,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0697_a",
+        "InternalName": "card0807_a",
         "CardName": "Water Card 12",
         "Cost": "1W4A",
         "ConvertedCost": 5,
@@ -17075,7 +17075,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0698_a",
+        "InternalName": "card0808_a",
         "CardName": "Water Card 13",
         "Cost": "2W2A",
         "ConvertedCost": 4,
@@ -17095,7 +17095,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0699_a",
+        "InternalName": "card0809_a",
         "CardName": "Fusion Water Card 14a",
         "Cost": "2W11A",
         "ConvertedCost": 13,
@@ -17115,7 +17115,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0699_b",
+        "InternalName": "card0809_b",
         "CardName": "Fusion Water Card 14b",
         "Cost": "2V2W9A",
         "ConvertedCost": 13,
@@ -17135,7 +17135,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0700_a",
+        "InternalName": "card0810_a",
         "CardName": "Water Card 15",
         "Cost": "1W2A",
         "ConvertedCost": 3,
@@ -17155,7 +17155,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0701_a",
+        "InternalName": "card0811_a",
         "CardName": "Water Card 16",
         "Cost": "2W2A",
         "ConvertedCost": 4,
@@ -17175,7 +17175,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0702_a",
+        "InternalName": "card0812_a",
         "CardName": "Fusion Water Card 17a",
         "Cost": "2W3A",
         "ConvertedCost": 5,
@@ -17195,7 +17195,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0702_b",
+        "InternalName": "card0812_b",
         "CardName": "Fusion Water Card 17b",
         "Cost": "2V2W4A",
         "ConvertedCost": 8,
@@ -17215,7 +17215,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0703_a",
+        "InternalName": "card0813_a",
         "CardName": "Neutral Card 1",
         "Cost": "1U",
         "ConvertedCost": 1,
@@ -17235,7 +17235,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0704_a",
+        "InternalName": "card0814_a",
         "CardName": "Fusion Neutral Card 2a",
         "Cost": "4A",
         "ConvertedCost": 4,
@@ -17255,7 +17255,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0704_b",
+        "InternalName": "card0814_b",
         "CardName": "Fusion Neutral Card 2b",
         "Cost": "5A",
         "ConvertedCost": 5,
@@ -17275,7 +17275,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0705_a",
+        "InternalName": "card0815_a",
         "CardName": "Neutral Card 3",
         "Cost": "4A",
         "ConvertedCost": 4,
@@ -17295,7 +17295,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0706_a",
+        "InternalName": "card0816_a",
         "CardName": "Neutral Card 4",
         "Cost": "1U2A",
         "ConvertedCost": 3,
@@ -17315,7 +17315,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0707_a",
+        "InternalName": "card0817_a",
         "CardName": "Neutral Card 5",
         "Cost": "2U",
         "ConvertedCost": 2,
@@ -17335,7 +17335,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0708_a",
+        "InternalName": "card0818_a",
         "CardName": "Neutral Card 6",
         "Cost": "6A",
         "ConvertedCost": 6,
@@ -17355,7 +17355,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0709_a",
+        "InternalName": "card0819_a",
         "CardName": "Neutral Card 7",
         "Cost": "1U1A",
         "ConvertedCost": 2,
@@ -17375,7 +17375,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0710_a",
+        "InternalName": "card0820_a",
         "CardName": "Neutral Card 8",
         "Cost": "7A",
         "ConvertedCost": 7,
@@ -17395,7 +17395,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0711_a",
+        "InternalName": "card0821_a",
         "CardName": "Neutral Card 9",
         "Cost": "1U",
         "ConvertedCost": 1,
@@ -17415,7 +17415,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0712_a",
+        "InternalName": "card0822_a",
         "CardName": "Neutral Card 10",
         "Cost": "3A",
         "ConvertedCost": 3,
@@ -17435,7 +17435,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0713_a",
+        "InternalName": "card0823_a",
         "CardName": "Neutral Card 11",
         "Cost": "6A",
         "ConvertedCost": 6,
@@ -17455,7 +17455,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0714_a",
+        "InternalName": "card0824_a",
         "CardName": "2Type Card 1",
         "Cost": "1F1S2A",
         "ConvertedCost": 4,
@@ -17475,7 +17475,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0715_a",
+        "InternalName": "card0825_a",
         "CardName": "2Type Card 2",
         "Cost": "1F1V4A",
         "ConvertedCost": 6,
@@ -17495,7 +17495,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0716_a",
+        "InternalName": "card0826_a",
         "CardName": "2Type Card 3",
         "Cost": "1I1T5A",
         "ConvertedCost": 7,
@@ -17515,7 +17515,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0717_a",
+        "InternalName": "card0827_a",
         "CardName": "2Type Card 4",
         "Cost": "1I1W1A",
         "ConvertedCost": 3,
@@ -17535,8 +17535,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0718_a",
-        "CardName": "2Type Card 5a",
+        "InternalName": "card0828_a",
+        "CardName": "2Type Card 5",
         "Cost": "1S1W3A",
         "ConvertedCost": 5,
         "Refund": 1,
@@ -17555,8 +17555,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0718b_a",
-        "CardName": "2Type Card 5b",
+        "InternalName": "card0829_a",
+        "CardName": "2Type Card 6",
         "Cost": "1I1T3A",
         "ConvertedCost": 5,
         "Refund": 1,
@@ -17575,8 +17575,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0718c_a",
-        "CardName": "2Type Card 5c",
+        "InternalName": "card0830_a",
+        "CardName": "2Type Card 7",
         "Cost": "1F1S3A",
         "ConvertedCost": 5,
         "Refund": 1,
@@ -17595,8 +17595,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0718d_a",
-        "CardName": "2Type Card 5d",
+        "InternalName": "card0831_a",
+        "CardName": "2Type Card 8",
         "Cost": "1F1V3A",
         "ConvertedCost": 5,
         "Refund": 1,
@@ -17615,8 +17615,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0718e_a",
-        "CardName": "2Type Card 5e",
+        "InternalName": "card0832_a",
+        "CardName": "2Type Card 9",
         "Cost": "1T1V3A",
         "ConvertedCost": 5,
         "Refund": 1,
@@ -17635,8 +17635,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0718f_a",
-        "CardName": "2Type Card 5f",
+        "InternalName": "card0833_a",
+        "CardName": "2Type Card 10",
         "Cost": "1F1T3A",
         "ConvertedCost": 5,
         "Refund": 1,
@@ -17655,8 +17655,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0718g_a",
-        "CardName": "2Type Card 5g",
+        "InternalName": "card0834_a",
+        "CardName": "2Type Card 11",
         "Cost": "1I1S3A",
         "ConvertedCost": 5,
         "Refund": 1,
@@ -17675,8 +17675,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0718h_a",
-        "CardName": "2Type Card 5h",
+        "InternalName": "card0835_a",
+        "CardName": "2Type Card 12",
         "Cost": "1I1V3A",
         "ConvertedCost": 5,
         "Refund": 1,
@@ -17695,8 +17695,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0718i_a",
-        "CardName": "2Type Card 5i",
+        "InternalName": "card0836_a",
+        "CardName": "2Type Card 13",
         "Cost": "1T1W3A",
         "ConvertedCost": 5,
         "Refund": 1,
@@ -17715,8 +17715,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0718j_a",
-        "CardName": "2Type Card 5j",
+        "InternalName": "card0837_a",
+        "CardName": "2Type Card 14",
         "Cost": "1V1W3A",
         "ConvertedCost": 5,
         "Refund": 1,
@@ -17735,8 +17735,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0719_a",
-        "CardName": "2Type Card 6",
+        "InternalName": "card0838_a",
+        "CardName": "2Type Card 15",
         "Cost": "1V1W2A",
         "ConvertedCost": 4,
         "Refund": 1,
@@ -17755,8 +17755,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0720_a",
-        "CardName": "2Type Card 7",
+        "InternalName": "card0839_a",
+        "CardName": "2Type Card 16",
         "Cost": "1I1S1A",
         "ConvertedCost": 3,
         "Refund": 1,
@@ -17775,8 +17775,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0721_a",
-        "CardName": "2Type Card 8",
+        "InternalName": "card0840_a",
+        "CardName": "2Type Card 17",
         "Cost": "1T1W1A",
         "ConvertedCost": 3,
         "Refund": 1,
@@ -17795,8 +17795,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0722_a",
-        "CardName": "2Type Card 9",
+        "InternalName": "card0841_a",
+        "CardName": "2Type Card 18",
         "Cost": "1I1V1A",
         "ConvertedCost": 3,
         "Refund": "",
@@ -17815,8 +17815,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0723_a",
-        "CardName": "2Type Card 10",
+        "InternalName": "card0842_a",
+        "CardName": "2Type Card 19",
         "Cost": "1F1T1A",
         "ConvertedCost": 3,
         "Refund": 1,
@@ -17835,8 +17835,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0724_a",
-        "CardName": "2Type Card 11",
+        "InternalName": "card0843_a",
+        "CardName": "2Type Card 20",
         "Cost": "1F1T1A",
         "ConvertedCost": 3,
         "Refund": 1,
@@ -17855,8 +17855,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0725_a",
-        "CardName": "2Type Card 12",
+        "InternalName": "card0844_a",
+        "CardName": "2Type Card 21",
         "Cost": "2I2V2A",
         "ConvertedCost": 6,
         "Refund": 2,
@@ -17875,8 +17875,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0726_a",
-        "CardName": "2Type Card 13",
+        "InternalName": "card0845_a",
+        "CardName": "2Type Card 22",
         "Cost": "1V1W7A",
         "ConvertedCost": 9,
         "Refund": 2,
@@ -17895,8 +17895,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0727_a",
-        "CardName": "2Type Card 14",
+        "InternalName": "card0846_a",
+        "CardName": "2Type Card 23",
         "Cost": "1I1W1A",
         "ConvertedCost": 3,
         "Refund": 1,
@@ -17915,8 +17915,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0728_a",
-        "CardName": "2Type Card 15",
+        "InternalName": "card0847_a",
+        "CardName": "2Type Card 24",
         "Cost": "2S2W",
         "ConvertedCost": 4,
         "Refund": 1,
@@ -17935,8 +17935,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0729_a",
-        "CardName": "2Type Card 16",
+        "InternalName": "card0848_a",
+        "CardName": "2Type Card 25",
         "Cost": "1I1T2A",
         "ConvertedCost": 4,
         "Refund": 1,
@@ -17955,8 +17955,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0730_a",
-        "CardName": "2Type Card 17",
+        "InternalName": "card0849_a",
+        "CardName": "2Type Card 26",
         "Cost": "2F2S2A",
         "ConvertedCost": 6,
         "Refund": 2,
@@ -17975,8 +17975,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0731_a",
-        "CardName": "2Type Card 18",
+        "InternalName": "card0850_a",
+        "CardName": "2Type Card 27",
         "Cost": "1F1V5A",
         "ConvertedCost": 7,
         "Refund": 1,
@@ -17995,8 +17995,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0732_a",
-        "CardName": "2Type Card 19",
+        "InternalName": "card0851_a",
+        "CardName": "2Type Card 28",
         "Cost": "1I1S1A",
         "ConvertedCost": 3,
         "Refund": 1,
@@ -18015,8 +18015,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0733_a",
-        "CardName": "2Type Card 20",
+        "InternalName": "card0852_a",
+        "CardName": "2Type Card 29",
         "Cost": "1T1W1A",
         "ConvertedCost": 3,
         "Refund": 1,
@@ -18035,8 +18035,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0734_a",
-        "CardName": "2Type Card 21",
+        "InternalName": "card0853_a",
+        "CardName": "2Type Card 30",
         "Cost": "2F2S1A",
         "ConvertedCost": 5,
         "Refund": 1,
@@ -18055,8 +18055,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0735_a",
-        "CardName": "2Type Card 22",
+        "InternalName": "card0854_a",
+        "CardName": "2Type Card 31",
         "Cost": "1I1T1A",
         "ConvertedCost": 3,
         "Refund": 1,
@@ -18075,8 +18075,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0736_a",
-        "CardName": "2Type Card 23",
+        "InternalName": "card0855_a",
+        "CardName": "2Type Card 32",
         "Cost": "1I1W2A",
         "ConvertedCost": 4,
         "Refund": 1,
@@ -18095,8 +18095,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0737_a",
-        "CardName": "2Type Card 24",
+        "InternalName": "card0856_a",
+        "CardName": "2Type Card 33",
         "Cost": "3S3W3A",
         "ConvertedCost": 9,
         "Refund": 3,
@@ -18115,8 +18115,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0738_a",
-        "CardName": "2Type Card 25a",
+        "InternalName": "card0857_a",
+        "CardName": "2Type Card 34",
         "Cost": "",
         "ConvertedCost": 0,
         "Refund": "",
@@ -18135,28 +18135,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0738b_a",
-        "CardName": "2Type Card 25b",
-        "Cost": "",
-        "ConvertedCost": 0,
-        "Refund": "",
-        "Hold": "",
-        "SuperType": "",
-        "CardType": "Shield",
-        "SubType": "",
-        "ElementType1": "Ice",
-        "ElementType2": "Toxic",
-        "ElementType3": "",
-        "Rarity": "Uncommon",
-        "CardText": "Play: You may scour 4. If you dom Produce 1IT. Otherwise, Produce 1IU or Produce 1TU.",
-        "ATK": "",
-        "DEF": "",
-        "HP": "",
-        "Set": "S4"
-    },
-    {
-        "InternalName": "card0738c_a",
-        "CardName": "2Type Card 25c",
+        "InternalName": "card0858_a",
+        "CardName": "2Type Card 35",
         "Cost": "",
         "ConvertedCost": 0,
         "Refund": "",
@@ -18165,58 +18145,18 @@
         "CardType": "Shield",
         "SubType": "",
         "ElementType1": "Fire",
-        "ElementType2": "Storm",
-        "ElementType3": "",
-        "Rarity": "Uncommon",
-        "CardText": "Play: You may scour 4. If you dom Produce 1FS. Otherwise, Produce 1FU or Produce 1SU.",
-        "ATK": "",
-        "DEF": "",
-        "HP": "",
-        "Set": "S4"
-    },
-    {
-        "InternalName": "card0738d_a",
-        "CardName": "2Type Card 25d",
-        "Cost": "",
-        "ConvertedCost": 0,
-        "Refund": "",
-        "Hold": "",
-        "SuperType": "",
-        "CardType": "Shield",
-        "SubType": "",
-        "ElementType1": "Storm",
-        "ElementType2": "Water",
-        "ElementType3": "",
-        "Rarity": "Uncommon",
-        "CardText": "Play: You may scour 4. If you dom Produce 1SW. Otherwise, Produce 1SU or Produce 1WU.",
-        "ATK": "",
-        "DEF": "",
-        "HP": "",
-        "Set": "S4"
-    },
-    {
-        "InternalName": "card0738e_a",
-        "CardName": "2Type Card 25e",
-        "Cost": "",
-        "ConvertedCost": 0,
-        "Refund": "",
-        "Hold": "",
-        "SuperType": "",
-        "CardType": "Shield",
-        "SubType": "",
-        "ElementType1": "Toxic",
         "ElementType2": "Void",
         "ElementType3": "",
         "Rarity": "Uncommon",
-        "CardText": "Play: You may scour 4. If you dom Produce 1TV. Otherwise, Produce 1TU or Produce 1VU.",
+        "CardText": "Enter Play: You may scour 4. If you do, Produce 1FV. Otherwise, Produce 1FU or Produce 1VU.",
         "ATK": "",
         "DEF": "",
         "HP": "",
         "Set": "S4"
     },
     {
-        "InternalName": "card0738f_a",
-        "CardName": "2Type Card 25f",
+        "InternalName": "card0859_a",
+        "CardName": "2Type Card 36",
         "Cost": "",
         "ConvertedCost": 0,
         "Refund": "",
@@ -18225,58 +18165,18 @@
         "CardType": "Shield",
         "SubType": "",
         "ElementType1": "Fire",
-        "ElementType2": "Toxic",
-        "ElementType3": "",
-        "Rarity": "Uncommon",
-        "CardText": "Play: You may scour 4. If you dom Produce 1FT. Otherwise, Produce 1FU or Produce 1TU.",
-        "ATK": "",
-        "DEF": "",
-        "HP": "",
-        "Set": "S4"
-    },
-    {
-        "InternalName": "card0738g_a",
-        "CardName": "2Type Card 25g",
-        "Cost": "",
-        "ConvertedCost": 0,
-        "Refund": "",
-        "Hold": "",
-        "SuperType": "",
-        "CardType": "Shield",
-        "SubType": "",
-        "ElementType1": "Ice",
-        "ElementType2": "Storm",
-        "ElementType3": "",
-        "Rarity": "Uncommon",
-        "CardText": "Play: You may scour 4. If you dom Produce 1IS. Otherwise, Produce 1IU or Produce 1SU.",
-        "ATK": "",
-        "DEF": "",
-        "HP": "",
-        "Set": "S4"
-    },
-    {
-        "InternalName": "card0738h_a",
-        "CardName": "2Type Card 25h",
-        "Cost": "",
-        "ConvertedCost": 0,
-        "Refund": "",
-        "Hold": "",
-        "SuperType": "",
-        "CardType": "Shield",
-        "SubType": "",
-        "ElementType1": "Ice",
         "ElementType2": "Void",
         "ElementType3": "",
         "Rarity": "Uncommon",
-        "CardText": "Play: You may scour 4. If you dom Produce 1IV. Otherwise, Produce 1IU or Produce 1VU.",
+        "CardText": "Enter Play: You may scour 4. If you do, Produce 1FV. Otherwise, Produce 1FU or Produce 1VU.",
         "ATK": "",
         "DEF": "",
         "HP": "",
         "Set": "S4"
     },
     {
-        "InternalName": "card0738i_a",
-        "CardName": "2Type Card 25i",
+        "InternalName": "card0860_a",
+        "CardName": "2Type Card 37",
         "Cost": "",
         "ConvertedCost": 0,
         "Refund": "",
@@ -18284,19 +18184,19 @@
         "SuperType": "",
         "CardType": "Shield",
         "SubType": "",
-        "ElementType1": "Toxic",
-        "ElementType2": "Water",
+        "ElementType1": "Fire",
+        "ElementType2": "Void",
         "ElementType3": "",
         "Rarity": "Uncommon",
-        "CardText": "Play: You may scour 4. If you dom Produce 1TV. Otherwise, Produce 1TU or Produce 1WU.",
+        "CardText": "Enter Play: You may scour 4. If you do, Produce 1FV. Otherwise, Produce 1FU or Produce 1VU.",
         "ATK": "",
         "DEF": "",
         "HP": "",
         "Set": "S4"
     },
     {
-        "InternalName": "card0738j_a",
-        "CardName": "2Type Card 25j",
+        "InternalName": "card0861_a",
+        "CardName": "2Type Card 38",
         "Cost": "",
         "ConvertedCost": 0,
         "Refund": "",
@@ -18304,19 +18204,119 @@
         "SuperType": "",
         "CardType": "Shield",
         "SubType": "",
-        "ElementType1": "Void",
-        "ElementType2": "Water",
+        "ElementType1": "Fire",
+        "ElementType2": "Void",
         "ElementType3": "",
         "Rarity": "Uncommon",
-        "CardText": "Play: You may scour 4. If you dom Produce 1VW. Otherwise, Produce 1VU or Produce 1WU.",
+        "CardText": "Enter Play: You may scour 4. If you do, Produce 1FV. Otherwise, Produce 1FU or Produce 1VU.",
         "ATK": "",
         "DEF": "",
         "HP": "",
         "Set": "S4"
     },
     {
-        "InternalName": "card0739_a",
-        "CardName": "2Type Card 26",
+        "InternalName": "card0862_a",
+        "CardName": "2Type Card 39",
+        "Cost": "",
+        "ConvertedCost": 0,
+        "Refund": "",
+        "Hold": "",
+        "SuperType": "",
+        "CardType": "Shield",
+        "SubType": "",
+        "ElementType1": "Fire",
+        "ElementType2": "Void",
+        "ElementType3": "",
+        "Rarity": "Uncommon",
+        "CardText": "Enter Play: You may scour 4. If you do, Produce 1FV. Otherwise, Produce 1FU or Produce 1VU.",
+        "ATK": "",
+        "DEF": "",
+        "HP": "",
+        "Set": "S4"
+    },
+    {
+        "InternalName": "card0863_a",
+        "CardName": "2Type Card 40",
+        "Cost": "",
+        "ConvertedCost": 0,
+        "Refund": "",
+        "Hold": "",
+        "SuperType": "",
+        "CardType": "Shield",
+        "SubType": "",
+        "ElementType1": "Fire",
+        "ElementType2": "Void",
+        "ElementType3": "",
+        "Rarity": "Uncommon",
+        "CardText": "Enter Play: You may scour 4. If you do, Produce 1FV. Otherwise, Produce 1FU or Produce 1VU.",
+        "ATK": "",
+        "DEF": "",
+        "HP": "",
+        "Set": "S4"
+    },
+    {
+        "InternalName": "card0864_a",
+        "CardName": "2Type Card 41",
+        "Cost": "",
+        "ConvertedCost": 0,
+        "Refund": "",
+        "Hold": "",
+        "SuperType": "",
+        "CardType": "Shield",
+        "SubType": "",
+        "ElementType1": "Fire",
+        "ElementType2": "Void",
+        "ElementType3": "",
+        "Rarity": "Uncommon",
+        "CardText": "Enter Play: You may scour 4. If you do, Produce 1FV. Otherwise, Produce 1FU or Produce 1VU.",
+        "ATK": "",
+        "DEF": "",
+        "HP": "",
+        "Set": "S4"
+    },
+    {
+        "InternalName": "card0865_a",
+        "CardName": "2Type Card 42",
+        "Cost": "",
+        "ConvertedCost": 0,
+        "Refund": "",
+        "Hold": "",
+        "SuperType": "",
+        "CardType": "Shield",
+        "SubType": "",
+        "ElementType1": "Fire",
+        "ElementType2": "Void",
+        "ElementType3": "",
+        "Rarity": "Uncommon",
+        "CardText": "Enter Play: You may scour 4. If you do, Produce 1FV. Otherwise, Produce 1FU or Produce 1VU.",
+        "ATK": "",
+        "DEF": "",
+        "HP": "",
+        "Set": "S4"
+    },
+    {
+        "InternalName": "card0866_a",
+        "CardName": "2Type Card 43",
+        "Cost": "",
+        "ConvertedCost": 0,
+        "Refund": "",
+        "Hold": "",
+        "SuperType": "",
+        "CardType": "Shield",
+        "SubType": "",
+        "ElementType1": "Fire",
+        "ElementType2": "Void",
+        "ElementType3": "",
+        "Rarity": "Uncommon",
+        "CardText": "Enter Play: You may scour 4. If you do, Produce 1FV. Otherwise, Produce 1FU or Produce 1VU.",
+        "ATK": "",
+        "DEF": "",
+        "HP": "",
+        "Set": "S4"
+    },
+    {
+        "InternalName": "card0867_a",
+        "CardName": "2Type Card 44",
         "Cost": "2F2T1A",
         "ConvertedCost": 5,
         "Refund": 2,
@@ -18335,8 +18335,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0740_a",
-        "CardName": "2Type Card 27",
+        "InternalName": "card0868_a",
+        "CardName": "2Type Card 45",
         "Cost": "1I1V2A",
         "ConvertedCost": 4,
         "Refund": "",
@@ -18355,8 +18355,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0741_a",
-        "CardName": "2Type Card 28",
+        "InternalName": "card0869_a",
+        "CardName": "2Type Card 46",
         "Cost": "1T1W",
         "ConvertedCost": 2,
         "Refund": "",
@@ -18375,8 +18375,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0742_a",
-        "CardName": "2Type Card 29",
+        "InternalName": "card0870_a",
+        "CardName": "2Type Card 47",
         "Cost": "1V1W5A",
         "ConvertedCost": 7,
         "Refund": 1,
@@ -18395,8 +18395,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0743_a",
-        "CardName": "2Type Card 30",
+        "InternalName": "card0871_a",
+        "CardName": "2Type Card 48",
         "Cost": "1I1S2A",
         "ConvertedCost": 4,
         "Refund": 1,
@@ -18415,7 +18415,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0744_a",
+        "InternalName": "card0872_a",
         "CardName": "3Type Card 1",
         "Cost": "1F1I1W1A",
         "ConvertedCost": 4,
@@ -18435,7 +18435,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0745_a",
+        "InternalName": "card0873_a",
         "CardName": "3Type Card 2",
         "Cost": "1F1Y1T1A",
         "ConvertedCost": 4,
@@ -18455,7 +18455,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0746_a",
+        "InternalName": "card0874_a",
         "CardName": "3Type Card 3",
         "Cost": "2S2T2W",
         "ConvertedCost": 6,
@@ -18475,7 +18475,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0747_a",
+        "InternalName": "card0875_a",
         "CardName": "3Type Card 4",
         "Cost": "1I1V1W2A",
         "ConvertedCost": 5,
@@ -18495,7 +18495,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0748_a",
+        "InternalName": "card0876_a",
         "CardName": "3Type Card 5",
         "Cost": "1F1T1V1A",
         "ConvertedCost": 4,
@@ -18515,7 +18515,7 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0749_a",
+        "InternalName": "card0877_a",
         "CardName": "3Type Card 6",
         "Cost": "1I1T1WXA",
         "ConvertedCost": 3,
@@ -18535,8 +18535,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0750_a",
-        "CardName": "3Type Card 7a",
+        "InternalName": "card0878_a",
+        "CardName": "3Type Card 7",
         "Cost": "",
         "ConvertedCost": 0,
         "Refund": "",
@@ -18555,8 +18555,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0750b_a",
-        "CardName": "3Type Card 7b",
+        "InternalName": "card0879_a",
+        "CardName": "3Type Card 8",
         "Cost": "",
         "ConvertedCost": 0,
         "Refund": "",
@@ -18564,147 +18564,7 @@
         "SuperType": "",
         "CardType": "Shield",
         "SubType": "",
-        "ElementType1": "Earth",
-        "ElementType2": "Ice",
-        "ElementType3": "Void",
-        "Rarity": "Rare",
-        "CardText": "Enter Play: You may scour 4 up to three times. For each time you do, Produce 1 of your partner's elemental types.\nWhen Defeated: You roil 4., Banish",
-        "ATK": "",
-        "DEF": "",
-        "HP": "",
-        "Set": "S4"
-    },
-    {
-        "InternalName": "card0750c_a",
-        "CardName": "3Type Card 7c",
-        "Cost": "",
-        "ConvertedCost": 0,
-        "Refund": "",
-        "Hold": "",
-        "SuperType": "",
-        "CardType": "Shield",
-        "SubType": "",
-        "ElementType1": "Fire",
-        "ElementType2": "Synthetic",
-        "ElementType3": "Toxic",
-        "Rarity": "Rare",
-        "CardText": "Enter Play: You may scour 4 up to three times. For each time you do, Produce 1 of your partner's elemental types.\nWhen Defeated: You roil 4., Banish",
-        "ATK": "",
-        "DEF": "",
-        "HP": "",
-        "Set": "S4"
-    },
-    {
-        "InternalName": "card0750d_a",
-        "CardName": "3Type Card 7d",
-        "Cost": "",
-        "ConvertedCost": 0,
-        "Refund": "",
-        "Hold": "",
-        "SuperType": "",
-        "CardType": "Shield",
-        "SubType": "",
-        "ElementType1": "Ice",
-        "ElementType2": "Nature",
-        "ElementType3": "Storm",
-        "Rarity": "Rare",
-        "CardText": "Enter Play: You may scour 4 up to three times. For each time you do, Produce 1 of your partner's elemental types.\nWhen Defeated: You roil 4., Banish",
-        "ATK": "",
-        "DEF": "",
-        "HP": "",
-        "Set": "S4"
-    },
-    {
-        "InternalName": "card0750e_a",
-        "CardName": "3Type Card 7e",
-        "Cost": "",
-        "ConvertedCost": 0,
-        "Refund": "",
-        "Hold": "",
-        "SuperType": "",
-        "CardType": "Shield",
-        "SubType": "",
-        "ElementType1": "Nature",
-        "ElementType2": "Toxic",
-        "ElementType3": "Water",
-        "Rarity": "Rare",
-        "CardText": "Enter Play: You may scour 4 up to three times. For each time you do, Produce 1 of your partner's elemental types.\nWhen Defeated: You roil 4., Banish",
-        "ATK": "",
-        "DEF": "",
-        "HP": "",
-        "Set": "S4"
-    },
-    {
-        "InternalName": "card0750f_a",
-        "CardName": "3Type Card 7f",
-        "Cost": "",
-        "ConvertedCost": 0,
-        "Refund": "",
-        "Hold": "",
-        "SuperType": "",
-        "CardType": "Shield",
-        "SubType": "",
-        "ElementType1": "Ice",
-        "ElementType2": "Storm",
-        "ElementType3": "Water",
-        "Rarity": "Rare",
-        "CardText": "Enter Play: You may scour 4 up to three times. For each time you do, Produce 1 of your partner's elemental types.\nWhen Defeated: You roil 4., Banish",
-        "ATK": "",
-        "DEF": "",
-        "HP": "",
-        "Set": "S4"
-    },
-    {
-        "InternalName": "card0750g_a",
-        "CardName": "3Type Card 7g",
-        "Cost": "",
-        "ConvertedCost": 0,
-        "Refund": "",
-        "Hold": "",
-        "SuperType": "",
-        "CardType": "Shield",
-        "SubType": "",
-        "ElementType1": "Fire",
-        "ElementType2": "Toxic",
-        "ElementType3": "Void",
-        "Rarity": "Rare",
-        "CardText": "Enter Play: You may scour 4 up to three times. For each time you do, Produce 1 of your partner's elemental types.\nWhen Defeated: You roil 4., Banish",
-        "ATK": "",
-        "DEF": "",
-        "HP": "",
-        "Set": "S4"
-    },
-    {
-        "InternalName": "card0750h_a",
-        "CardName": "3Type Card 7h",
-        "Cost": "",
-        "ConvertedCost": 0,
-        "Refund": "",
-        "Hold": "",
-        "SuperType": "",
-        "CardType": "Shield",
-        "SubType": "",
-        "ElementType1": "Ice",
-        "ElementType2": "Toxic",
-        "ElementType3": "Water",
-        "Rarity": "Rare",
-        "CardText": "Enter Play: You may scour 4 up to three times. For each time you do, Produce 1 of your partner's elemental types.\nWhen Defeated: You roil 4., Banish",
-        "ATK": "",
-        "DEF": "",
-        "HP": "",
-        "Set": "S4"
-    },
-    {
-        "InternalName": "card0750i_a",
-        "CardName": "3Type Card 7i",
-        "Cost": "",
-        "ConvertedCost": 0,
-        "Refund": "",
-        "Hold": "",
-        "SuperType": "",
-        "CardType": "Shield",
-        "SubType": "",
-        "ElementType1": "Ice",
+        "ElementType1": "Synthetic",
         "ElementType2": "Void",
         "ElementType3": "Water",
         "Rarity": "Rare",
@@ -18715,8 +18575,8 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0750j_a",
-        "CardName": "3Type Card 7j",
+        "InternalName": "card0880_a",
+        "CardName": "3Type Card 9",
         "Cost": "",
         "ConvertedCost": 0,
         "Refund": "",
@@ -18724,7 +18584,7 @@
         "SuperType": "",
         "CardType": "Shield",
         "SubType": "",
-        "ElementType1": "Toxic",
+        "ElementType1": "Synthetic",
         "ElementType2": "Void",
         "ElementType3": "Water",
         "Rarity": "Rare",
@@ -18735,7 +18595,147 @@
         "Set": "S4"
     },
     {
-        "InternalName": "card0751_a",
+        "InternalName": "card0881_a",
+        "CardName": "3Type Card 10",
+        "Cost": "",
+        "ConvertedCost": 0,
+        "Refund": "",
+        "Hold": "",
+        "SuperType": "",
+        "CardType": "Shield",
+        "SubType": "",
+        "ElementType1": "Synthetic",
+        "ElementType2": "Void",
+        "ElementType3": "Water",
+        "Rarity": "Rare",
+        "CardText": "Enter Play: You may scour 4 up to three times. For each time you do, Produce 1 of your partner's elemental types.\nWhen Defeated: You roil 4., Banish",
+        "ATK": "",
+        "DEF": "",
+        "HP": "",
+        "Set": "S4"
+    },
+    {
+        "InternalName": "card0882_a",
+        "CardName": "3Type Card 11",
+        "Cost": "",
+        "ConvertedCost": 0,
+        "Refund": "",
+        "Hold": "",
+        "SuperType": "",
+        "CardType": "Shield",
+        "SubType": "",
+        "ElementType1": "Synthetic",
+        "ElementType2": "Void",
+        "ElementType3": "Water",
+        "Rarity": "Rare",
+        "CardText": "Enter Play: You may scour 4 up to three times. For each time you do, Produce 1 of your partner's elemental types.\nWhen Defeated: You roil 4., Banish",
+        "ATK": "",
+        "DEF": "",
+        "HP": "",
+        "Set": "S4"
+    },
+    {
+        "InternalName": "card0883_a",
+        "CardName": "3Type Card 12",
+        "Cost": "",
+        "ConvertedCost": 0,
+        "Refund": "",
+        "Hold": "",
+        "SuperType": "",
+        "CardType": "Shield",
+        "SubType": "",
+        "ElementType1": "Synthetic",
+        "ElementType2": "Void",
+        "ElementType3": "Water",
+        "Rarity": "Rare",
+        "CardText": "Enter Play: You may scour 4 up to three times. For each time you do, Produce 1 of your partner's elemental types.\nWhen Defeated: You roil 4., Banish",
+        "ATK": "",
+        "DEF": "",
+        "HP": "",
+        "Set": "S4"
+    },
+    {
+        "InternalName": "card0884_a",
+        "CardName": "3Type Card 13",
+        "Cost": "",
+        "ConvertedCost": 0,
+        "Refund": "",
+        "Hold": "",
+        "SuperType": "",
+        "CardType": "Shield",
+        "SubType": "",
+        "ElementType1": "Synthetic",
+        "ElementType2": "Void",
+        "ElementType3": "Water",
+        "Rarity": "Rare",
+        "CardText": "Enter Play: You may scour 4 up to three times. For each time you do, Produce 1 of your partner's elemental types.\nWhen Defeated: You roil 4., Banish",
+        "ATK": "",
+        "DEF": "",
+        "HP": "",
+        "Set": "S4"
+    },
+    {
+        "InternalName": "card0885_a",
+        "CardName": "3Type Card 14",
+        "Cost": "",
+        "ConvertedCost": 0,
+        "Refund": "",
+        "Hold": "",
+        "SuperType": "",
+        "CardType": "Shield",
+        "SubType": "",
+        "ElementType1": "Synthetic",
+        "ElementType2": "Void",
+        "ElementType3": "Water",
+        "Rarity": "Rare",
+        "CardText": "Enter Play: You may scour 4 up to three times. For each time you do, Produce 1 of your partner's elemental types.\nWhen Defeated: You roil 4., Banish",
+        "ATK": "",
+        "DEF": "",
+        "HP": "",
+        "Set": "S4"
+    },
+    {
+        "InternalName": "card0886_a",
+        "CardName": "3Type Card 15",
+        "Cost": "",
+        "ConvertedCost": 0,
+        "Refund": "",
+        "Hold": "",
+        "SuperType": "",
+        "CardType": "Shield",
+        "SubType": "",
+        "ElementType1": "Synthetic",
+        "ElementType2": "Void",
+        "ElementType3": "Water",
+        "Rarity": "Rare",
+        "CardText": "Enter Play: You may scour 4 up to three times. For each time you do, Produce 1 of your partner's elemental types.\nWhen Defeated: You roil 4., Banish",
+        "ATK": "",
+        "DEF": "",
+        "HP": "",
+        "Set": "S4"
+    },
+    {
+        "InternalName": "card0887_a",
+        "CardName": "3Type Card 16",
+        "Cost": "",
+        "ConvertedCost": 0,
+        "Refund": "",
+        "Hold": "",
+        "SuperType": "",
+        "CardType": "Shield",
+        "SubType": "",
+        "ElementType1": "Synthetic",
+        "ElementType2": "Void",
+        "ElementType3": "Water",
+        "Rarity": "Rare",
+        "CardText": "Enter Play: You may scour 4 up to three times. For each time you do, Produce 1 of your partner's elemental types.\nWhen Defeated: You roil 4., Banish",
+        "ATK": "",
+        "DEF": "",
+        "HP": "",
+        "Set": "S4"
+    },
+    {
+        "InternalName": "card0888_a",
         "CardName": "Fusion Earth Card 1a",
         "Cost": "1E",
         "ConvertedCost": 1,
@@ -18755,7 +18755,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0751_b",
+        "InternalName": "card0888_b",
         "CardName": "Fusion Earth Card 1b",
         "Cost": "3E2A",
         "ConvertedCost": 5,
@@ -18775,7 +18775,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0752_a",
+        "InternalName": "card0889_a",
         "CardName": "Earth Card 2",
         "Cost": "1E4A",
         "ConvertedCost": 5,
@@ -18795,7 +18795,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0753_a",
+        "InternalName": "card0890_a",
         "CardName": "Earth Card 3",
         "Cost": "1E1A",
         "ConvertedCost": 2,
@@ -18815,7 +18815,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0754_a",
+        "InternalName": "card0891_a",
         "CardName": "Earth Card 4",
         "Cost": "1E3A",
         "ConvertedCost": 4,
@@ -18835,7 +18835,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0755_a",
+        "InternalName": "card0892_a",
         "CardName": "Fusion Earth Card 5a",
         "Cost": "1E1A",
         "ConvertedCost": 2,
@@ -18855,7 +18855,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0755_b",
+        "InternalName": "card0892_b",
         "CardName": "Fusion Earth Card 5b",
         "Cost": "1E1V2A",
         "ConvertedCost": 4,
@@ -18875,7 +18875,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0756_a",
+        "InternalName": "card0893_a",
         "CardName": "Earth Card 6",
         "Cost": "2E6A",
         "ConvertedCost": 8,
@@ -18895,7 +18895,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0757_a",
+        "InternalName": "card0894_a",
         "CardName": "Earth Card 7",
         "Cost": "1E2A",
         "ConvertedCost": 3,
@@ -18915,7 +18915,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0758_a",
+        "InternalName": "card0895_a",
         "CardName": "Earth Card 8",
         "Cost": "2E2A",
         "ConvertedCost": 4,
@@ -18935,7 +18935,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0759_a",
+        "InternalName": "card0896_a",
         "CardName": "Fusion Earth Card 9a",
         "Cost": "2E2A",
         "ConvertedCost": 4,
@@ -18955,7 +18955,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0759_b",
+        "InternalName": "card0896_b",
         "CardName": "Fusion Earth Card 9b",
         "Cost": "2E2S1A",
         "ConvertedCost": 5,
@@ -18975,7 +18975,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0760_a",
+        "InternalName": "card0897_a",
         "CardName": "Earth Card 10",
         "Cost": "1E5A",
         "ConvertedCost": 6,
@@ -18995,7 +18995,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0761_a",
+        "InternalName": "card0898_a",
         "CardName": "Fusion Earth Card 11a",
         "Cost": "4E1A",
         "ConvertedCost": 5,
@@ -19015,7 +19015,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0761_b",
+        "InternalName": "card0898_b",
         "CardName": "Fusion Earth Card 11b",
         "Cost": "5E1A",
         "ConvertedCost": 6,
@@ -19035,7 +19035,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0762_a",
+        "InternalName": "card0899_a",
         "CardName": "Fusion Nature Card 1a",
         "Cost": "1N2A",
         "ConvertedCost": 3,
@@ -19055,7 +19055,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0762_b",
+        "InternalName": "card0899_b",
         "CardName": "Fusion Nature Card 1b",
         "Cost": "2N3A",
         "ConvertedCost": 5,
@@ -19075,7 +19075,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0763_a",
+        "InternalName": "card0900_a",
         "CardName": "Nature Card 2",
         "Cost": "1N7A",
         "ConvertedCost": 8,
@@ -19095,7 +19095,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0764_a",
+        "InternalName": "card0901_a",
         "CardName": "Nature Card 3",
         "Cost": "1N4A",
         "ConvertedCost": 5,
@@ -19115,7 +19115,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0765_a",
+        "InternalName": "card0902_a",
         "CardName": "Nature Card 4",
         "Cost": "1N5A",
         "ConvertedCost": 6,
@@ -19135,7 +19135,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0766_a",
+        "InternalName": "card0903_a",
         "CardName": "Fusion Nature Card 5a",
         "Cost": "1N2A",
         "ConvertedCost": 3,
@@ -19155,7 +19155,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0766_b",
+        "InternalName": "card0903_b",
         "CardName": "Fusion Nature Card 5b",
         "Cost": "1N1T3A",
         "ConvertedCost": 5,
@@ -19175,7 +19175,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0767_a",
+        "InternalName": "card0904_a",
         "CardName": "Nature Card 6",
         "Cost": "1N5A",
         "ConvertedCost": 6,
@@ -19195,7 +19195,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0768_a",
+        "InternalName": "card0905_a",
         "CardName": "Nature Card 7",
         "Cost": "1N1A",
         "ConvertedCost": 2,
@@ -19215,7 +19215,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0769_a",
+        "InternalName": "card0906_a",
         "CardName": "Nature Card 8",
         "Cost": "1N2A",
         "ConvertedCost": 3,
@@ -19235,7 +19235,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0770_a",
+        "InternalName": "card0907_a",
         "CardName": "Fusion Nature Card 9a",
         "Cost": "2N2A",
         "ConvertedCost": 4,
@@ -19255,7 +19255,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0770_b",
+        "InternalName": "card0907_b",
         "CardName": "Fusion Nature Card 9b",
         "Cost": "2N2S",
         "ConvertedCost": 4,
@@ -19275,7 +19275,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0771_a",
+        "InternalName": "card0908_a",
         "CardName": "Nature Card 10",
         "Cost": "3N1A",
         "ConvertedCost": 4,
@@ -19295,7 +19295,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0772_a",
+        "InternalName": "card0909_a",
         "CardName": "Fusion Nature Card 11a",
         "Cost": "2N2A",
         "ConvertedCost": 4,
@@ -19315,7 +19315,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0772_b",
+        "InternalName": "card0909_b",
         "CardName": "Fusion Nature Card 11b",
         "Cost": "5N1A",
         "ConvertedCost": 6,
@@ -19335,7 +19335,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0773_a",
+        "InternalName": "card0910_a",
         "CardName": "Fusion Storm Card 18a",
         "Cost": "1S",
         "ConvertedCost": 1,
@@ -19355,7 +19355,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0773_b",
+        "InternalName": "card0910_b",
         "CardName": "Fusion Storm Card 18b",
         "Cost": "1E1S1A",
         "ConvertedCost": 3,
@@ -19375,7 +19375,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0774_a",
+        "InternalName": "card0911_a",
         "CardName": "Storm Card 19",
         "Cost": "1S4A",
         "ConvertedCost": 5,
@@ -19395,7 +19395,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0775_a",
+        "InternalName": "card0912_a",
         "CardName": "Storm Card 20",
         "Cost": "1S3A",
         "ConvertedCost": 4,
@@ -19415,7 +19415,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0776_a",
+        "InternalName": "card0913_a",
         "CardName": "Storm Card 21",
         "Cost": "1S2A",
         "ConvertedCost": 3,
@@ -19435,7 +19435,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0777_a",
+        "InternalName": "card0914_a",
         "CardName": "Storm Card 22",
         "Cost": "1S2A",
         "ConvertedCost": 3,
@@ -19455,7 +19455,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0778_a",
+        "InternalName": "card0915_a",
         "CardName": "Fusion Storm Card 23a",
         "Cost": "2S4A",
         "ConvertedCost": 6,
@@ -19475,7 +19475,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0778_b",
+        "InternalName": "card0915_b",
         "CardName": "Fusion Storm Card 23b",
         "Cost": "1N2S3A",
         "ConvertedCost": 6,
@@ -19495,7 +19495,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0779_a",
+        "InternalName": "card0916_a",
         "CardName": "Storm Card 24",
         "Cost": "1S1A",
         "ConvertedCost": 2,
@@ -19515,7 +19515,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0780_a",
+        "InternalName": "card0917_a",
         "CardName": "Storm Card 25",
         "Cost": "1S3A",
         "ConvertedCost": 4,
@@ -19535,7 +19535,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0781_a",
+        "InternalName": "card0918_a",
         "CardName": "Fusion Storm Card 26a",
         "Cost": "3S",
         "ConvertedCost": 3,
@@ -19555,7 +19555,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0781_b",
+        "InternalName": "card0918_b",
         "CardName": "Fusion Storm Card 26b",
         "Cost": "3S2Y",
         "ConvertedCost": 5,
@@ -19575,7 +19575,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0782_a",
+        "InternalName": "card0919_a",
         "CardName": "Storm Card 27",
         "Cost": "3S2A",
         "ConvertedCost": 5,
@@ -19595,7 +19595,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0783_a",
+        "InternalName": "card0920_a",
         "CardName": "Storm Card 28",
         "Cost": "3S4A",
         "ConvertedCost": 7,
@@ -19615,7 +19615,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0784_a",
+        "InternalName": "card0921_a",
         "CardName": "Synthetic Card 1",
         "Cost": "1Y1A",
         "ConvertedCost": 2,
@@ -19635,7 +19635,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0785_a",
+        "InternalName": "card0922_a",
         "CardName": "Fusion Synthetic Card 2a",
         "Cost": "1Y3A",
         "ConvertedCost": 4,
@@ -19655,7 +19655,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0785_b",
+        "InternalName": "card0922_b",
         "CardName": "Fusion Synthetic Card 2b",
         "Cost": "2Y2A",
         "ConvertedCost": 4,
@@ -19675,7 +19675,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0786_a",
+        "InternalName": "card0923_a",
         "CardName": "Synthetic Card 3",
         "Cost": "1Y3A",
         "ConvertedCost": 4,
@@ -19695,7 +19695,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0787_a",
+        "InternalName": "card0924_a",
         "CardName": "Synthetic Card 4",
         "Cost": "1Y2A",
         "ConvertedCost": 3,
@@ -19715,7 +19715,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0788_a",
+        "InternalName": "card0925_a",
         "CardName": "Synthetic Card 5",
         "Cost": "1Y1A",
         "ConvertedCost": 2,
@@ -19735,7 +19735,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0789_a",
+        "InternalName": "card0926_a",
         "CardName": "Synthetic Card 6",
         "Cost": "1Y4A",
         "ConvertedCost": 5,
@@ -19755,7 +19755,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0790_a",
+        "InternalName": "card0927_a",
         "CardName": "Synthetic Card 7",
         "Cost": "2Y4A",
         "ConvertedCost": 6,
@@ -19775,7 +19775,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0791_a",
+        "InternalName": "card0928_a",
         "CardName": "Fusion Synthetic Card 8a",
         "Cost": "1Y4A",
         "ConvertedCost": 5,
@@ -19795,7 +19795,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0791_b",
+        "InternalName": "card0928_b",
         "CardName": "Fusion Synthetic Card 8b",
         "Cost": "1E1Y5A",
         "ConvertedCost": 7,
@@ -19815,7 +19815,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0792_a",
+        "InternalName": "card0929_a",
         "CardName": "Fusion Synthetic Card 9a",
         "Cost": "2YXA",
         "ConvertedCost": 2,
@@ -19835,7 +19835,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0792_b",
+        "InternalName": "card0929_b",
         "CardName": "Fusion Synthetic Card 9b",
         "Cost": "2Y1T2",
         "ConvertedCost": 5,
@@ -19855,7 +19855,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0793_a",
+        "InternalName": "card0930_a",
         "CardName": "Synthetic Card 10",
         "Cost": "2Y5A",
         "ConvertedCost": 7,
@@ -19875,7 +19875,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0794_a",
+        "InternalName": "card0931_a",
         "CardName": "Fusion Synthetic Card 11a",
         "Cost": "2Y2A",
         "ConvertedCost": 4,
@@ -19895,7 +19895,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0794_b",
+        "InternalName": "card0931_b",
         "CardName": "Fusion Synthetic Card 11b",
         "Cost": "5Y1A",
         "ConvertedCost": 6,
@@ -19915,7 +19915,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0795_a",
+        "InternalName": "card0932_a",
         "CardName": "Fusion Toxic Card 18a",
         "Cost": "1T",
         "ConvertedCost": 1,
@@ -19935,7 +19935,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0795_b",
+        "InternalName": "card0932_b",
         "CardName": "Fusion Toxic Card 18b",
         "Cost": "1E1T1A",
         "ConvertedCost": 3,
@@ -19955,7 +19955,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0796_a",
+        "InternalName": "card0933_a",
         "CardName": "Toxic Card 19",
         "Cost": "2T4A",
         "ConvertedCost": 6,
@@ -19975,7 +19975,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0797_a",
+        "InternalName": "card0934_a",
         "CardName": "Toxic Card 20",
         "Cost": "1T2A",
         "ConvertedCost": 3,
@@ -19995,7 +19995,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0798_a",
+        "InternalName": "card0935_a",
         "CardName": "Toxic Card 21",
         "Cost": "1T3A",
         "ConvertedCost": 4,
@@ -20015,7 +20015,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0799_a",
+        "InternalName": "card0936_a",
         "CardName": "Fusion Toxic Card 22a",
         "Cost": "1T2A",
         "ConvertedCost": 3,
@@ -20035,7 +20035,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0799_b",
+        "InternalName": "card0936_b",
         "CardName": "Fusion Toxic Card 22b",
         "Cost": "1Y2T2A",
         "ConvertedCost": 5,
@@ -20055,7 +20055,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0800_a",
+        "InternalName": "card0937_a",
         "CardName": "Toxic Card 23",
         "Cost": "2T3A",
         "ConvertedCost": 5,
@@ -20075,7 +20075,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0801_a",
+        "InternalName": "card0938_a",
         "CardName": "Toxic Card 24",
         "Cost": "1T2A",
         "ConvertedCost": 3,
@@ -20095,7 +20095,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0802_a",
+        "InternalName": "card0939_a",
         "CardName": "Toxic Card 25",
         "Cost": "2TXA",
         "ConvertedCost": 2,
@@ -20115,7 +20115,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0803_a",
+        "InternalName": "card0940_a",
         "CardName": "Toxic Card 26",
         "Cost": "2T3A",
         "ConvertedCost": 5,
@@ -20135,7 +20135,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0804_a",
+        "InternalName": "card0941_a",
         "CardName": "Fusion Toxic Card 27a",
         "Cost": "2T2A",
         "ConvertedCost": 4,
@@ -20155,7 +20155,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0804_b",
+        "InternalName": "card0941_b",
         "CardName": "Fusion Toxic Card 27b",
         "Cost": "1N2T1A",
         "ConvertedCost": 4,
@@ -20175,7 +20175,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0805_a",
+        "InternalName": "card0942_a",
         "CardName": "Toxic Card 28",
         "Cost": "2T1A",
         "ConvertedCost": 3,
@@ -20195,7 +20195,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0806_a",
+        "InternalName": "card0943_a",
         "CardName": "Void Card 18",
         "Cost": "1V2A",
         "ConvertedCost": 3,
@@ -20215,7 +20215,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0807_a",
+        "InternalName": "card0944_a",
         "CardName": "Fusion Void Card 19a",
         "Cost": "1V4A",
         "ConvertedCost": 5,
@@ -20235,7 +20235,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0807_b",
+        "InternalName": "card0944_b",
         "CardName": "Fusion Void Card 19b",
         "Cost": "1E2V2A",
         "ConvertedCost": 5,
@@ -20255,7 +20255,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0808_a",
+        "InternalName": "card0945_a",
         "CardName": "Void Card 20",
         "Cost": "1V2A",
         "ConvertedCost": 3,
@@ -20275,7 +20275,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0809_a",
+        "InternalName": "card0946_a",
         "CardName": "Void Card 21",
         "Cost": "1V3A",
         "ConvertedCost": 4,
@@ -20295,7 +20295,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0810_a",
+        "InternalName": "card0947_a",
         "CardName": "Fusion Void Card 22a",
         "Cost": "1V",
         "ConvertedCost": 1,
@@ -20315,7 +20315,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0810_b",
+        "InternalName": "card0947_b",
         "CardName": "Fusion Void Card 22b",
         "Cost": "1Y1V1A",
         "ConvertedCost": 3,
@@ -20335,7 +20335,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0811_a",
+        "InternalName": "card0948_a",
         "CardName": "Void Card 23",
         "Cost": "2V2A",
         "ConvertedCost": 4,
@@ -20355,7 +20355,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0812_a",
+        "InternalName": "card0949_a",
         "CardName": "Void Card 24",
         "Cost": "2V5A",
         "ConvertedCost": 7,
@@ -20375,7 +20375,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0813_a",
+        "InternalName": "card0950_a",
         "CardName": "Void Card 25",
         "Cost": "1V1A",
         "ConvertedCost": 2,
@@ -20395,7 +20395,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0814_a",
+        "InternalName": "card0951_a",
         "CardName": "Fusion Void Card 26a",
         "Cost": "2V4A",
         "ConvertedCost": 6,
@@ -20415,7 +20415,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0814_b",
+        "InternalName": "card0951_b",
         "CardName": "Fusion Void Card 26b",
         "Cost": "2E2V3A",
         "ConvertedCost": 7,
@@ -20435,7 +20435,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0815_a",
+        "InternalName": "card0952_a",
         "CardName": "Void Card 27",
         "Cost": "2V7A",
         "ConvertedCost": 9,
@@ -20455,7 +20455,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0816_a",
+        "InternalName": "card0953_a",
         "CardName": "Void Card 28",
         "Cost": "3V1A",
         "ConvertedCost": 4,
@@ -20475,7 +20475,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0817_a",
+        "InternalName": "card0954_a",
         "CardName": "Fusion Neutral Card 12a",
         "Cost": "2A",
         "ConvertedCost": 2,
@@ -20495,7 +20495,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0817_b",
+        "InternalName": "card0954_b",
         "CardName": "Fusion Neutral Card 12b",
         "Cost": "1N1U2A",
         "ConvertedCost": 4,
@@ -20515,7 +20515,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0818_a",
+        "InternalName": "card0955_a",
         "CardName": "Neutral Card 13",
         "Cost": "5A",
         "ConvertedCost": 5,
@@ -20535,7 +20535,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0819_a",
+        "InternalName": "card0956_a",
         "CardName": "Neutral Card 14",
         "Cost": "3U2A",
         "ConvertedCost": 5,
@@ -20555,7 +20555,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0820_a",
+        "InternalName": "card0957_a",
         "CardName": "Neutral Card 15",
         "Cost": "3A",
         "ConvertedCost": 3,
@@ -20575,7 +20575,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0821_a",
+        "InternalName": "card0958_a",
         "CardName": "Neutral Card 16",
         "Cost": "2A",
         "ConvertedCost": 2,
@@ -20595,7 +20595,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0822_a",
+        "InternalName": "card0959_a",
         "CardName": "Neutral Card 17",
         "Cost": "4A",
         "ConvertedCost": 4,
@@ -20615,7 +20615,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0823_a",
+        "InternalName": "card0960_a",
         "CardName": "Neutral Card 18",
         "Cost": "1U2A",
         "ConvertedCost": 3,
@@ -20635,7 +20635,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0824_a",
+        "InternalName": "card0961_a",
         "CardName": "Neutral Card 19",
         "Cost": "",
         "ConvertedCost": 0,
@@ -20655,7 +20655,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0825_a",
+        "InternalName": "card0962_a",
         "CardName": "Fusion Neutral Card 20a",
         "Cost": "2U13A",
         "ConvertedCost": 15,
@@ -20675,7 +20675,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0825_b",
+        "InternalName": "card0962_b",
         "CardName": "Fusion Neutral Card 20b",
         "Cost": "4U11A",
         "ConvertedCost": 15,
@@ -20695,7 +20695,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0826_a",
+        "InternalName": "card0963_a",
         "CardName": "Neutral Card 21",
         "Cost": "1U4A",
         "ConvertedCost": 5,
@@ -20715,7 +20715,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0827_a",
+        "InternalName": "card0964_a",
         "CardName": "Neutral Card 22",
         "Cost": "4A",
         "ConvertedCost": 4,
@@ -20735,8 +20735,8 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0828_a",
-        "CardName": "2Type Card 31",
+        "InternalName": "card0965_a",
+        "CardName": "2Type Card 49",
         "Cost": "1E1V2A",
         "ConvertedCost": 4,
         "Refund": "",
@@ -20755,8 +20755,8 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0829_a",
-        "CardName": "2Type Card 32",
+        "InternalName": "card0966_a",
+        "CardName": "2Type Card 50",
         "Cost": "1N1S3A",
         "ConvertedCost": 5,
         "Refund": 1,
@@ -20775,8 +20775,8 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0830_a",
-        "CardName": "2Type Card 33",
+        "InternalName": "card0967_a",
+        "CardName": "2Type Card 51",
         "Cost": "1N1T1A",
         "ConvertedCost": 3,
         "Refund": 1,
@@ -20795,8 +20795,8 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0831_a",
-        "CardName": "2Type Card 34",
+        "InternalName": "card0968_a",
+        "CardName": "2Type Card 52",
         "Cost": "1Y1V4A",
         "ConvertedCost": 6,
         "Refund": 1,
@@ -20815,8 +20815,8 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0832_a",
-        "CardName": "2Type Card 35",
+        "InternalName": "card0969_a",
+        "CardName": "2Type Card 53",
         "Cost": "1Y1T2A",
         "ConvertedCost": 4,
         "Refund": 1,
@@ -20835,8 +20835,8 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0833_a",
-        "CardName": "2Type Card 36",
+        "InternalName": "card0970_a",
+        "CardName": "2Type Card 54",
         "Cost": "1E1T1A",
         "ConvertedCost": 3,
         "Refund": "",
@@ -20855,8 +20855,8 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0834_a",
-        "CardName": "2Type Card 37",
+        "InternalName": "card0971_a",
+        "CardName": "2Type Card 55",
         "Cost": "1T1V3A",
         "ConvertedCost": 5,
         "Refund": 1,
@@ -20875,8 +20875,8 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0835_a",
-        "CardName": "2Type Card 38",
+        "InternalName": "card0972_a",
+        "CardName": "2Type Card 56",
         "Cost": "1E1S2A",
         "ConvertedCost": 4,
         "Refund": 1,
@@ -20895,8 +20895,8 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0836_a",
-        "CardName": "2Type Card 39",
+        "InternalName": "card0973_a",
+        "CardName": "2Type Card 57",
         "Cost": "1E1Y2A",
         "ConvertedCost": 4,
         "Refund": "",
@@ -20915,8 +20915,8 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0837_a",
-        "CardName": "2Type Card 40a",
+        "InternalName": "card0974_a",
+        "CardName": "2Type Card 58",
         "Cost": "",
         "ConvertedCost": 0,
         "Refund": "",
@@ -20935,8 +20935,8 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0837b_a",
-        "CardName": "2Type Card 40b",
+        "InternalName": "card0975_a",
+        "CardName": "2Type Card 59",
         "Cost": "",
         "ConvertedCost": 0,
         "Refund": "",
@@ -20944,19 +20944,19 @@
         "SuperType": "",
         "CardType": "Shield",
         "SubType": "",
-        "ElementType1": "Earth",
+        "ElementType1": "Storm",
         "ElementType2": "Synthetic",
         "ElementType3": "",
         "Rarity": "Common",
-        "CardText": "Enter Play: Produce 1EU.\nWhen Defeated: One friendly unit or support hoards 1Y.",
+        "CardText": "Enter Play: Produce 1SU.\nWhen Defeated: One friendly unit or support hoards 1Y.",
         "ATK": "",
         "DEF": "",
         "HP": "",
         "Set": "S5"
     },
     {
-        "InternalName": "card0837c_a",
-        "CardName": "2Type Card 40c",
+        "InternalName": "card0976_a",
+        "CardName": "2Type Card 60",
         "Cost": "",
         "ConvertedCost": 0,
         "Refund": "",
@@ -20964,19 +20964,19 @@
         "SuperType": "",
         "CardType": "Shield",
         "SubType": "",
-        "ElementType1": "Earth",
-        "ElementType2": "Storm",
+        "ElementType1": "Storm",
+        "ElementType2": "Synthetic",
         "ElementType3": "",
         "Rarity": "Common",
-        "CardText": "Enter Play: Produce 1EU.\nWhen Defeated: One friendly unit or support hoards 1S.",
+        "CardText": "Enter Play: Produce 1SU.\nWhen Defeated: One friendly unit or support hoards 1Y.",
         "ATK": "",
         "DEF": "",
         "HP": "",
         "Set": "S5"
     },
     {
-        "InternalName": "card0837d_a",
-        "CardName": "2Type Card 40d",
+        "InternalName": "card0977_a",
+        "CardName": "2Type Card 61",
         "Cost": "",
         "ConvertedCost": 0,
         "Refund": "",
@@ -20984,19 +20984,19 @@
         "SuperType": "",
         "CardType": "Shield",
         "SubType": "",
-        "ElementType1": "Earth",
-        "ElementType2": "Toxic",
+        "ElementType1": "Storm",
+        "ElementType2": "Synthetic",
         "ElementType3": "",
         "Rarity": "Common",
-        "CardText": "Enter Play: Produce 1EU.\nWhen Defeated: One friendly unit or support hoards 1T.",
+        "CardText": "Enter Play: Produce 1SU.\nWhen Defeated: One friendly unit or support hoards 1Y.",
         "ATK": "",
         "DEF": "",
         "HP": "",
         "Set": "S5"
     },
     {
-        "InternalName": "card0837e_a",
-        "CardName": "2Type Card 40e",
+        "InternalName": "card0978_a",
+        "CardName": "2Type Card 62",
         "Cost": "",
         "ConvertedCost": 0,
         "Refund": "",
@@ -21004,19 +21004,19 @@
         "SuperType": "",
         "CardType": "Shield",
         "SubType": "",
-        "ElementType1": "Nature",
-        "ElementType2": "Void",
+        "ElementType1": "Storm",
+        "ElementType2": "Synthetic",
         "ElementType3": "",
         "Rarity": "Common",
-        "CardText": "Enter Play: Produce 1NU.\nWhen Defeated: One friendly unit or support hoards 1V.",
+        "CardText": "Enter Play: Produce 1SU.\nWhen Defeated: One friendly unit or support hoards 1Y.",
         "ATK": "",
         "DEF": "",
         "HP": "",
         "Set": "S5"
     },
     {
-        "InternalName": "card0837f_a",
-        "CardName": "2Type Card 40f",
+        "InternalName": "card0979_a",
+        "CardName": "2Type Card 63",
         "Cost": "",
         "ConvertedCost": 0,
         "Refund": "",
@@ -21024,19 +21024,19 @@
         "SuperType": "",
         "CardType": "Shield",
         "SubType": "",
-        "ElementType1": "Earth",
-        "ElementType2": "Void",
+        "ElementType1": "Storm",
+        "ElementType2": "Synthetic",
         "ElementType3": "",
         "Rarity": "Common",
-        "CardText": "Enter Play: Produce 1EU.\nWhen Defeated: One friendly unit or support hoards 1V.",
+        "CardText": "Enter Play: Produce 1SU.\nWhen Defeated: One friendly unit or support hoards 1Y.",
         "ATK": "",
         "DEF": "",
         "HP": "",
         "Set": "S5"
     },
     {
-        "InternalName": "card0837g_a",
-        "CardName": "2Type Card 40g",
+        "InternalName": "card0980_a",
+        "CardName": "2Type Card 64",
         "Cost": "",
         "ConvertedCost": 0,
         "Refund": "",
@@ -21044,19 +21044,19 @@
         "SuperType": "",
         "CardType": "Shield",
         "SubType": "",
-        "ElementType1": "Nature",
-        "ElementType2": "Storm",
+        "ElementType1": "Storm",
+        "ElementType2": "Synthetic",
         "ElementType3": "",
         "Rarity": "Common",
-        "CardText": "Enter Play: Produce 1NU.\nWhen Defeated: One friendly unit or support hoards 1S.",
+        "CardText": "Enter Play: Produce 1SU.\nWhen Defeated: One friendly unit or support hoards 1Y.",
         "ATK": "",
         "DEF": "",
         "HP": "",
         "Set": "S5"
     },
     {
-        "InternalName": "card0837h_a",
-        "CardName": "2Type Card 40h",
+        "InternalName": "card0981_a",
+        "CardName": "2Type Card 65",
         "Cost": "",
         "ConvertedCost": 0,
         "Refund": "",
@@ -21064,19 +21064,19 @@
         "SuperType": "",
         "CardType": "Shield",
         "SubType": "",
-        "ElementType1": "Nature",
-        "ElementType2": "Toxic",
+        "ElementType1": "Storm",
+        "ElementType2": "Synthetic",
         "ElementType3": "",
         "Rarity": "Common",
-        "CardText": "Enter Play: Produce 1NU.\nWhen Defeated: One friendly unit or support hoards 1T.",
+        "CardText": "Enter Play: Produce 1SU.\nWhen Defeated: One friendly unit or support hoards 1Y.",
         "ATK": "",
         "DEF": "",
         "HP": "",
         "Set": "S5"
     },
     {
-        "InternalName": "card0837i_a",
-        "CardName": "2Type Card 40i",
+        "InternalName": "card0982_a",
+        "CardName": "2Type Card 66",
         "Cost": "",
         "ConvertedCost": 0,
         "Refund": "",
@@ -21084,19 +21084,19 @@
         "SuperType": "",
         "CardType": "Shield",
         "SubType": "",
-        "ElementType1": "Synthetic",
-        "ElementType2": "Toxic",
+        "ElementType1": "Storm",
+        "ElementType2": "Synthetic",
         "ElementType3": "",
         "Rarity": "Common",
-        "CardText": "Enter Play: Produce 1YU.\nWhen Defeated: One friendly unit or support hoards 1T.",
+        "CardText": "Enter Play: Produce 1SU.\nWhen Defeated: One friendly unit or support hoards 1Y.",
         "ATK": "",
         "DEF": "",
         "HP": "",
         "Set": "S5"
     },
     {
-        "InternalName": "card0837j_a",
-        "CardName": "2Type Card 40j",
+        "InternalName": "card0983_a",
+        "CardName": "2Type Card 67",
         "Cost": "",
         "ConvertedCost": 0,
         "Refund": "",
@@ -21104,19 +21104,19 @@
         "SuperType": "",
         "CardType": "Shield",
         "SubType": "",
-        "ElementType1": "Synthetic",
-        "ElementType2": "Void",
+        "ElementType1": "Storm",
+        "ElementType2": "Synthetic",
         "ElementType3": "",
         "Rarity": "Common",
-        "CardText": "Enter Play: Produce 1YU.\nWhen Defeated: One friendly unit or support hoards 1V.",
+        "CardText": "Enter Play: Produce 1SU.\nWhen Defeated: One friendly unit or support hoards 1Y.",
         "ATK": "",
         "DEF": "",
         "HP": "",
         "Set": "S5"
     },
     {
-        "InternalName": "card0838_a",
-        "CardName": "2Type Card 41",
+        "InternalName": "card0984_a",
+        "CardName": "2Type Card 68",
         "Cost": "1E1S1A",
         "ConvertedCost": 3,
         "Refund": 1,
@@ -21135,8 +21135,8 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0839_a",
-        "CardName": "2Type Card 42",
+        "InternalName": "card0985_a",
+        "CardName": "2Type Card 69",
         "Cost": "1T1V5A",
         "ConvertedCost": 7,
         "Refund": 2,
@@ -21155,8 +21155,8 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0840_a",
-        "CardName": "2Type Card 43",
+        "InternalName": "card0986_a",
+        "CardName": "2Type Card 70",
         "Cost": "1E1Y3A",
         "ConvertedCost": 5,
         "Refund": 1,
@@ -21175,8 +21175,8 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0841_a",
-        "CardName": "2Type Card 44",
+        "InternalName": "card0987_a",
+        "CardName": "2Type Card 71",
         "Cost": "1S1Y1A",
         "ConvertedCost": 3,
         "Refund": 1,
@@ -21195,8 +21195,8 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0842_a",
-        "CardName": "2Type Card 45",
+        "InternalName": "card0988_a",
+        "CardName": "2Type Card 72",
         "Cost": "1E1T1A",
         "ConvertedCost": 3,
         "Refund": 1,
@@ -21215,8 +21215,8 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0843_a",
-        "CardName": "2Type Card 46",
+        "InternalName": "card0989_a",
+        "CardName": "2Type Card 73",
         "Cost": "2Y2V5A",
         "ConvertedCost": 9,
         "Refund": 2,
@@ -21235,8 +21235,8 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0844_a",
-        "CardName": "2Type Card 47",
+        "InternalName": "card0990_a",
+        "CardName": "2Type Card 74",
         "Cost": "1Y1T3A",
         "ConvertedCost": 5,
         "Refund": 1,
@@ -21255,8 +21255,8 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0845_a",
-        "CardName": "2Type Card 48",
+        "InternalName": "card0991_a",
+        "CardName": "2Type Card 75",
         "Cost": "2E2V2A",
         "ConvertedCost": 6,
         "Refund": 1,
@@ -21275,8 +21275,8 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0846_a",
-        "CardName": "2Type Card 49",
+        "InternalName": "card0992_a",
+        "CardName": "2Type Card 76",
         "Cost": "2N2S2A",
         "ConvertedCost": 6,
         "Refund": 2,
@@ -21295,8 +21295,8 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0847_a",
-        "CardName": "2Type Card 50",
+        "InternalName": "card0993_a",
+        "CardName": "2Type Card 77",
         "Cost": "1N1T2A",
         "ConvertedCost": 4,
         "Refund": 1,
@@ -21315,8 +21315,8 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0848_a",
-        "CardName": "3Type Card 8",
+        "InternalName": "card0994_a",
+        "CardName": "3Type Card 17",
         "Cost": "1E1S1T",
         "ConvertedCost": 3,
         "Refund": "",
@@ -21335,8 +21335,8 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0849_a",
-        "CardName": "3Type Card 9",
+        "InternalName": "card0995_a",
+        "CardName": "3Type Card 18",
         "Cost": "1N1T1W1A",
         "ConvertedCost": 4,
         "Refund": "",
@@ -21355,8 +21355,8 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0850_a",
-        "CardName": "3Type Card 10",
+        "InternalName": "card0996_a",
+        "CardName": "3Type Card 19",
         "Cost": "1Y1V1W",
         "ConvertedCost": 3,
         "Refund": "",
@@ -21375,7 +21375,7 @@
         "Set": "S5"
     },
     {
-        "InternalName": "card0851_a",
+        "InternalName": "card0997_a",
         "CardName": "Fusion Earth Card 12a",
         "Cost": "1E2A",
         "ConvertedCost": 3,
@@ -21395,7 +21395,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0851_b",
+        "InternalName": "card0997_b",
         "CardName": "Fusion Earth Card 12b",
         "Cost": "1E1Y3A",
         "ConvertedCost": 5,
@@ -21415,7 +21415,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0852_a",
+        "InternalName": "card0998_a",
         "CardName": "Earth Card 13",
         "Cost": "1E7A",
         "ConvertedCost": 8,
@@ -21435,7 +21435,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0853_a",
+        "InternalName": "card0999_a",
         "CardName": "Earth Card 14",
         "Cost": "1E4A",
         "ConvertedCost": 5,
@@ -21455,7 +21455,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0854_a",
+        "InternalName": "card1000_a",
         "CardName": "Earth Card 15",
         "Cost": "1E2A",
         "ConvertedCost": 3,
@@ -21475,7 +21475,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0855_a",
+        "InternalName": "card1001_a",
         "CardName": "Earth Card 16",
         "Cost": "1E1A",
         "ConvertedCost": 2,
@@ -21495,7 +21495,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0856_a",
+        "InternalName": "card1002_a",
         "CardName": "Fusion Earth Card 17a",
         "Cost": "1E3A",
         "ConvertedCost": 4,
@@ -21515,7 +21515,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0856_b",
+        "InternalName": "card1002_b",
         "CardName": "Fusion Earth Card 17b",
         "Cost": "1E1N2A",
         "ConvertedCost": 4,
@@ -21535,7 +21535,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0857_a",
+        "InternalName": "card1003_a",
         "CardName": "Earth Card 18",
         "Cost": "2E1A",
         "ConvertedCost": 3,
@@ -21555,7 +21555,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0858_a",
+        "InternalName": "card1004_a",
         "CardName": "Earth Card 19",
         "Cost": "1E1A",
         "ConvertedCost": 2,
@@ -21575,7 +21575,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0859_a",
+        "InternalName": "card1005_a",
         "CardName": "Fusion Earth Card 20a",
         "Cost": "3E7A",
         "ConvertedCost": 10,
@@ -21595,7 +21595,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0859_b",
+        "InternalName": "card1005_b",
         "CardName": "Fusion Earth Card 20b",
         "Cost": "6E5A",
         "ConvertedCost": 11,
@@ -21615,7 +21615,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0860_a",
+        "InternalName": "card1006_a",
         "CardName": "Earth Card 21",
         "Cost": "2E1A",
         "ConvertedCost": 3,
@@ -21635,7 +21635,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0861_a",
+        "InternalName": "card1007_a",
         "CardName": "Earth Card 22",
         "Cost": "2EXA",
         "ConvertedCost": 2,
@@ -21655,7 +21655,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0862_a",
+        "InternalName": "card1008_a",
         "CardName": "Fusion Fire Card 18a",
         "Cost": "1F1A",
         "ConvertedCost": 2,
@@ -21675,7 +21675,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0862_b",
+        "InternalName": "card1008_b",
         "CardName": "Fusion Fire Card 18b",
         "Cost": "1F1Y2A",
         "ConvertedCost": 4,
@@ -21695,7 +21695,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0863_a",
+        "InternalName": "card1009_a",
         "CardName": "Fire Card 19",
         "Cost": "1F4A",
         "ConvertedCost": 5,
@@ -21715,7 +21715,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0864_a",
+        "InternalName": "card1010_a",
         "CardName": "Fire Card 20",
         "Cost": "1F4A",
         "ConvertedCost": 5,
@@ -21735,7 +21735,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0865_a",
+        "InternalName": "card1011_a",
         "CardName": "Fire Card 21",
         "Cost": "1F3A",
         "ConvertedCost": 4,
@@ -21755,7 +21755,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0866_a",
+        "InternalName": "card1012_a",
         "CardName": "Fusion Fire Card 22a",
         "Cost": "1F1A",
         "ConvertedCost": 2,
@@ -21775,7 +21775,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0866_b",
+        "InternalName": "card1012_b",
         "CardName": "Fusion Fire Card 22b",
         "Cost": "1F1Y2A",
         "ConvertedCost": 4,
@@ -21795,7 +21795,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0867_a",
+        "InternalName": "card1013_a",
         "CardName": "Fire Card 23",
         "Cost": "1F3A",
         "ConvertedCost": 4,
@@ -21815,7 +21815,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0868_a",
+        "InternalName": "card1014_a",
         "CardName": "Fire Card 24",
         "Cost": "2F1A",
         "ConvertedCost": 3,
@@ -21835,7 +21835,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0869_a",
+        "InternalName": "card1015_a",
         "CardName": "Fire Card 25",
         "Cost": "1F1A",
         "ConvertedCost": 2,
@@ -21855,7 +21855,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0870_a",
+        "InternalName": "card1016_a",
         "CardName": "Fusion Fire Card 26a",
         "Cost": "1F2A",
         "ConvertedCost": 3,
@@ -21875,7 +21875,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0870_b",
+        "InternalName": "card1016_b",
         "CardName": "Fusion Fire Card 26b",
         "Cost": "1E1F2A",
         "ConvertedCost": 4,
@@ -21895,7 +21895,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0871_a",
+        "InternalName": "card1017_a",
         "CardName": "Fire Card 27",
         "Cost": "2F4A",
         "ConvertedCost": 6,
@@ -21915,7 +21915,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0872_a",
+        "InternalName": "card1018_a",
         "CardName": "Fire Card 28",
         "Cost": "XF1A",
         "ConvertedCost": 1,
@@ -21935,7 +21935,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0873_a",
+        "InternalName": "card1019_a",
         "CardName": "Ice Card 18",
         "Cost": "1I",
         "ConvertedCost": 1,
@@ -21955,7 +21955,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0874_a",
+        "InternalName": "card1020_a",
         "CardName": "Ice Card 19",
         "Cost": "1I3A",
         "ConvertedCost": 4,
@@ -21975,7 +21975,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0875_a",
+        "InternalName": "card1021_a",
         "CardName": "Fusion Ice Card 20a",
         "Cost": "1I2A",
         "ConvertedCost": 3,
@@ -21995,7 +21995,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0875_b",
+        "InternalName": "card1021_b",
         "CardName": "Fusion Ice Card 20b",
         "Cost": "1E1I2A",
         "ConvertedCost": 4,
@@ -22015,7 +22015,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0876_a",
+        "InternalName": "card1022_a",
         "CardName": "Ice Card 21",
         "Cost": "1I2A",
         "ConvertedCost": 3,
@@ -22035,7 +22035,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0877_a",
+        "InternalName": "card1023_a",
         "CardName": "Ice Card 22",
         "Cost": "1I1A",
         "ConvertedCost": 2,
@@ -22055,7 +22055,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0878_a",
+        "InternalName": "card1024_a",
         "CardName": "Fusion Ice Card 23a",
         "Cost": "2I4A",
         "ConvertedCost": 6,
@@ -22075,7 +22075,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0878_b",
+        "InternalName": "card1024_b",
         "CardName": "Fusion Ice Card 23b",
         "Cost": "2I1Y3A",
         "ConvertedCost": 6,
@@ -22095,7 +22095,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0879_a",
+        "InternalName": "card1025_a",
         "CardName": "Ice Card 24",
         "Cost": "1I2A",
         "ConvertedCost": 3,
@@ -22115,7 +22115,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0880_a",
+        "InternalName": "card1026_a",
         "CardName": "Ice Card 25",
         "Cost": "2I3A",
         "ConvertedCost": 5,
@@ -22135,7 +22135,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0881_a",
+        "InternalName": "card1027_a",
         "CardName": "Ice Card 26",
         "Cost": "2I3A",
         "ConvertedCost": 5,
@@ -22155,7 +22155,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0882_a",
+        "InternalName": "card1028_a",
         "CardName": "Fusion Ice Card 27a",
         "Cost": "2I2A",
         "ConvertedCost": 4,
@@ -22175,7 +22175,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0882_b",
+        "InternalName": "card1028_b",
         "CardName": "Fusion Ice Card 27b",
         "Cost": "2I1N1A",
         "ConvertedCost": 4,
@@ -22195,7 +22195,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0883_a",
+        "InternalName": "card1029_a",
         "CardName": "Ice Card 28",
         "Cost": "2I2A",
         "ConvertedCost": 4,
@@ -22215,7 +22215,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0884_a",
+        "InternalName": "card1030_a",
         "CardName": "Fusion Nature Card 12a",
         "Cost": "1N",
         "ConvertedCost": 1,
@@ -22235,7 +22235,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0884_b",
+        "InternalName": "card1030_b",
         "CardName": "Fusion Nature Card 12b",
         "Cost": "1E1N1A",
         "ConvertedCost": 3,
@@ -22255,7 +22255,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0885_a",
+        "InternalName": "card1031_a",
         "CardName": "Nature Card 13",
         "Cost": "1N6A",
         "ConvertedCost": 7,
@@ -22275,7 +22275,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0886_a",
+        "InternalName": "card1032_a",
         "CardName": "Nature Card 14",
         "Cost": "1N2A",
         "ConvertedCost": 3,
@@ -22295,7 +22295,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0887_a",
+        "InternalName": "card1033_a",
         "CardName": "Nature Card 15",
         "Cost": "1N1A",
         "ConvertedCost": 2,
@@ -22315,7 +22315,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0888_a",
+        "InternalName": "card1034_a",
         "CardName": "Fusion Nature Card 16a",
         "Cost": "1N1A",
         "ConvertedCost": 2,
@@ -22335,7 +22335,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0888_b",
+        "InternalName": "card1034_b",
         "CardName": "Fusion Nature Card 16b",
         "Cost": "1I1N2A",
         "ConvertedCost": 4,
@@ -22355,7 +22355,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0889_a",
+        "InternalName": "card1035_a",
         "CardName": "Nature Card 17",
         "Cost": "3N3A",
         "ConvertedCost": 6,
@@ -22375,7 +22375,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0890_a",
+        "InternalName": "card1036_a",
         "CardName": "Nature Card 18",
         "Cost": "1N3A",
         "ConvertedCost": 4,
@@ -22395,7 +22395,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0891_a",
+        "InternalName": "card1037_a",
         "CardName": "Nature Card 19",
         "Cost": "4NXA",
         "ConvertedCost": 4,
@@ -22415,7 +22415,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0892_a",
+        "InternalName": "card1038_a",
         "CardName": "Fusion Nature Card 20a",
         "Cost": "3N8A",
         "ConvertedCost": 11,
@@ -22435,7 +22435,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0892_b",
+        "InternalName": "card1038_b",
         "CardName": "Fusion Nature Card 20b",
         "Cost": "6N6A",
         "ConvertedCost": 12,
@@ -22455,7 +22455,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0893_a",
+        "InternalName": "card1039_a",
         "CardName": "Nature Card 21",
         "Cost": "3N5A",
         "ConvertedCost": 8,
@@ -22475,7 +22475,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0894_a",
+        "InternalName": "card1040_a",
         "CardName": "Nature Card 22",
         "Cost": "1N1A",
         "ConvertedCost": 2,
@@ -22495,7 +22495,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0895_a",
+        "InternalName": "card1041_a",
         "CardName": "Fusion Synthetic Card 12a",
         "Cost": "1Y2A",
         "ConvertedCost": 3,
@@ -22515,7 +22515,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0895_b",
+        "InternalName": "card1041_b",
         "CardName": "Fusion Synthetic Card 12b",
         "Cost": "1F1Y3A",
         "ConvertedCost": 5,
@@ -22535,7 +22535,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0896_a",
+        "InternalName": "card1042_a",
         "CardName": "Synthetic Card 13",
         "Cost": "1Y7A",
         "ConvertedCost": 8,
@@ -22555,7 +22555,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0897_a",
+        "InternalName": "card1043_a",
         "CardName": "Synthetic Card 14",
         "Cost": "1Y3A",
         "ConvertedCost": 4,
@@ -22575,7 +22575,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0898_a",
+        "InternalName": "card1044_a",
         "CardName": "Synthetic Card 15",
         "Cost": "1Y1A",
         "ConvertedCost": 2,
@@ -22595,7 +22595,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0899_a",
+        "InternalName": "card1045_a",
         "CardName": "Synthetic Card 16",
         "Cost": "1Y1A",
         "ConvertedCost": 2,
@@ -22615,7 +22615,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0900_a",
+        "InternalName": "card1046_a",
         "CardName": "Fusion Synthetic Card 17a",
         "Cost": "2Y4A",
         "ConvertedCost": 6,
@@ -22635,7 +22635,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0900_b",
+        "InternalName": "card1046_b",
         "CardName": "Fusion Synthetic Card 17b",
         "Cost": "2Y1W4",
         "ConvertedCost": 7,
@@ -22655,7 +22655,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0901_a",
+        "InternalName": "card1047_a",
         "CardName": "Synthetic Card 18",
         "Cost": "1Y",
         "ConvertedCost": 1,
@@ -22675,7 +22675,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0902_a",
+        "InternalName": "card1048_a",
         "CardName": "Synthetic Card 19",
         "Cost": "2Y2A",
         "ConvertedCost": 4,
@@ -22695,7 +22695,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0903_a",
+        "InternalName": "card1049_a",
         "CardName": "Fusion Synthetic Card 20a",
         "Cost": "3Y8A",
         "ConvertedCost": 11,
@@ -22715,7 +22715,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0903_b",
+        "InternalName": "card1049_b",
         "CardName": "Fusion Synthetic Card 20b",
         "Cost": "6Y6A",
         "ConvertedCost": 12,
@@ -22735,7 +22735,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0904_a",
+        "InternalName": "card1050_a",
         "CardName": "Synthetic Card 21",
         "Cost": "1Y2A",
         "ConvertedCost": 3,
@@ -22755,7 +22755,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0905_a",
+        "InternalName": "card1051_a",
         "CardName": "Synthetic Card 22",
         "Cost": "2Y4A",
         "ConvertedCost": 6,
@@ -22775,7 +22775,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0906_a",
+        "InternalName": "card1052_a",
         "CardName": "Fusion Water Card 18a",
         "Cost": "1W1A",
         "ConvertedCost": 2,
@@ -22795,7 +22795,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0906_b",
+        "InternalName": "card1052_b",
         "CardName": "Fusion Water Card 18b",
         "Cost": "1Y1W2A",
         "ConvertedCost": 4,
@@ -22815,7 +22815,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0907_a",
+        "InternalName": "card1053_a",
         "CardName": "Water Card 19",
         "Cost": "2W3A",
         "ConvertedCost": 5,
@@ -22835,7 +22835,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0908_a",
+        "InternalName": "card1054_a",
         "CardName": "Water Card 20",
         "Cost": "1W3A",
         "ConvertedCost": 4,
@@ -22855,7 +22855,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0909_a",
+        "InternalName": "card1055_a",
         "CardName": "Water Card 21",
         "Cost": "1W",
         "ConvertedCost": 1,
@@ -22875,7 +22875,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0910_a",
+        "InternalName": "card1056_a",
         "CardName": "Fusion Water Card 22a",
         "Cost": "1W2A",
         "ConvertedCost": 3,
@@ -22895,7 +22895,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0910_b",
+        "InternalName": "card1056_b",
         "CardName": "Fusion Water Card 22b",
         "Cost": "1E1W3A",
         "ConvertedCost": 5,
@@ -22915,7 +22915,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0911_a",
+        "InternalName": "card1057_a",
         "CardName": "Water Card 23",
         "Cost": "1W4A",
         "ConvertedCost": 5,
@@ -22935,7 +22935,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0912_a",
+        "InternalName": "card1058_a",
         "CardName": "Water Card 24",
         "Cost": "1W4A",
         "ConvertedCost": 5,
@@ -22955,7 +22955,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0913_a",
+        "InternalName": "card1059_a",
         "CardName": "Water Card 25",
         "Cost": "1W3A",
         "ConvertedCost": 4,
@@ -22975,7 +22975,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0914_a",
+        "InternalName": "card1060_a",
         "CardName": "Fusion Water Card 26a",
         "Cost": "2W1A",
         "ConvertedCost": 3,
@@ -22995,7 +22995,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0914_b",
+        "InternalName": "card1060_b",
         "CardName": "Fusion Water Card 26b",
         "Cost": "2N2W",
         "ConvertedCost": 4,
@@ -23015,7 +23015,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0915_a",
+        "InternalName": "card1061_a",
         "CardName": "Water Card 27",
         "Cost": "1WXA",
         "ConvertedCost": 1,
@@ -23035,7 +23035,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0916_a",
+        "InternalName": "card1062_a",
         "CardName": "Water Card 28",
         "Cost": "3W3A",
         "ConvertedCost": 6,
@@ -23055,7 +23055,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0917_a",
+        "InternalName": "card1063_a",
         "CardName": "Fusion Neutral Card 23a",
         "Cost": "2A",
         "ConvertedCost": 2,
@@ -23075,7 +23075,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0917_b",
+        "InternalName": "card1063_b",
         "CardName": "Fusion Neutral Card 23b",
         "Cost": "1U1Y2A",
         "ConvertedCost": 4,
@@ -23095,7 +23095,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0918_a",
+        "InternalName": "card1064_a",
         "CardName": "Neutral Card 24",
         "Cost": "6A",
         "ConvertedCost": 6,
@@ -23115,7 +23115,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0919_a",
+        "InternalName": "card1065_a",
         "CardName": "Neutral Card 25",
         "Cost": "1U2A",
         "ConvertedCost": 3,
@@ -23135,7 +23135,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0920_a",
+        "InternalName": "card1066_a",
         "CardName": "Neutral Card 26",
         "Cost": "4A",
         "ConvertedCost": 4,
@@ -23155,7 +23155,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0921_a",
+        "InternalName": "card1067_a",
         "CardName": "Fusion Neutral Card 27a",
         "Cost": "3A",
         "ConvertedCost": 3,
@@ -23175,7 +23175,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0921_b",
+        "InternalName": "card1067_b",
         "CardName": "Fusion Neutral Card 27b",
         "Cost": "1E1U3A",
         "ConvertedCost": 5,
@@ -23195,7 +23195,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0922_a",
+        "InternalName": "card1068_a",
         "CardName": "Neutral Card 28",
         "Cost": "7A",
         "ConvertedCost": 7,
@@ -23215,7 +23215,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0923_a",
+        "InternalName": "card1069_a",
         "CardName": "Neutral Card 29",
         "Cost": "4U",
         "ConvertedCost": 4,
@@ -23235,7 +23235,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0924_a",
+        "InternalName": "card1070_a",
         "CardName": "Neutral Card 30",
         "Cost": "1U2A",
         "ConvertedCost": 3,
@@ -23255,7 +23255,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0925_a",
+        "InternalName": "card1071_a",
         "CardName": "Neutral Card 31",
         "Cost": "2U3A",
         "ConvertedCost": 5,
@@ -23275,7 +23275,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0926_a",
+        "InternalName": "card1072_a",
         "CardName": "Neutral Card 32",
         "Cost": "3A",
         "ConvertedCost": 3,
@@ -23295,7 +23295,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0927_a",
+        "InternalName": "card1073_a",
         "CardName": "Fusion Neutral Card 33a",
         "Cost": "2U1A",
         "ConvertedCost": 3,
@@ -23315,7 +23315,7 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0927_b",
+        "InternalName": "card1073_b",
         "CardName": "Fusion Neutral Card 33b",
         "Cost": "6U",
         "ConvertedCost": 6,
@@ -23335,8 +23335,8 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0928_a",
-        "CardName": "2Type Card 51",
+        "InternalName": "card1074_a",
+        "CardName": "2Type Card 78",
         "Cost": "1E1N2A",
         "ConvertedCost": 4,
         "Refund": 1,
@@ -23355,8 +23355,8 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0929_a",
-        "CardName": "2Type Card 52",
+        "InternalName": "card1075_a",
+        "CardName": "2Type Card 79",
         "Cost": "1I1W2A",
         "ConvertedCost": 4,
         "Refund": 1,
@@ -23375,8 +23375,8 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0930_a",
-        "CardName": "2Type Card 53",
+        "InternalName": "card1076_a",
+        "CardName": "2Type Card 80",
         "Cost": "1E1W1A",
         "ConvertedCost": 3,
         "Refund": 1,
@@ -23395,8 +23395,8 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0931_a",
-        "CardName": "2Type Card 54",
+        "InternalName": "card1077_a",
+        "CardName": "2Type Card 81",
         "Cost": "1I1Y4A",
         "ConvertedCost": 6,
         "Refund": 2,
@@ -23415,8 +23415,8 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0932_a",
-        "CardName": "2Type Card 55",
+        "InternalName": "card1078_a",
+        "CardName": "2Type Card 82",
         "Cost": "1E1F",
         "ConvertedCost": 2,
         "Refund": "",
@@ -23435,8 +23435,8 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0933_a",
-        "CardName": "2Type Card 56",
+        "InternalName": "card1079_a",
+        "CardName": "2Type Card 83",
         "Cost": "1E1I1A",
         "ConvertedCost": 3,
         "Refund": 1,
@@ -23455,8 +23455,8 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0934_a",
-        "CardName": "2Type Card 57",
+        "InternalName": "card1080_a",
+        "CardName": "2Type Card 84",
         "Cost": "1N1W1A",
         "ConvertedCost": 3,
         "Refund": 1,
@@ -23475,8 +23475,8 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0935_a",
-        "CardName": "2Type Card 58",
+        "InternalName": "card1081_a",
+        "CardName": "2Type Card 85",
         "Cost": "1I1N1A",
         "ConvertedCost": 3,
         "Refund": 1,
@@ -23495,8 +23495,8 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0936_a",
-        "CardName": "2Type Card 59",
+        "InternalName": "card1082_a",
+        "CardName": "2Type Card 86",
         "Cost": "1Y1W1A",
         "ConvertedCost": 3,
         "Refund": 1,
@@ -23515,8 +23515,8 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0937_a",
-        "CardName": "2Type Card 60",
+        "InternalName": "card1083_a",
+        "CardName": "2Type Card 87",
         "Cost": "1F1Y1A",
         "ConvertedCost": 3,
         "Refund": 1,
@@ -23535,8 +23535,8 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0938_a",
-        "CardName": "2Type Card 61",
+        "InternalName": "card1084_a",
+        "CardName": "2Type Card 88",
         "Cost": "2E2N1A",
         "ConvertedCost": 5,
         "Refund": 1,
@@ -23555,8 +23555,8 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0939_a",
-        "CardName": "2Type Card 62",
+        "InternalName": "card1085_a",
+        "CardName": "2Type Card 89",
         "Cost": "1I1W",
         "ConvertedCost": 2,
         "Refund": 1,
@@ -23575,8 +23575,8 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0940_a",
-        "CardName": "2Type Card 63",
+        "InternalName": "card1086_a",
+        "CardName": "2Type Card 90",
         "Cost": "1I1Y2A",
         "ConvertedCost": 4,
         "Refund": "",
@@ -23595,8 +23595,8 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0941_a",
-        "CardName": "2Type Card 64",
+        "InternalName": "card1087_a",
+        "CardName": "2Type Card 91",
         "Cost": "1E1WA",
         "ConvertedCost": 2,
         "Refund": "",
@@ -23615,8 +23615,8 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0942_a",
-        "CardName": "2Type Card 65a",
+        "InternalName": "card1088_a",
+        "CardName": "2Type Card 92",
         "Cost": "",
         "ConvertedCost": 0,
         "Refund": "",
@@ -23635,8 +23635,8 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0942b_a",
-        "CardName": "2Type Card 65b",
+        "InternalName": "card1089_a",
+        "CardName": "2Type Card 93",
         "Cost": "",
         "ConvertedCost": 0,
         "Refund": "",
@@ -23645,18 +23645,18 @@
         "CardType": "Shield",
         "SubType": "",
         "ElementType1": "Earth",
-        "ElementType2": "Nature",
+        "ElementType2": "Fire",
         "ElementType3": "",
         "Rarity": "Uncommon",
-        "CardText": "Enter Play: Produce 1EU.\nSwell 15 - Produce 1EN instead.",
+        "CardText": "Enter Play: Produce 1EU.\nSwell 15 - Produce 1EF instead.",
         "ATK": "",
         "DEF": "",
         "HP": "",
         "Set": "S6"
     },
     {
-        "InternalName": "card0942c_a",
-        "CardName": "2Type Card 65c",
+        "InternalName": "card1090_a",
+        "CardName": "2Type Card 94",
         "Cost": "",
         "ConvertedCost": 0,
         "Refund": "",
@@ -23665,58 +23665,18 @@
         "CardType": "Shield",
         "SubType": "",
         "ElementType1": "Earth",
-        "ElementType2": "Water",
+        "ElementType2": "Fire",
         "ElementType3": "",
         "Rarity": "Uncommon",
-        "CardText": "Enter Play: Produce 1EU.\nSwell 15 - Produce 1EW instead.",
+        "CardText": "Enter Play: Produce 1EU.\nSwell 15 - Produce 1EF instead.",
         "ATK": "",
         "DEF": "",
         "HP": "",
         "Set": "S6"
     },
     {
-        "InternalName": "card0942d_a",
-        "CardName": "2Type Card 65d",
-        "Cost": "",
-        "ConvertedCost": 0,
-        "Refund": "",
-        "Hold": "",
-        "SuperType": "",
-        "CardType": "Shield",
-        "SubType": "",
-        "ElementType1": "Ice",
-        "ElementType2": "Synthetic",
-        "ElementType3": "",
-        "Rarity": "Uncommon",
-        "CardText": "Enter Play: Produce 1IU.\nSwell 15 - Produce 1IY instead.",
-        "ATK": "",
-        "DEF": "",
-        "HP": "",
-        "Set": "S6"
-    },
-    {
-        "InternalName": "card0942e_a",
-        "CardName": "2Type Card 65e",
-        "Cost": "",
-        "ConvertedCost": 0,
-        "Refund": "",
-        "Hold": "",
-        "SuperType": "",
-        "CardType": "Shield",
-        "SubType": "",
-        "ElementType1": "Ice",
-        "ElementType2": "Water",
-        "ElementType3": "",
-        "Rarity": "Uncommon",
-        "CardText": "Enter Play: Produce 1IU.\nSwell 15 - Produce 1IW instead.",
-        "ATK": "",
-        "DEF": "",
-        "HP": "",
-        "Set": "S6"
-    },
-    {
-        "InternalName": "card0942f_a",
-        "CardName": "2Type Card 65f",
+        "InternalName": "card1091_a",
+        "CardName": "2Type Card 95",
         "Cost": "",
         "ConvertedCost": 0,
         "Refund": "",
@@ -23725,18 +23685,18 @@
         "CardType": "Shield",
         "SubType": "",
         "ElementType1": "Earth",
-        "ElementType2": "Ice",
+        "ElementType2": "Fire",
         "ElementType3": "",
         "Rarity": "Uncommon",
-        "CardText": "Enter Play: Produce 1EU.\nSwell 15 - Produce 1EI instead.",
+        "CardText": "Enter Play: Produce 1EU.\nSwell 15 - Produce 1EF instead.",
         "ATK": "",
         "DEF": "",
         "HP": "",
         "Set": "S6"
     },
     {
-        "InternalName": "card0942g_a",
-        "CardName": "2Type Card 65g",
+        "InternalName": "card1092_a",
+        "CardName": "2Type Card 96",
         "Cost": "",
         "ConvertedCost": 0,
         "Refund": "",
@@ -23744,19 +23704,19 @@
         "SuperType": "",
         "CardType": "Shield",
         "SubType": "",
-        "ElementType1": "Fire",
-        "ElementType2": "Synthetic",
+        "ElementType1": "Earth",
+        "ElementType2": "Fire",
         "ElementType3": "",
         "Rarity": "Uncommon",
-        "CardText": "Enter Play: Produce 1FU.\nSwell 15 - Produce 1FY instead.",
+        "CardText": "Enter Play: Produce 1EU.\nSwell 15 - Produce 1EF instead.",
         "ATK": "",
         "DEF": "",
         "HP": "",
         "Set": "S6"
     },
     {
-        "InternalName": "card0942h_a",
-        "CardName": "2Type Card 65h",
+        "InternalName": "card1093_a",
+        "CardName": "2Type Card 97",
         "Cost": "",
         "ConvertedCost": 0,
         "Refund": "",
@@ -23764,19 +23724,19 @@
         "SuperType": "",
         "CardType": "Shield",
         "SubType": "",
-        "ElementType1": "Ice",
-        "ElementType2": "Nature",
+        "ElementType1": "Earth",
+        "ElementType2": "Fire",
         "ElementType3": "",
         "Rarity": "Uncommon",
-        "CardText": "Enter Play: Produce 1IU.\nSwell 15 - Produce 1IN instead.",
+        "CardText": "Enter Play: Produce 1EU.\nSwell 15 - Produce 1EF instead.",
         "ATK": "",
         "DEF": "",
         "HP": "",
         "Set": "S6"
     },
     {
-        "InternalName": "card0942i_a",
-        "CardName": "2Type Card 65i",
+        "InternalName": "card1094_a",
+        "CardName": "2Type Card 98",
         "Cost": "",
         "ConvertedCost": 0,
         "Refund": "",
@@ -23784,19 +23744,19 @@
         "SuperType": "",
         "CardType": "Shield",
         "SubType": "",
-        "ElementType1": "Nature",
-        "ElementType2": "Water",
+        "ElementType1": "Earth",
+        "ElementType2": "Fire",
         "ElementType3": "",
         "Rarity": "Uncommon",
-        "CardText": "Enter Play: Produce 1NU.\nSwell 15 - Produce 1NW instead.",
+        "CardText": "Enter Play: Produce 1EU.\nSwell 15 - Produce 1EF instead.",
         "ATK": "",
         "DEF": "",
         "HP": "",
         "Set": "S6"
     },
     {
-        "InternalName": "card0942j_a",
-        "CardName": "2Type Card 65j",
+        "InternalName": "card1095_a",
+        "CardName": "2Type Card 99",
         "Cost": "",
         "ConvertedCost": 0,
         "Refund": "",
@@ -23804,19 +23764,59 @@
         "SuperType": "",
         "CardType": "Shield",
         "SubType": "",
-        "ElementType1": "Synthetic",
-        "ElementType2": "Water",
+        "ElementType1": "Earth",
+        "ElementType2": "Fire",
         "ElementType3": "",
         "Rarity": "Uncommon",
-        "CardText": "Enter Play: Produce 1YU.\nSwell 15 - Produce 1YW instead.",
+        "CardText": "Enter Play: Produce 1EU.\nSwell 15 - Produce 1EF instead.",
         "ATK": "",
         "DEF": "",
         "HP": "",
         "Set": "S6"
     },
     {
-        "InternalName": "card0943_a",
-        "CardName": "2Type Card 66",
+        "InternalName": "card1096_a",
+        "CardName": "2Type Card 100",
+        "Cost": "",
+        "ConvertedCost": 0,
+        "Refund": "",
+        "Hold": "",
+        "SuperType": "",
+        "CardType": "Shield",
+        "SubType": "",
+        "ElementType1": "Earth",
+        "ElementType2": "Fire",
+        "ElementType3": "",
+        "Rarity": "Uncommon",
+        "CardText": "Enter Play: Produce 1EU.\nSwell 15 - Produce 1EF instead.",
+        "ATK": "",
+        "DEF": "",
+        "HP": "",
+        "Set": "S6"
+    },
+    {
+        "InternalName": "card1097_a",
+        "CardName": "2Type Card 101",
+        "Cost": "",
+        "ConvertedCost": 0,
+        "Refund": "",
+        "Hold": "",
+        "SuperType": "",
+        "CardType": "Shield",
+        "SubType": "",
+        "ElementType1": "Earth",
+        "ElementType2": "Fire",
+        "ElementType3": "",
+        "Rarity": "Uncommon",
+        "CardText": "Enter Play: Produce 1EU.\nSwell 15 - Produce 1EF instead.",
+        "ATK": "",
+        "DEF": "",
+        "HP": "",
+        "Set": "S6"
+    },
+    {
+        "InternalName": "card1098_a",
+        "CardName": "2Type Card 102",
         "Cost": "1N1W6A",
         "ConvertedCost": 8,
         "Refund": 2,
@@ -23835,8 +23835,8 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0944_a",
-        "CardName": "2Type Card 67",
+        "InternalName": "card1099_a",
+        "CardName": "2Type Card 103",
         "Cost": "1F1Y2A",
         "ConvertedCost": 4,
         "Refund": 1,
@@ -23855,8 +23855,8 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0945_a",
-        "CardName": "2Type Card 68",
+        "InternalName": "card1100_a",
+        "CardName": "2Type Card 104",
         "Cost": "2I2N1A",
         "ConvertedCost": 5,
         "Refund": 1,
@@ -23875,8 +23875,8 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0946_a",
-        "CardName": "2Type Card 69",
+        "InternalName": "card1101_a",
+        "CardName": "2Type Card 105",
         "Cost": "1Y1W5A",
         "ConvertedCost": 7,
         "Refund": 1,
@@ -23895,8 +23895,8 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0947_a",
-        "CardName": "2Type Card 70",
+        "InternalName": "card1102_a",
+        "CardName": "2Type Card 106",
         "Cost": "2E2I1A",
         "ConvertedCost": 5,
         "Refund": "",
@@ -23915,8 +23915,8 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0948_a",
-        "CardName": "3Type Card 11",
+        "InternalName": "card1103_a",
+        "CardName": "3Type Card 20",
         "Cost": "1E1N1Y",
         "ConvertedCost": 3,
         "Refund": "",
@@ -23935,8 +23935,8 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0949_a",
-        "CardName": "3Type Card 12",
+        "InternalName": "card1104_a",
+        "CardName": "3Type Card 21",
         "Cost": "1E1I1V1A",
         "ConvertedCost": 4,
         "Refund": 1,
@@ -23955,8 +23955,8 @@
         "Set": "S6"
     },
     {
-        "InternalName": "card0950_a",
-        "CardName": "3Type Card 13",
+        "InternalName": "card1105_a",
+        "CardName": "3Type Card 22",
         "Cost": "1I1N1S",
         "ConvertedCost": 3,
         "Refund": "",
