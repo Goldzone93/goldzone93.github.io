@@ -926,11 +926,11 @@ export function PackSimulator() {
             const baseKey = getBaseFrontId(baseFront);
 
             const cap = capOf(rarity);
-            const baseTotal = (baseCounts.get(baseKey) || 0) + (seenCounts.get(baseKey) || 0);
+            const collectionBaseTotal = (baseCounts.get(baseKey) || 0);
 
-            // At/over cap: if the player doesn't own the ORIGINAL printing yet,
-            // allow exactly 1 copy of it (same unlock rule as other variants).
-            if (baseTotal >= cap) {
+            // Only enable the bonus if the collection was already at/over cap
+            // before this Open Packs action started.
+            if (collectionBaseTotal >= cap) {
                 const ownedOriginal = (collection?.counts?.get(baseFront) || 0);
                 const bonusOriginalTaken = (seenVariantBonus.get(baseFront) || 0);
                 if (ownedOriginal < 1 && bonusOriginalTaken < 1) {
@@ -947,12 +947,19 @@ export function PackSimulator() {
             if (packSeen.has(baseKey)) return false;
 
             const cap = capOf(rarity);
-            const baseTotal = (baseCounts.get(baseKey) || 0) + (seenCounts.get(baseKey) || 0);
+            const collectionBaseTotal = (baseCounts.get(baseKey) || 0);
+            const runningBaseTotal = collectionBaseTotal + (seenCounts.get(baseKey) || 0);
 
             // Normal behavior until the card as a whole hits cap
-            if (baseTotal < cap) return true;
+            if (runningBaseTotal < cap) return true;
 
-            // At/over cap: allow exactly 1 copy of a NEW printing (variant) you don't own yet
+            // If this Open Packs action is what reached the cap, stop there.
+            // Only allow the +1 variant/original unlock when the collection
+            // was already at/over cap before opening.
+            if (collectionBaseTotal < cap) return false;
+
+            // At/over cap from the existing collection: allow exactly 1 copy
+            // of a NEW printing (variant) you don't own yet.
             const printId = printedIdForCandidate(card, rarity);
             const ownedPrinting = (collection?.counts?.get(printId) || 0);
             const bonusTaken = (seenVariantBonus.get(printId) || 0);
@@ -971,7 +978,8 @@ export function PackSimulator() {
 
             const baseKey = getBaseFrontId(pickedBase.InternalName);
             const cap = capOf(rarity);
-            const baseTotalBefore = (baseCounts.get(baseKey) || 0) + (seenCounts.get(baseKey) || 0);
+            const collectionBaseTotalBefore = (baseCounts.get(baseKey) || 0);
+            const baseTotalBefore = collectionBaseTotalBefore + (seenCounts.get(baseKey) || 0);
 
             // Track click-wide counts (still useful for normal pre-cap behavior)
             seenCounts.set(baseKey, (seenCounts.get(baseKey) || 0) + 1);
@@ -983,8 +991,9 @@ export function PackSimulator() {
                 ? { ...pickedBase, InternalName: printId }
                 : pickedBase;
 
-            // If we were already at/over cap, consume the 1-time bonus for this printing
-            if (baseTotalBefore >= cap) {
+            // Only consume the 1-time bonus if the collection was already
+            // at/over cap before opening.
+            if (collectionBaseTotalBefore >= cap) {
                 seenVariantBonus.set(printId, 1);
             }
 
