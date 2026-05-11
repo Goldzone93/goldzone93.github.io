@@ -3541,9 +3541,9 @@ export function PlaytestBoard() {
                                       <CardZoom id={ensureFrontId(banishPile[0])} name={banishPile[0]} />
                                       <img
                                           className="pb-card-img"
-                                          src={imgSrc(banishPile[0], 'a')}
-                                          alt={imgAlt('banish', banishPile[0], 'a')}
-                                          onError={onImgError('banish', banishPile[0], 'a')}
+                                          src={imgSrc(banishPile[0], /_b$/i.test(String(banishPile[0])) ? 'b' : 'a')}
+                                          alt={imgAlt('banish', banishPile[0], /_b$/i.test(String(banishPile[0])) ? 'b' : 'a')}
+                                          onError={onImgError('banish', banishPile[0], /_b$/i.test(String(banishPile[0])) ? 'b' : 'a')}
                                           draggable
                                           onDragStart={onBanishDragStart}
                                       />
@@ -3771,9 +3771,9 @@ export function PlaytestBoard() {
                                       <CardZoom id={ensureFrontId(gravePile[0])} name={gravePile[0]} />
                                       <img
                                           className="pb-card-img"
-                                          src={imgSrc(gravePile[0], 'a')}
-                                          alt={imgAlt('grave', gravePile[0], 'a')}
-                                          onError={onImgError('grave', gravePile[0], 'a')}
+                                          src={imgSrc(gravePile[0], /_b$/i.test(String(gravePile[0])) ? 'b' : 'a')}
+                                          alt={imgAlt('grave', gravePile[0], /_b$/i.test(String(gravePile[0])) ? 'b' : 'a')}
+                                          onError={onImgError('grave', gravePile[0], /_b$/i.test(String(gravePile[0])) ? 'b' : 'a')}
                                           draggable
                                           onDragStart={onGraveDragStart}
                                       />
@@ -4101,9 +4101,9 @@ export function PlaytestBoard() {
                                           <CardZoom id={ensureFrontId(cid)} name={cid} />
                                           <img
                                               className="pb-card-img"
-                                              src={imgSrc(cid, 'a')}
-                                              alt={imgAlt('card', cid, 'a')}
-                                              onError={onImgError('card', cid, 'a')}
+                                              src={imgSrc(cid, /_b$/i.test(String(cid)) ? 'b' : 'a')}
+                                              alt={imgAlt('card', cid, /_b$/i.test(String(cid)) ? 'b' : 'a')}
+                                              onError={onImgError('card', cid, /_b$/i.test(String(cid)) ? 'b' : 'a')}
                                               draggable="false"
                                               style={{ width: '100%', height: 'auto' }}
                                           />
@@ -4116,27 +4116,27 @@ export function PlaytestBoard() {
                               className="pb-modal-body"
                               style={{ display: 'flex', justifyContent: 'center' }}
                           >
-                                  <figure
-                                      className="pb-gallery-card"
-                                      data-menu-area={peekCard.readonly ? 'viewer-card' : 'hand-card'}
-                                      data-card-id={peekCard.id}
-                                      data-stack={peekCard.from}   /* 'deck' | 'shield' | 'grave' (readonly) */
-                                      data-owner={peekCard.owner || 'player'}
-                                      data-peek-index={0}
-                                      data-peek-size={Array.isArray(peekCard.ids) ? peekCard.ids.length : 1}
-                                      data-peek-total={Array.isArray(peekCard.ids) ? peekCard.ids.length : 1}
-                                      style={{ width: 'min(56vw, 420px)' }}
-                                  >
-                                      <CardZoom id={ensureFrontId(peekCard.id)} name={peekCard.id} />
-                                      <img
-                                          className="pb-card-img"
-                                          src={imgSrc(peekCard.id, 'a')}
-                                          alt={imgAlt('card', peekCard.id, 'a')}
-                                          onError={onImgError('card', peekCard.id, 'a')}
-                                          draggable="false"
-                                          style={{ width: '100%', height: 'auto' }}
-                                      />
-                                  </figure>
+                              <figure
+                                  className="pb-gallery-card"
+                                  data-menu-area={peekCard.readonly ? 'viewer-card' : 'hand-card'}
+                                  data-card-id={peekCard.id}
+                                  data-stack={peekCard.from}   /* 'deck' | 'shield' | 'grave' (readonly) */
+                                  data-owner={peekCard.owner || 'player'}
+                                  data-peek-index={0}
+                                  data-peek-size={Array.isArray(peekCard.ids) ? peekCard.ids.length : 1}
+                                  data-peek-total={Array.isArray(peekCard.ids) ? peekCard.ids.length : 1}
+                                  style={{ width: 'min(56vw, 420px)' }}
+                              >
+                                  <CardZoom id={ensureFrontId(peekCard.id)} name={peekCard.id} />
+                                  <img
+                                      className="pb-card-img"
+                                      src={imgSrc(peekCard.id, /_b$/i.test(String(peekCard.id)) ? 'b' : 'a')}
+                                      alt={imgAlt('card', peekCard.id, /_b$/i.test(String(peekCard.id)) ? 'b' : 'a')}
+                                      onError={onImgError('card', peekCard.id, /_b$/i.test(String(peekCard.id)) ? 'b' : 'a')}
+                                      draggable="false"
+                                      style={{ width: '100%', height: 'auto' }}
+                                  />
+                              </figure>
                           </div>
                       )}
                   </div>
@@ -4392,9 +4392,9 @@ export function PlaytestBoard() {
                                           <CardZoom id={ensureFrontId(id)} name={id} />
                                           <img
                                               className="pb-card-img"
-                                              src={imgSrc(id, 'a')}
-                                              alt={imgAlt('card', id, 'a')}
-                                              onError={onImgError('card', id, 'a')}
+                                              src={imgSrc(id, /_b$/i.test(String(id)) ? 'b' : 'a')}
+                                              alt={imgAlt('card', id, /_b$/i.test(String(id)) ? 'b' : 'a')}
+                                              onError={onImgError('card', id, /_b$/i.test(String(id)) ? 'b' : 'a')}
                                               draggable="false"
                                           />
                                       </figure>
@@ -4443,9 +4443,9 @@ export function PlaytestBoard() {
                                               <CardZoom id={ensureFrontId(id)} name={id} />
                                               <img
                                                   className="pb-card-img"
-                                                  src={imgSrc(id, 'a')}
-                                                  alt={imgAlt('card', id, 'a')}
-                                                  onError={onImgError('card', id, 'a')}
+                                                  src={imgSrc(id, /_b$/i.test(String(id)) ? 'b' : 'a')}
+                                                  alt={imgAlt('card', id, /_b$/i.test(String(id)) ? 'b' : 'a')}
+                                                  onError={onImgError('card', id, /_b$/i.test(String(id)) ? 'b' : 'a')}
                                                   draggable="false"
                                               />
                                           </figure>
@@ -4476,9 +4476,9 @@ export function PlaytestBoard() {
                                               <CardZoom id={ensureFrontId(id)} name={id} />
                                               <img
                                                   className="pb-card-img"
-                                                  src={imgSrc(id, 'a')}
-                                                  alt={imgAlt('card', id, 'a')}
-                                                  onError={onImgError('card', id, 'a')}
+                                                  src={imgSrc(id, /_b$/i.test(String(id)) ? 'b' : 'a')}
+                                                  alt={imgAlt('card', id, /_b$/i.test(String(id)) ? 'b' : 'a')}
+                                                  onError={onImgError('card', id, /_b$/i.test(String(id)) ? 'b' : 'a')}
                                                   draggable="false"
                                               />
                                           </figure>

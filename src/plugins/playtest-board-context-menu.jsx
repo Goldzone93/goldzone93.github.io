@@ -26,35 +26,35 @@ import { openPlayCostModal, getAvailableElements, spendElements } from './playte
   // Each returns an array of { id, label, disabled? } or { separator: true }
   const defaults = {
     'hand-card': (ctx) => {
-      // When opened from a stack viewer/reveal, cards have data-stack set to that pile.
-      // Disable sending to the *same* pile you’re currently viewing.
-      const stack = String(ctx?.data?.stack || '').toLowerCase();
-      const disableGrave  = stack === 'grave';
-      const disableBanish = stack === 'banish';
-      const disableShield = stack === 'shield';
+        // When opened from a stack viewer/reveal, cards have data-stack set to that pile.
+        // Disable sending to the *same* pile you’re currently viewing.
+        const stack = String(ctx?.data?.stack || '').toLowerCase();
+        const disableGrave = stack === 'grave';
+        const disableBanish = stack === 'banish';
+        const disableShield = stack === 'shield';
 
-      // If no stack is present, the source is the Hand dock → already in hand.
-      const disableAddToHand = !stack;
+        // If no stack is present, the source is the Hand dock → already in hand.
+        const disableAddToHand = !stack;
 
-          // Derive current side for label; prefer ctx.data.side, fallback to cardId suffix.
-          const cid = String(ctx?.data?.cardId || '');
-          const ds = String(ctx?.data?.side || (/_b$/i.test(cid) ? 'b' : 'a')).toLowerCase();
-          const flipLabel = ds === 'b' ? 'Flip to Front' : 'Flip to Back';
+        // Derive current side for label; prefer ctx.data.side, fallback to cardId suffix.
+        const cid = String(ctx?.data?.cardId || '');
+        const ds = String(ctx?.data?.side || (/_b$/i.test(cid) ? 'b' : 'a')).toLowerCase();
+        const flipLabel = ds === 'b' ? 'Flip to Front' : 'Flip to Back';
 
-      return [
-        { id: 'inspect', label: 'Inspect (Zoom)' },
-        { id: 'flip', label: flipLabel, disabled: !!stack }, // NEW — flip only applies to real hand cards
-        { separator: true },
-        { id: 'move_to_unit', label: 'Move to Unit Slot…' },
-        { id: 'move_to_support', label: 'Move to Support Slot…' },
-        { separator: true },
-        { id: 'add_to_hand', label: 'Add to Hand', disabled: disableAddToHand }, // NEW
-        { id: 'to_grave',   label: 'Send to Grave',                 disabled: disableGrave  },
-        { id: 'to_banish',  label: 'Send to Banish',                disabled: disableBanish },
-        { id: 'to_shield',  label: 'Put into Shield (shuffle)',     disabled: disableShield },
-        { id: 'to_deck_top',    label: 'Put on Top of Deck' },
-        { id: 'to_deck_bottom', label: 'Put on Bottom of Deck' },
-      ];
+        return [
+            { id: 'inspect', label: 'Inspect (Zoom)' },
+            { id: 'flip', label: flipLabel },
+            { separator: true },
+            { id: 'move_to_unit', label: 'Move to Unit Slot…' },
+            { id: 'move_to_support', label: 'Move to Support Slot…' },
+            { separator: true },
+            { id: 'add_to_hand', label: 'Add to Hand', disabled: disableAddToHand }, // NEW
+            { id: 'to_grave', label: 'Send to Grave', disabled: disableGrave },
+            { id: 'to_banish', label: 'Send to Banish', disabled: disableBanish },
+            { id: 'to_shield', label: 'Put into Shield (shuffle)', disabled: disableShield },
+            { id: 'to_deck_top', label: 'Put on Top of Deck' },
+            { id: 'to_deck_bottom', label: 'Put on Bottom of Deck' },
+        ];
     },
       'slot-card': (ctx) => {
           const slotKey = ctx?.data?.slotKey;
@@ -632,67 +632,71 @@ export function installPBActionHandlers(host) {
     };
 
     const removeSlotCard = (slotKey, routeFn) => {
-        if (!slotKey) return;
-        host.setBoardSlots((prev) => {
-            const current = prev[slotKey];
-            if (!current) return prev;
-            const up = { ...prev };
-            delete up[slotKey];
-            routeFn?.(current);
-            return up;
-        });
-        host.setExhaustedSlots((prev) => {
-            const next = new Set(prev);
-            next.delete(slotKey);
-            return next;
-        });
-        host.setSlotSides((prev) => {
-            if (!prev?.[slotKey]) return prev;
-            const next = { ...prev };
-            delete next[slotKey];
-            return next;
-        });
-        host.setSlotCounters((prev) => {
-            if (!prev?.[slotKey]) return prev;
-            const next = { ...prev };
-            delete next[slotKey];
-            return next;
-        });
-        // Clear any stat mods for this slot
-        host.setSlotStatMods?.((prev) => {
-            if (!prev?.[slotKey]) return prev;
-            const next = { ...(prev || {}) };
-            delete next[slotKey];
-            return next;
-        });
-        // NEW: clear any ad hoc labels for this slot
-        host.setSlotLabels?.((prev) => {
-            if (!prev?.[slotKey]) return prev;
-            const next = { ...(prev || {}) };
-            delete next[slotKey];
-            return next;
-        });
-        host.setSlotResources?.((prev) => {
-            if (!prev?.[slotKey]) return prev;
-            const next = { ...(prev || {}) };
-            delete next[slotKey];
-            return next;
-        });
-        // NEW — if removing from a battle slot, clear battle role & origin
-        if (/^(?:ob|b)\d+$/.test(String(slotKey)) && host.setBattleRole) {
-            host.setBattleRole(prev => {
-                const up = { ...(prev || {}) };
-                delete up[slotKey];
-                return up;
-            });
-            if (host.setBattleOrigin) {
-                host.setBattleOrigin(prev => {
-                    const up = { ...(prev || {}) };
-                    delete up[slotKey];
-                    return up;
-                });
-            }
-        };
+                  if (!slotKey) return;
+                  host.setBoardSlots((prev) => {
+                      const current = prev[slotKey];
+                      if (!current) return prev;
+                      const up = { ...prev };
+                      delete up[slotKey];
+
+                      const side = host.slotSides?.[slotKey] || 'a';
+                      const moved = `${String(current).replace(/_(a|b)$/i, '')}_${side}`;
+
+                      routeFn?.(moved);
+                      return up;
+                  });
+                  host.setExhaustedSlots((prev) => {
+                      const next = new Set(prev);
+                      next.delete(slotKey);
+                      return next;
+                  });
+                  host.setSlotSides((prev) => {
+                      if (!prev?.[slotKey]) return prev;
+                      const next = { ...prev };
+                      delete next[slotKey];
+                      return next;
+                  });
+                  host.setSlotCounters((prev) => {
+                      if (!prev?.[slotKey]) return prev;
+                      const next = { ...prev };
+                      delete next[slotKey];
+                      return next;
+                  });
+                  // Clear any stat mods for this slot
+                  host.setSlotStatMods?.((prev) => {
+                      if (!prev?.[slotKey]) return prev;
+                      const next = { ...(prev || {}) };
+                      delete next[slotKey];
+                      return next;
+                  });
+                  // NEW: clear any ad hoc labels for this slot
+                  host.setSlotLabels?.((prev) => {
+                      if (!prev?.[slotKey]) return prev;
+                      const next = { ...(prev || {}) };
+                      delete next[slotKey];
+                      return next;
+                  });
+                  host.setSlotResources?.((prev) => {
+                      if (!prev?.[slotKey]) return prev;
+                      const next = { ...(prev || {}) };
+                      delete next[slotKey];
+                      return next;
+                  });
+                  // NEW — if removing from a battle slot, clear battle role & origin
+                  if (/^(?:ob|b)\d+$/.test(String(slotKey)) && host.setBattleRole) {
+                      host.setBattleRole(prev => {
+                          const up = { ...(prev || {}) };
+                          delete up[slotKey];
+                          return up;
+                      });
+                      if (host.setBattleOrigin) {
+                          host.setBattleOrigin(prev => {
+                              const up = { ...(prev || {}) };
+                              delete up[slotKey];
+                              return up;
+                          });
+                      }
+                  };
     };
 
     const deckPopTop = (routeFn) => {
@@ -843,81 +847,128 @@ export function installPBActionHandlers(host) {
             if (action === 'inspect') { tryZoom(target); return; }
 
             if (fromPeek && cardId) {
-                const route = (fn) => removeFromStackInPeek(pStack, pIdx, cardId, fn, pOwner);
+                  const route = (fn) => removeFromStackInPeek(pStack, pIdx, cardId, fn, pOwner);
 
-                if (action === 'add_to_hand') route(isOppPeek ? toHandOpp : toHand);
-                else if (action === 'to_grave') route(isOppPeek ? toOGraveTop : toGraveTop);
-                else if (action === 'to_banish') route(isOppPeek ? toOBanishTop : toBanishTop);
-                else if (action === 'to_shield') route(isOppPeek ? oShieldShuffleIn : shieldShuffleIn);
-                else if (action === 'to_deck_top') {
-                    if (pStack === 'deck') {
-                        (isOppPeek ? host.setODeckPile : host.setDeckPile)((prev) => {
-                            const next = [...prev];
-                            const k = next.indexOf(cardId);
-                            if (k === -1) return prev;
-                            const [m] = next.splice(k, 1);
-                            // unshift for top / push for bottom (keep each block’s original op)
-                            next.unshift ? next.unshift(m) : next.push(m);
-                            return next;
-                        });
-                        host.setPeekCard((prev) => {
-                            if (!prev) return prev;
-                            if (Array.isArray(prev.ids)) {
-                                const ids = [...prev.ids];
-                                const k = ids.indexOf(cardId);
-                                if (k === -1) return prev;
-                                ids.splice(k, 1);
-                                if (prev.all) { ids.unshift(cardId); return { ...prev, ids, owner: pOwner }; }
-                                return ids.length ? { ...prev, ids } : null;
-                            }
-                            return null;
-                        });
-                    } else {
-                        route(toDeckTop);
-                    }
-                }
-                else if (action === 'to_deck_bottom') {
-                    if (pStack === 'deck') {
-                        (isOppPeek ? host.setODeckPile : host.setDeckPile)((prev) => {
-                            const next = [...prev];
-                            const k = next.indexOf(cardId);
-                            if (k === -1) return prev;
-                            const [m] = next.splice(k, 1);
-                            // unshift for top / push for bottom (keep each block’s original op)
-                            next.unshift ? next.unshift(m) : next.push(m);
-                            return next;
-                        });
-                        host.setPeekCard((prev) => {
-                            if (!prev) return prev;
-                            if (Array.isArray(prev.ids)) {
-                                const ids = [...prev.ids];
-                                const k = ids.indexOf(cardId);
-                                if (k === -1) return prev;
-                                ids.splice(k, 1);
-                                if (prev.all) { ids.push(cardId); return { ...prev, ids, owner: pOwner }; }
-                                return ids.length ? { ...prev, ids } : null;
-                            }
-                            return null;
-                        });
-                    } else {
-                        route(toDeckBottom);
-                    }
-                }
-                else if (action === 'move_to_unit' || action === 'move_to_support') {
-                    removeFromStackInPeek(pStack, pIdx, cardId, () => { }, pOwner);
-                    host.setPendingPlace({
-                        source: 'viewer',
-                        cardId,
-                        target: action === 'move_to_unit' ? 'unit' : 'support',
-                        owner: pOwner
-                    });
-                    const modal = target?.closest?.('.pb-modal');
-                    if (modal) {
-                        modal.classList.add('is-hidden');
-                        window.__PB_SUSPENDED_MODAL = modal;
-                    }
-                }
-                return;
+                  const setPeekStack =
+                      pStack === 'deck' ? (isOppPeek ? host.setODeckPile : host.setDeckPile) :
+                          pStack === 'shield' ? (isOppPeek ? host.setOShieldPile : host.setShieldPile) :
+                              pStack === 'grave' ? (isOppPeek ? host.setOGravePile : host.setGravePile) :
+                                  pStack === 'banish' ? (isOppPeek ? host.setOBanishPile : host.setBanishPile) :
+                                      null;
+
+                  const flipPeekIds = (arr) => {
+                      const next = [...(arr || [])];
+                      const k = (Number.isFinite(pIdx) && pIdx >= 0 && pIdx < next.length)
+                          ? pIdx
+                          : next.indexOf(cardId);
+
+                      if (k === -1) return arr;
+
+                      const current = String(next[k] || '');
+                      const base = current.replace(/_(a|b)$/i, '');
+                      const isBack = /_b$/i.test(current);
+
+                      let nextId = current;
+                      if (action === 'flip') nextId = `${base}_${isBack ? 'a' : 'b'}`;
+                      else if (action === 'flip_to_front') nextId = `${base}_a`;
+                      else if (action === 'flip_to_back') nextId = `${base}_b`;
+
+                      next[k] = nextId;
+                      return next;
+                  };
+
+                  if (action === 'flip' || action === 'flip_to_front' || action === 'flip_to_back') {
+                      if (setPeekStack) {
+                          setPeekStack((prev = []) => flipPeekIds(prev));
+                      }
+
+                      host.setPeekCard((prev) => {
+                          if (!prev) return prev;
+                          if (String(prev.from || '').toLowerCase() !== pStack) return prev;
+
+                          const prevOwner = String(prev.owner || 'player').toLowerCase();
+                          if (prevOwner !== pOwner) return prev;
+                          if (!Array.isArray(prev.ids)) return prev;
+
+                          return { ...prev, ids: flipPeekIds(prev.ids), owner: pOwner };
+                      });
+
+                      return;
+                  }
+
+                  if (action === 'add_to_hand') route(isOppPeek ? toHandOpp : toHand);
+                  else if (action === 'to_grave') route(isOppPeek ? toOGraveTop : toGraveTop);
+                  else if (action === 'to_banish') route(isOppPeek ? toOBanishTop : toBanishTop);
+                  else if (action === 'to_shield') route(isOppPeek ? oShieldShuffleIn : shieldShuffleIn);
+                  else if (action === 'to_deck_top') {
+                      if (pStack === 'deck') {
+                          (isOppPeek ? host.setODeckPile : host.setDeckPile)((prev) => {
+                              const next = [...prev];
+                              const k = next.indexOf(cardId);
+                              if (k === -1) return prev;
+                              const [m] = next.splice(k, 1);
+                              // unshift for top / push for bottom (keep each block’s original op)
+                              next.unshift ? next.unshift(m) : next.push(m);
+                              return next;
+                          });
+                          host.setPeekCard((prev) => {
+                              if (!prev) return prev;
+                              if (Array.isArray(prev.ids)) {
+                                  const ids = [...prev.ids];
+                                  const k = ids.indexOf(cardId);
+                                  if (k === -1) return prev;
+                                  ids.splice(k, 1);
+                                  if (prev.all) { ids.unshift(cardId); return { ...prev, ids, owner: pOwner }; }
+                                  return ids.length ? { ...prev, ids } : null;
+                              }
+                              return null;
+                          });
+                      } else {
+                          route(toDeckTop);
+                      }
+                  }
+                  else if (action === 'to_deck_bottom') {
+                      if (pStack === 'deck') {
+                          (isOppPeek ? host.setODeckPile : host.setDeckPile)((prev) => {
+                              const next = [...prev];
+                              const k = next.indexOf(cardId);
+                              if (k === -1) return prev;
+                              const [m] = next.splice(k, 1);
+                              // unshift for top / push for bottom (keep each block’s original op)
+                              next.unshift ? next.unshift(m) : next.push(m);
+                              return next;
+                          });
+                          host.setPeekCard((prev) => {
+                              if (!prev) return prev;
+                              if (Array.isArray(prev.ids)) {
+                                  const ids = [...prev.ids];
+                                  const k = ids.indexOf(cardId);
+                                  if (k === -1) return prev;
+                                  ids.splice(k, 1);
+                                  if (prev.all) { ids.push(cardId); return { ...prev, ids, owner: pOwner }; }
+                                  return ids.length ? { ...prev, ids } : null;
+                              }
+                              return null;
+                          });
+                      } else {
+                          route(toDeckBottom);
+                      }
+                  }
+                  else if (action === 'move_to_unit' || action === 'move_to_support') {
+                      removeFromStackInPeek(pStack, pIdx, cardId, () => { }, pOwner);
+                      host.setPendingPlace({
+                          source: 'viewer',
+                          cardId,
+                          target: action === 'move_to_unit' ? 'unit' : 'support',
+                          owner: pOwner
+                      });
+                      const modal = target?.closest?.('.pb-modal');
+                      if (modal) {
+                          modal.classList.add('is-hidden');
+                          window.__PB_SUSPENDED_MODAL = modal;
+                      }
+                  }
+                  return;
             }
 
             // Determine owner (player vs opponent) for non-peek hand actions

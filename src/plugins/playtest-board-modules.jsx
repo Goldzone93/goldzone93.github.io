@@ -1548,7 +1548,34 @@ export function GalleryModal({ title, items, onClose }) {
         return els.some(e => activeEls.includes(e));
     };
 
-    const filtered = (items || []).filter(it => matchesQuery(it) && matchesElements(it));
+    const dedupedItems = React.useMemo(() => {
+        const byBase = new Map();
+
+        for (const it of (items || [])) {
+            const internal = String(it?.InternalName || it?.internalName || it?.id || '');
+            if (!internal) continue;
+
+            const key = baseStem(internal);
+            const prev = byBase.get(key);
+
+            if (!prev) {
+                byBase.set(key, it);
+                continue;
+            }
+
+            const prevInternal = String(prev?.InternalName || prev?.internalName || prev?.id || '');
+            const prevIsFront = /_a$/i.test(prevInternal);
+            const curIsFront = /_a$/i.test(internal);
+
+            if (!prevIsFront && curIsFront) {
+                byBase.set(key, it);
+            }
+        }
+
+        return Array.from(byBase.values());
+    }, [items]);
+
+    const filtered = dedupedItems.filter(it => matchesQuery(it) && matchesElements(it));
 
     return (
         <div className="pb-modal" role="dialog" aria-modal="true" aria-label={title}>

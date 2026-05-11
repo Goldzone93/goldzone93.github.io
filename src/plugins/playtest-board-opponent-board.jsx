@@ -205,11 +205,11 @@ export function OpponentBoard({
                                 <CardZoom id={ensureFrontId(oBanishPile[0])} name={oBanishPile[0]} />
                                 <img
                                     className="pb-card-img"
-                                    src={imgSrc(oBanishPile[0], 'a')}
-                                    alt={`opponent:banish:${oBanishPile[0]}:a`}
+                                    src={imgSrc(oBanishPile[0], /_b$/i.test(String(oBanishPile[0])) ? 'b' : 'a')}
+                                    alt={`opponent:banish:${oBanishPile[0]}:${/_b$/i.test(String(oBanishPile[0])) ? 'b' : 'a'}`}
                                     draggable
                                     onDragStart={onOBanishDragStart}
-                                    onError={(e) => onImgError(e, 'a')}
+                                    onError={(e) => onImgError(e, /_b$/i.test(String(oBanishPile[0])) ? 'b' : 'a')}
                                 />
                             </div>
                         </div>
@@ -291,11 +291,11 @@ export function OpponentBoard({
                                 <CardZoom id={ensureFrontId(oGravePile[0])} name={oGravePile[0]} />
                                 <img
                                     className="pb-card-img"
-                                    src={imgSrc(oGravePile[0], 'a')}
-                                    alt={`opponent:grave:${oGravePile[0]}:a`}
+                                    src={imgSrc(oGravePile[0], /_b$/i.test(String(oGravePile[0])) ? 'b' : 'a')}
+                                    alt={`opponent:grave:${oGravePile[0]}:${/_b$/i.test(String(oGravePile[0])) ? 'b' : 'a'}`}
                                     draggable
                                     onDragStart={onOGraveDragStart}
-                                    onError={(e) => onImgError(e, 'a')}
+                                    onError={(e) => onImgError(e, /_b$/i.test(String(oGravePile[0])) ? 'b' : 'a')}
                                 />
                             </div>
                         </div>

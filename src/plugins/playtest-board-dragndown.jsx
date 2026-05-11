@@ -53,6 +53,12 @@ export function usePlaytestBoardDragNDown(ctx) {
 
     // Helper: normalize id without _a/_b suffix
     const baseId = (s) => String(s || '').replace(/_(a|b)$/i, '');
+    const getSlotCardWithSide = (slotKey) => {
+        const cardId = boardSlots?.[slotKey];
+        if (!cardId) return cardId;
+        const side = slotSides?.[slotKey] || 'a';
+        return `${String(cardId).replace(/_(a|b)$/i, '')}_${side}`;
+    };
 
     // Gather cards on the paying side that have hoard/resource counters
     const gatherHoardCardsForOwner = (payOwner) => {
@@ -316,7 +322,7 @@ export function usePlaytestBoardDragNDown(ctx) {
 
     // Slot → Hand
     if (src.kind === 'slot') {
-      const moved = boardSlots?.[src.key];
+      const moved = getSlotCardWithSide(src.key);
       if (!moved) return;
 
       setBoardSlots(prev => {
@@ -441,7 +447,7 @@ export function usePlaytestBoardDragNDown(ctx) {
 
     // Slot → Hand (insert)
     if (src.kind === 'slot') {
-      const moved = boardSlots?.[src.key];
+      const moved = getSlotCardWithSide(src.key);
       if (!moved) return;
 
         setBoardSlots(prev => {
@@ -567,7 +573,7 @@ export function usePlaytestBoardDragNDown(ctx) {
 
         // Slot → Opponent Hand (append)
         if (src.kind === 'slot') {
-            const moved = boardSlots?.[src.key];
+            const moved = getSlotCardWithSide(src.key);
             if (!moved) return;
             setBoardSlots(prev => {
                 if (!prev?.[src.key]) return prev;
@@ -654,7 +660,7 @@ export function usePlaytestBoardDragNDown(ctx) {
 
         // Slot → insert into ohand
         if (src.kind === 'slot') {
-            const moved = boardSlots?.[src.key];
+            const moved = getSlotCardWithSide(src.key);
             if (!moved) return;
             setBoardSlots(prev => {
                 if (!prev?.[src.key]) return prev;
@@ -771,7 +777,7 @@ export function usePlaytestBoardDragNDown(ctx) {
 
           // From a BOARD SLOT → opartner (only if that slot currently holds the opponent partner)
           if (src?.kind === 'slot') {
-              const moved = boardSlots?.[src.key];
+              const moved = getSlotCardWithSide(src.key);
               if (!moved) return;
               if (allowId && baseId(moved) !== allowId) return; // not the partner
               // remove from source slot
@@ -1015,7 +1021,7 @@ export function usePlaytestBoardDragNDown(ctx) {
 
       // Slot → Slot (carry side, counters, labels; clear battle flags if leaving)
       if (src.kind === 'slot') {
-          const moved = boardSlots?.[src.key];
+          const moved = getSlotCardWithSide(src.key);
           if (!moved) return;
 
           const srcKey = src.key;
@@ -1127,22 +1133,23 @@ export function usePlaytestBoardDragNDown(ctx) {
           return;
       }
 
-    // Shield/Banish/Grave/Deck → Slot
+      // Shield/Banish/Grave/Deck → Slot
       // Shield/Banish/Grave/Deck → Slot
       const moveTopToSlot = (getTop, removeTop) => {
-          const moved = getTop();
-          if (!moved) return;
-          setBoardSlots(prev => ({ ...(prev || {}), [key]: moved }));
-          setSlotSides(prev => ({ ...(prev || {}), [key]: 'a' }));
-          removeTop();
-          if (prevInTarget) {
-              clearSlotCountersAndLabels(key);
-              if (/^o/.test(String(key))) {
-                  setOHand(p => ([...(p || []), prevInTarget]));
-              } else {
-                  setHand(prev => [...prev, prevInTarget]);
-              }
-          }
+        const moved = getTop();
+        if (!moved) return;
+        const sideFromId = /_b$/i.test(String(moved)) ? 'b' : 'a';
+        setBoardSlots(prev => ({ ...(prev || {}), [key]: moved }));
+        setSlotSides(prev => ({ ...(prev || {}), [key]: sideFromId }));
+        removeTop();
+        if (prevInTarget) {
+            clearSlotCountersAndLabels(key);
+            if (/^o/.test(String(key))) {
+                setOHand(p => ([...(p || []), prevInTarget]));
+            } else {
+                setHand(prev => [...prev, prevInTarget]);
+            }
+        }
       };
 
       if (src.kind === 'shield') { moveTopToSlot(getShieldTop, removeShieldTop); return; }
@@ -1258,7 +1265,7 @@ export function usePlaytestBoardDragNDown(ctx) {
 
         // Slot → Partner area (only if that slot holds our partner, either side)
         if (src.kind === 'slot') {
-            const moved = boardSlots?.[src.key];
+            const moved = getSlotCardWithSide(src.key);
             if (!moved || baseId(moved) !== allowId) return;
 
             const srcKey = src.key;
@@ -1367,7 +1374,7 @@ export function usePlaytestBoardDragNDown(ctx) {
 
     // Slot → Shield
     if (src.kind === 'slot') {
-      const moved = boardSlots?.[src.key];
+      const moved = getSlotCardWithSide(src.key);
       if (!moved) return;
       setBoardSlots(prev => { const up={...(prev||{})}; delete up[src.key]; return up; });
       clearSlotCountersAndLabels(src.key);
@@ -1437,7 +1444,7 @@ export function usePlaytestBoardDragNDown(ctx) {
 
     // Slot → Banish
     if (src.kind === 'slot') {
-      const moved = boardSlots?.[src.key];
+      const moved = getSlotCardWithSide(src.key);
       if (!moved) return;
       setBoardSlots(prev => { const up={...(prev||{})}; delete up[src.key]; return up; });
       clearSlotCountersAndLabels(src.key);
@@ -1508,7 +1515,7 @@ export function usePlaytestBoardDragNDown(ctx) {
 
     // Slot → Grave
     if (src.kind === 'slot') {
-      const moved = boardSlots?.[src.key];
+      const moved = getSlotCardWithSide(src.key);
       if (!moved) return;
       setBoardSlots(prev => { const up={...(prev||{})}; delete up[src.key]; return up; });
       clearSlotCountersAndLabels(src.key);
@@ -1578,7 +1585,7 @@ export function usePlaytestBoardDragNDown(ctx) {
 
     // Slot → Deck (top)
     if (src.kind === 'slot') {
-      const moved = boardSlots?.[src.key];
+      const moved = getSlotCardWithSide(src.key);
       if (!moved) return;
       setBoardSlots(prev => { const up={...(prev||{})}; delete up[src.key]; return up; });
       clearSlotCountersAndLabels(src.key);
@@ -1640,7 +1647,7 @@ export function usePlaytestBoardDragNDown(ctx) {
 
         // Slot → Opponent Shield
         if (src.kind === 'slot') {
-            const moved = boardSlots?.[src.key];
+            const moved = getSlotCardWithSide(src.key);
             if (!moved) return;
             setBoardSlots(prev => { const up = { ...(prev || {}) }; delete up[src.key]; return up; });
             clearSlotCountersAndLabels(src.key);
@@ -1699,7 +1706,7 @@ export function usePlaytestBoardDragNDown(ctx) {
         }
 
         if (src.kind === 'slot') {
-            const moved = boardSlots?.[src.key];
+            const moved = getSlotCardWithSide(src.key);
             if (!moved) return;
             setBoardSlots(prev => { const up = { ...(prev || {}) }; delete up[src.key]; return up; });
             clearSlotCountersAndLabels(src.key);
@@ -1757,7 +1764,7 @@ export function usePlaytestBoardDragNDown(ctx) {
         }
 
         if (src.kind === 'slot') {
-            const moved = boardSlots?.[src.key];
+            const moved = getSlotCardWithSide(src.key);
             if (!moved) return;
             setBoardSlots(prev => { const up = { ...(prev || {}) }; delete up[src.key]; return up; });
             clearSlotCountersAndLabels(src.key);
@@ -1815,7 +1822,7 @@ export function usePlaytestBoardDragNDown(ctx) {
         }
 
         if (src.kind === 'slot') {
-            const moved = boardSlots?.[src.key];
+            const moved = getSlotCardWithSide(src.key);
             if (!moved) return;
             setBoardSlots(prev => { const up = { ...(prev || {}) }; delete up[src.key]; return up; });
             clearSlotCountersAndLabels(src.key);
